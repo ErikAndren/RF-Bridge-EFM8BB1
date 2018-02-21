@@ -57,24 +57,22 @@ int main (void)
 	// enable UART
 	UART0_init(UART0_RX_ENABLE, UART0_WIDTH_8, UART0_MULTIPROC_DISABLE);
 
-	// start sniffing if enabled by default
-	if (Sniffing)
-	{
-		// set desired RF protocol PT2260
-		desired_rf_protocol = PT2260_IDENTIFIER;
-		rf_sniffing_mode = MODE_DUTY_CYCLE;
-		PCA0_DoSniffing(RF_CODE_RFIN);
-		last_sniffing_command = RF_CODE_RFIN;
-	}
-	else
-		PCA0_StopSniffing();
+#ifdef SNIFF_ON_START
+	desired_rf_protocol = PT2260_IDENTIFIER;
+	rf_sniffing_mode = MODE_DUTY_CYCLE;
+	PCA0_DoSniffing(RF_CODE_RFIN);
+	last_sniffing_command = RF_CODE_RFIN;
+#elif
+	PCA0_StopSniffing();
+#endif
 
 	// enable global interrupts
 	IE_EA = 1;
 
-	for (l = 0; l < 10000; l++)
+	// Startup beep
+	for (l = 0; l < 10000; l++) {
 		BUZZER = BUZZER_ON;
-
+	}
 	BUZZER = BUZZER_OFF;
 
 	while (1)
@@ -88,10 +86,11 @@ int main (void)
 		uint8_t protocol_index;
 
 		// read only data from uart if idle
-		if (ReadUARTData)
+		if (ReadUARTData) {
 			rxdata = uart_getc();
-		else
+		} else {
 			rxdata = UART_NO_DATA;
+		}
 
 		if (rxdata == UART_NO_DATA)
 		{
@@ -99,8 +98,9 @@ int main (void)
 				l = 0;
 			else
 			{
-				if (++l > 10000)
+				if (++l > 10000) {
 					BUZZER = BUZZER_ON;
+				}
 
 				if (l > 30000)
 				{
@@ -147,18 +147,21 @@ int main (void)
 							// start timeout timer
 							InitTimer_ms(1, 30000);
 							break;
+
 						case RF_CODE_RFOUT:
 							PCA0_StopSniffing();
 							uart_state = RECEIVING;
 							position = 0;
 							len = 9;
 							break;
+
 						case RF_CODE_SNIFFING_ON:
 							desired_rf_protocol = UNKNOWN_IDENTIFIER;
 							rf_sniffing_mode = MODE_DUTY_CYCLE;
 							PCA0_DoSniffing(RF_CODE_SNIFFING_ON);
 							last_sniffing_command = RF_CODE_SNIFFING_ON;
 							break;
+
 						case RF_CODE_SNIFFING_OFF:
 							// set desired RF protocol PT2260
 							desired_rf_protocol = PT2260_IDENTIFIER;
@@ -167,6 +170,7 @@ int main (void)
 							PCA0_DoSniffing(RF_CODE_RFIN);
 							last_sniffing_command = RF_CODE_RFIN;
 							break;
+
 						case RF_CODE_RFOUT_NEW:
 						case RF_CODE_RFOUT_BUCKET:
 							uart_state = RECEIVE_LEN;
@@ -286,6 +290,7 @@ int main (void)
 					BUZZER = BUZZER_OFF;
 
 					PCA0_DoSniffing(last_sniffing_command);
+
 					// send not-acknowledge
 					uart_put_command(RF_CODE_LEARN_KO);
 
