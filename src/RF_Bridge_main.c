@@ -75,7 +75,8 @@ int main (void)
 	}
 	BUZZER = BUZZER_OFF;
 
-	while (1)
+	// Main loop
+	while (true)
 	{
 		/*------------------------------------------
 		 * check if something got received by UART
@@ -85,23 +86,26 @@ int main (void)
 		uint8_t position;
 		uint8_t protocol_index;
 
+		rxdata = UART_NO_DATA;
+
 		// read only data from uart if idle
 		if (ReadUARTData) {
 			rxdata = uart_getc();
-		} else {
-			rxdata = UART_NO_DATA;
 		}
 
 		if (rxdata == UART_NO_DATA)
 		{
 			if (uart_state == IDLE)
-				l = 0;
-			else
 			{
+				l = 0;
+
+			// Beep if we are not in idle but are not receiving data
+			} else {
 				if (++l > 10000) {
 					BUZZER = BUZZER_ON;
 				}
 
+				// Revert back to idle state
 				if (l > 30000)
 				{
 					l = 0;
