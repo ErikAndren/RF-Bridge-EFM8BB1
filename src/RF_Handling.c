@@ -124,6 +124,7 @@ void PCA0_channel1EventCb()
 						used_protocol = RFInSync(desired_rf_protocol, capture_period_pos, capture_period_neg);
 
 						// check if a matching protocol got found
+						//FIXME: Hard coded value
 						if (used_protocol != 0x80)
 						{
 							// backup sync time
@@ -136,9 +137,9 @@ void PCA0_channel1EventCb()
 							low_pulse_time = 0;
 							memset(RF_DATA, 0, sizeof(RF_DATA));
 							rf_state = RF_IN_SYNC;
-							break;
+							break; // switch rf_state
 						}
-						break;
+						break; // switch(rf_sniffing_mode)
 
 					// one matching sync got received
 					case RF_IN_SYNC:
@@ -275,8 +276,9 @@ uint8_t RFInSync(uint8_t identifier, uint16_t period_pos, uint16_t period_neg)
 			used_protocol = PCA0_GetProtocolIndex(identifier);
 
 			// check if identifier got found in list
-			if (used_protocol == 0xFF)
+			if (used_protocol == 0xFF) {
 				break;
+			}
 
 			// check if SYNC high and SYNC low should be compared
 			if (PROTOCOL_DATA[used_protocol].SYNC_HIGH > 0)
@@ -474,13 +476,16 @@ void PCA0_StopTransmit(void)
 
 uint8_t PCA0_DoSniffing(uint8_t active_command)
 {
+	//Assignment of global variable
 	uint8_t ret = last_sniffing_command;
-	// restore timer to 100000Hz, 10µs interval
+
+	// restore timer to 100000Hz, 10s interval
 	SetTimer0Overflow(0x0B);
 
 	// enable interrupt for RF receiving
 	PCA0CPM1 |= PCA0CPM1_ECCF__ENABLED;
-	// disable interrupt for RF transmitting
+
+	// disable interrupt for RF transmission
 	PCA0CPM0 &= ~PCA0CPM0_ECCF__ENABLED;
 	PCA0PWM &= ~PCA0PWM_ECOV__COVF_MASK_ENABLED;
 
@@ -491,6 +496,7 @@ uint8_t PCA0_DoSniffing(uint8_t active_command)
 	RF_DATA_STATUS = 0;
 
 	// set uart_command back if sniffing was on
+	// FIXME: Global variable manipulation in different files
 	uart_command = active_command;
 
 	// backup uart_command to be able to enable the sniffing again
