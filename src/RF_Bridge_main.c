@@ -20,8 +20,6 @@
 // $[Generated Includes]
 // [Generated Includes]$
 
-//FIXME: Doesn't really need to be global
-SI_SEGMENT_VARIABLE(uart_state, uart_state_t, SI_SEG_XDATA) = IDLE;
 SI_SEGMENT_VARIABLE(uart_command, uart_command_t, SI_SEG_XDATA) = NONE;
 
 //-----------------------------------------------------------------------------
@@ -34,7 +32,6 @@ SI_SEGMENT_VARIABLE(uart_command, uart_command_t, SI_SEG_XDATA) = NONE;
 //-----------------------------------------------------------------------------
 void SiLabs_Startup (void)
 {
-
 }
 
 //-----------------------------------------------------------------------------
@@ -42,6 +39,7 @@ void SiLabs_Startup (void)
 // ----------------------------------------------------------------------------
 int main (void)
 {
+	uart_state_t uart_state = IDLE;
 	bool ReadUARTData = true;
 	uint8_t last_desired_rf_protocol;
 	uint16_t l;
