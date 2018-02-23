@@ -50,13 +50,12 @@ int main (void)
 	// enter default state
 	LED = LED_OFF;
 	BUZZER = BUZZER_OFF;
-
 	T_DATA = 1;
 
 	// enable UART
 	UART0_init(UART0_RX_ENABLE, UART0_WIDTH_8, UART0_MULTIPROC_DISABLE);
 
-#ifdef SNIFF_ON_START
+#ifdef RF_LISTEN_ON_START
 	desired_rf_protocol = PT2260_IDENTIFIER;
 	rf_sniffing_mode = MODE_DUTY_CYCLE;
 	PCA0_DoSniffing(RF_CODE_RFIN);
