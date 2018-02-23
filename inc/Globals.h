@@ -18,7 +18,8 @@
 #define TDATA_ON	1
 #define TDATA_OFF	0
 
-#define SNIFF_ON_START	false
+//FIXME: Bad name replace with Listen instead
+#define SNIFF_ON_START	true
 
 #define SYSCLK	24500000
 
