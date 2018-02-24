@@ -26,6 +26,8 @@
 
 #define UART_COMMAND_TIMEOUT 30000
 #define LEARN_CMD_START_MS 50
+#define LEARN_CMD_FAILURE_MS 1000
+#define LEARN_CMD_SUCCESS_MS 200
 #define LEARN_CMD_TIMEOUT_MS 30000
 #define BOOT_BUZZ_LENGTH_MS 50
 
@@ -213,10 +215,11 @@ int main (void)
 				case RECEIVE_LEN:
 					position = 0;
 					len = rxdata;
-					if (len > 0)
+					if (len > 0) {
 						uart_state = RECEIVING;
-					else
+					} else {
 						uart_state = SYNC_FINISH;
+					}
 					break;
 
 				// Receiving UART data
@@ -269,7 +272,7 @@ int main (void)
 				// check if a RF signal got decoded
 				if ((RF_DATA_STATUS & RF_DATA_RECEIVED_MASK) != 0)
 				{
-					SoundBuzzer_ms(200);
+					SoundBuzzer_ms(LEARN_CMD_SUCCESS_MS);
 
 					PCA0_DoSniffing(last_sniffing_command);
 					uart_put_RF_CODE_Data(RF_CODE_LEARN_OK);
@@ -281,7 +284,7 @@ int main (void)
 					ReadUARTData = true;
 				} else if (IsTimerFinished()) {
 					// check for learning timeout
-					SoundBuzzer_ms(1000);
+					SoundBuzzer_ms(LEARN_CMD_FAILURE_MS);
 
 					PCA0_DoSniffing(last_sniffing_command);
 
@@ -308,8 +311,9 @@ int main (void)
 			// do original transfer
 			case RF_CODE_RFOUT:
 				// only do the job if all data got received by UART
-				if (uart_state != IDLE)
+				if (uart_state != IDLE) {
 					break;
+				}
 
 				// do transmit of the data
 				switch(rf_state)
@@ -436,7 +440,7 @@ int main (void)
 				if ((RF_DATA_STATUS & RF_DATA_RECEIVED_MASK) != 0)
 				{
 					uint8_t used_protocol = RF_DATA_STATUS & 0x7F;
-					SoundBuzzer_ms(200);
+					SoundBuzzer_ms(LEARN_CMD_SUCCESS_MS);
 
 					desired_rf_protocol = last_desired_rf_protocol;
 					PCA0_DoSniffing(last_sniffing_command);
@@ -452,7 +456,7 @@ int main (void)
 				// check for learning timeout
 				else if (IsTimerFinished())
 				{
-					SoundBuzzer_ms(1000);
+					SoundBuzzer_ms(LEARN_CMD_FAILURE_MS);
 
 					desired_rf_protocol = last_desired_rf_protocol;
 					PCA0_DoSniffing(last_sniffing_command);
