@@ -71,6 +71,7 @@ int main (void)
 	// enable global interrupts
 	IE_EA = 1;
 
+	// Boot buzz
 	SoundBuzzer_ms(50);
 
 	// Main loop
@@ -79,7 +80,7 @@ int main (void)
 		/*------------------------------------------
 		 * check if something got received by UART
 		 ------------------------------------------*/
-		unsigned int rxdata = UART_NO_DATA;
+		uint16_t rxdata = UART_NO_DATA;
 		uint8_t len;
 		uint8_t position;
 		uint8_t protocol_index;
