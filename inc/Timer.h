@@ -9,6 +9,7 @@
 #define INC_TIMER_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
 void InitTimer_us(uint16_t interval, uint16_t timeout);
 void InitTimer_ms(uint16_t interval, uint16_t timeout);
