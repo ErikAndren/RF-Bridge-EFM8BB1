@@ -107,7 +107,11 @@ int main (void)
 				{
 					// Three beeps for error
 					SoundBuzzer_ms(50);
+					delay_ms(50);
 					SoundBuzzer_ms(50);
+					delay_ms(50);
+					SoundBuzzer_ms(50);
+					delay_ms(50);
 
 					uart_state = IDLE;
 					uart_command = NONE;
