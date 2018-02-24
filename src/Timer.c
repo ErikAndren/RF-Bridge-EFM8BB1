@@ -1,5 +1,5 @@
 /*
- * Globals.c
+ * Timer.c
  *
  *  Created on: 07.12.2017
  *      Author:
