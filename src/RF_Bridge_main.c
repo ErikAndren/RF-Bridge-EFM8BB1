@@ -24,6 +24,7 @@
 // [Generated Includes]$
 
 #define UART_COMMAND_TIMEOUT 30000
+#define LEARN_CMD_TIMEOUT_MS 30000
 
 SI_SEGMENT_VARIABLE(uart_command, uart_command_t, SI_SEG_XDATA) = NONE;
 
@@ -139,7 +140,7 @@ int main (void)
 							last_sniffing_command = PCA0_DoSniffing(RF_CODE_LEARN);
 
 							// start timeout timer
-							InitTimer_ms(1, 30000);
+							InitTimer_ms(1, LEARN_CMD_TIMEOUT_MS);
 							break;
 
 						case RF_CODE_RFOUT:
@@ -184,7 +185,7 @@ int main (void)
 							last_sniffing_command = PCA0_DoSniffing(RF_CODE_LEARN_NEW);
 
 							// start timeout timer
-							InitTimer_ms(1, 30000);
+							InitTimer_ms(1, LEARN_CMD_TIMEOUT_MS);
 							break;
 						case RF_CODE_ACK:
 							// re-enable default RF_CODE_RFIN sniffing
