@@ -88,7 +88,7 @@ int main (void)
 			rxdata = uart_getc();
 		}
 
-		if (rxdata == UART_NO_DATA)
+		if (rxdata >= UART_NO_DATA)
 		{
 			if (uart_state == IDLE)
 			{
@@ -96,8 +96,8 @@ int main (void)
 			} else {
 				l++;
 
-				// Timeout, revert back to idle state
-				if (l > UART_COMMAND_TIMEOUT)
+				// Timeout, revert back to idle state. Reset state if uart gets other errors
+				if ((l > UART_COMMAND_TIMEOUT) || (rxdata > UART_NO_DATA))
 				{
 					// Two beeps for error
 					SoundBuzzer_ms(50);
@@ -114,16 +114,14 @@ int main (void)
 			{
 				// check if UART_SYNC_INIT got received
 				case IDLE:
-					// FIXME: No error checking
-					if ((rxdata & 0xFF) == RF_CODE_START) {
+					if (rxdata == RF_CODE_START) {
 						uart_state = SYNC_INIT;
 					}
 					break;
 
 				// sync byte got received, read command
 				case SYNC_INIT:
-					// FIXME: No error checking
-					uart_command = rxdata & 0xFF;
+					uart_command = rxdata;
 					uart_state = SYNC_FINISH;
 
 					// check if some data needs to be received
@@ -203,7 +201,7 @@ int main (void)
 				// Receiving UART data length
 				case RECEIVE_LEN:
 					position = 0;
-					len = rxdata & 0xFF;
+					len = rxdata;
 					if (len > 0)
 						uart_state = RECEIVING;
 					else
@@ -212,7 +210,7 @@ int main (void)
 
 				// Receiving UART data
 				case RECEIVING:
-					RF_DATA[position] = rxdata & 0xFF;
+					RF_DATA[position] = rxdata;
 					position++;
 
 					if (position == len || position >= RF_DATA_BUFFERSIZE) {
@@ -222,8 +220,7 @@ int main (void)
 
 				// wait and check for UART_SYNC_END
 				case SYNC_FINISH:
-					//FIXME: No error checking
-					if ((rxdata & 0xFF) == RF_CODE_STOP)
+					if (rxdata == RF_CODE_STOP)
 					{
 						uart_state = IDLE;
 						//FIXME: WHy disable here if we almost always enable below?
@@ -248,8 +245,8 @@ int main (void)
 						}
 					}
 					break;
-			}
-		} // switch(uart_state)
+			} // switch uart_state
+		}
 
 		/*------------------------------------------
 		 * check command byte
