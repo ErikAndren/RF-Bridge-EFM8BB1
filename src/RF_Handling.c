@@ -12,6 +12,7 @@
 #include "RF_Protocols.h"
 #include "pca_0.h"
 #include "uart.h"
+#include "Timer.h"
 
 SI_SEGMENT_VARIABLE(RF_DATA[RF_DATA_BUFFERSIZE], uint8_t, SI_SEG_XDATA);
 SI_SEGMENT_VARIABLE(RF_DATA_STATUS, uint8_t, SI_SEG_XDATA) = 0;

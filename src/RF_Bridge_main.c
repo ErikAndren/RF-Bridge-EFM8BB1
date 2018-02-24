@@ -18,6 +18,7 @@
 #include "RF_Handling.h"
 #include "RF_Protocols.h"
 #include "Buzzer.h"
+#include "Timer.h"
 
 // $[Generated Includes]
 // [Generated Includes]$

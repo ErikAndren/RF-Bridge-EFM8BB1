@@ -6,6 +6,7 @@
  */
 #include <SI_EFM8BB1_Register_Enums.h>
 #include "Globals.h"
+#include "Timer.h"
 
 SI_SEGMENT_VARIABLE(Timer_3_Timeout, uint16_t, SI_SEG_XDATA) = 0x0000;
 SI_SEGMENT_VARIABLE(Timer_3_Interval, uint16_t, SI_SEG_XDATA) = 0x0000;
@@ -23,7 +24,7 @@ void SetTimerReload(uint16_t reload)
 }
 
 /*
- * Init Timer with microseconds interval, maximum is 65535µs.
+ * Init Timer with microseconds interval, maximum is 65535ï¿½s.
  */
 void InitTimer_us(uint16_t interval, uint16_t timeout)
 {

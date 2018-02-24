@@ -6,7 +6,7 @@
  */
  
 #include "Globals.h"
-#include "Buzzer.h"
+#include "Timer.h"
 
 void SoundBuzzer_ms(uint16_t interval) {
 	InitTimer_ms(1, interval);

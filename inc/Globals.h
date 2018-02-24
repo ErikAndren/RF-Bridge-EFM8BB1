@@ -32,9 +32,4 @@ SI_SBIT(T_DATA, SFR_P0, 0);		// T_DATA
 SI_SBIT(R_DATA, SFR_P1, 3);		// R_DATA
 SI_SBIT(BUZZER, SFR_P1, 6);		// BUZZER
 
-void InitTimer_us(uint16_t interval, uint16_t timeout);
-void InitTimer_ms(uint16_t interval, uint16_t timeout);
-void WaitTimerFinished(void);
-bool IsTimerFinished(void);
-
 #endif /* INC_GLOBALS_H_ */
