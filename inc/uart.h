@@ -20,11 +20,12 @@
 /*
 ** high byte error return code of uart_getc()
 */
+#define UART_NO_DATA          0x0100              /* no receive data available   */
+/* The errors below are never set are they? */
 #define UART_FRAME_ERROR      0x1000              /* Framing Error by UART       */
 #define UART_OVERRUN_ERROR    0x0800              /* Overrun condition by UART   */
 #define UART_PARITY_ERROR     0x0400              /* Parity Error by UART        */
 #define UART_BUFFER_OVERFLOW  0x0200              /* receive ringbuffer overflow */
-#define UART_NO_DATA          0x0100              /* no receive data available   */
 //-----------------------------------------------------------------------------
 // Global Enums
 //-----------------------------------------------------------------------------
