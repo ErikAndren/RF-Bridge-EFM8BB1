@@ -19,12 +19,15 @@
 #include "RF_Protocols.h"
 #include "Buzzer.h"
 #include "Timer.h"
+#include "Delay.h"
 
 // $[Generated Includes]
 // [Generated Includes]$
 
 #define UART_COMMAND_TIMEOUT 30000
+#define LEARN_CMD_START_MS 50
 #define LEARN_CMD_TIMEOUT_MS 30000
+#define BOOT_BUZZ_LENGTH_MS 50
 
 SI_SEGMENT_VARIABLE(uart_command, uart_command_t, SI_SEG_XDATA) = NONE;
 
@@ -74,7 +77,7 @@ int main (void)
 	IE_EA = 1;
 
 	// Boot buzz
-	SoundBuzzer_ms(50);
+	SoundBuzzer_ms(BOOT_BUZZ_LENGTH_MS);
 
 	// Main loop
 	while (true)
@@ -102,9 +105,10 @@ int main (void)
 				// Timeout, revert back to idle state. Reset state if uart gets other errors
 				if ((l > UART_COMMAND_TIMEOUT) || (rxdata > UART_NO_DATA))
 				{
-					// Two beeps for error
+					// Three beeps for error
 					SoundBuzzer_ms(50);
 					SoundBuzzer_ms(50);
+
 					uart_state = IDLE;
 					uart_command = NONE;
 				}
@@ -132,7 +136,7 @@ int main (void)
 					switch(uart_command)
 					{
 						case RF_CODE_LEARN:
-							SoundBuzzer_ms(50);
+							SoundBuzzer_ms(LEARN_CMD_START_MS);
 
 							// set desired RF protocol PT2260
 							desired_rf_protocol = PT2260_IDENTIFIER;
@@ -176,7 +180,7 @@ int main (void)
 							break;
 
 						case RF_CODE_LEARN_NEW:
-							SoundBuzzer_ms(50);
+							SoundBuzzer_ms(LEARN_CMD_START_MS);
 
 							// enable sniffing for all known protocols
 							last_desired_rf_protocol = desired_rf_protocol;
