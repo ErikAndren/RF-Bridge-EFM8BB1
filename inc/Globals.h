@@ -8,8 +8,6 @@
 #ifndef INC_GLOBALS_H_
 #define INC_GLOBALS_H_
 
-#include <si_toolchain.h>
-#include <stdint.h>
 #include <SI_EFM8BB1_Defs.h>
 
 // USER CONSTANTS
