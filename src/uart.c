@@ -18,12 +18,12 @@
 //-----------------------------------------------------------------------------
 SI_SEGMENT_VARIABLE(UART_RX_Buffer[UART_RX_BUFFER_SIZE], uint8_t, SI_SEG_XDATA);
 SI_SEGMENT_VARIABLE(UART_TX_Buffer[UART_TX_BUFFER_SIZE], uint8_t, SI_SEG_DATA);
-SI_SEGMENT_VARIABLE(UART_RX_Buffer_Position, static volatile uint8_t,  SI_SEG_XDATA)=0;
-SI_SEGMENT_VARIABLE(UART_TX_Buffer_Position, static volatile uint8_t,  SI_SEG_XDATA)=0;
-SI_SEGMENT_VARIABLE(UART_Buffer_Read_Position, static volatile uint8_t,  SI_SEG_XDATA)=0;
-SI_SEGMENT_VARIABLE(UART_Buffer_Write_Position, static volatile uint8_t,  SI_SEG_XDATA)=0;
-SI_SEGMENT_VARIABLE(UART_Buffer_Write_Len, static volatile uint8_t,  SI_SEG_XDATA)=0;
-SI_SEGMENT_VARIABLE(lastRxError, static volatile uint8_t,  SI_SEG_XDATA)=0;
+SI_SEGMENT_VARIABLE(UART_RX_Buffer_Position, static volatile uint8_t,  SI_SEG_XDATA) = 0;
+SI_SEGMENT_VARIABLE(UART_TX_Buffer_Position, static volatile uint8_t,  SI_SEG_XDATA) = 0;
+SI_SEGMENT_VARIABLE(UART_Buffer_Read_Position, static volatile uint8_t,  SI_SEG_XDATA) = 0;
+SI_SEGMENT_VARIABLE(UART_Buffer_Write_Position, static volatile uint8_t,  SI_SEG_XDATA) = 0;
+SI_SEGMENT_VARIABLE(UART_Buffer_Write_Len, static volatile uint8_t,  SI_SEG_XDATA) = 0;
+SI_SEGMENT_VARIABLE(lastRxError, static volatile uint8_t,  SI_SEG_XDATA) = 0;
 
 //-----------------------------------------------------------------------------
 // UART ISR Callbacks
@@ -41,20 +41,21 @@ void UART0_transmitCompleteCb()
 //=========================================================
 SI_INTERRUPT(UART0_ISR, UART0_IRQn)
 {
-	//Buffer and clear flags immediately so we don't miss an interrupt while processing
+	// Buffer and clear flags immediately so we don't miss an interrupt while processing
 	uint8_t flags = SCON0 & (UART0_RX_IF | UART0_TX_IF);
 	SCON0 &= ~flags;
 
-	// receiving byte
-	if ((flags &  SCON0_RI__SET))
+	// receive byte
+	if ((flags & SCON0_RI__SET))
 	{
         /* store received data in buffer */
     	UART_RX_Buffer[UART_RX_Buffer_Position] = UART0_read();
         UART_RX_Buffer_Position++;
 
+        //FIXME: Here a check if we are overwriting last read byte would be useful
+
         // set to beginning of buffer if end is reached
-        if ( UART_RX_Buffer_Position == UART_RX_BUFFER_SIZE )
-	    	UART_RX_Buffer_Position = 0;
+        UART_RX_Buffer_Position %= UART_RX_BUFFER_SIZE;
 	}
 
 	// transmit byte
@@ -67,8 +68,8 @@ SI_INTERRUPT(UART0_ISR, UART0_IRQn)
 			UART_Buffer_Write_Len--;
 		}
 
-		if (UART_Buffer_Write_Position == UART_TX_BUFFER_SIZE)
-			UART_Buffer_Write_Position = 0;
+		// Set to beginning if end is reached
+		UART_Buffer_Write_Position %= UART_TX_BUFFER_SIZE;
 	}
 }
 
@@ -96,11 +97,11 @@ Purpose:  return byte from ringbuffer
 Returns:  lower byte:  received byte from ringbuffer
           higher byte: last receive error
 **************************************************************************/
-unsigned int uart_getc(void)
+uint16_t uart_getc(void)
 {
-	unsigned int rxdata;
+	uint16_t rxdata;
 
-    if ( UART_Buffer_Read_Position == UART_RX_Buffer_Position ) {
+    if (UART_Buffer_Read_Position == UART_RX_Buffer_Position) {
         return UART_NO_DATA;   /* no data available */
     }
 
@@ -108,8 +109,8 @@ unsigned int uart_getc(void)
     rxdata = UART_RX_Buffer[UART_Buffer_Read_Position];
     UART_Buffer_Read_Position++;
 
-    if (UART_Buffer_Read_Position == UART_RX_BUFFER_SIZE)
-    	UART_Buffer_Read_Position = 0;
+    /* Handle wrap-around */
+    UART_Buffer_Read_Position %= UART_RX_BUFFER_SIZE;
 
     rxdata |= (lastRxError << 8);
     lastRxError = 0;
@@ -124,8 +125,8 @@ Returns:  none
 **************************************************************************/
 void uart_putc(uint8_t txdata)
 {
-	if (UART_TX_Buffer_Position == UART_TX_BUFFER_SIZE)
-		UART_TX_Buffer_Position = 0;
+	/* Wrap pointer */
+	UART_TX_Buffer_Position %= UART_TX_BUFFER_SIZE;
 
 	UART_TX_Buffer[UART_TX_Buffer_Position] = txdata;
 	UART_TX_Buffer_Position++;
