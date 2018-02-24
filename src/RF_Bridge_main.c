@@ -51,7 +51,7 @@ int main (void)
 	uart_state_t uart_state = IDLE;
 	bool ReadUARTData = true;
 	uint8_t last_desired_rf_protocol;
-	uint16_t l;
+	uint16_t l = 0;
 
 	// Call hardware initialization routine
 	enter_DefaultMode_from_RESET();
