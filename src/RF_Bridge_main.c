@@ -17,8 +17,12 @@
 #include "uart.h"
 #include "RF_Handling.h"
 #include "RF_Protocols.h"
+#include "Buzzer.h"
+
 // $[Generated Includes]
 // [Generated Includes]$
+
+#define UART_COMMAND_TIMEOUT 30000
 
 SI_SEGMENT_VARIABLE(uart_command, uart_command_t, SI_SEG_XDATA) = NONE;
 
@@ -67,11 +71,7 @@ int main (void)
 	// enable global interrupts
 	IE_EA = 1;
 
-	// Startup beep
-	for (l = 0; l < 10000; l++) {
-		BUZZER = BUZZER_ON;
-	}
-	BUZZER = BUZZER_OFF;
+	SoundBuzzer_ms(50);
 
 	// Main loop
 	while (true)
@@ -93,21 +93,17 @@ int main (void)
 			if (uart_state == IDLE)
 			{
 				l = 0;
-
-			// Beep if we are not in idle but are not receiving data
 			} else {
-				if (++l == 10000) {
-					BUZZER = BUZZER_ON;
-				}
-
-				//FIXME: Time window here where the buzzer will remain on if a valid command did enter
+				l++;
 
 				// Timeout, revert back to idle state
-				if (l > 30000)
+				if (l > UART_COMMAND_TIMEOUT)
 				{
+					// Two beeps for error
+					SoundBuzzer_ms(50);
+					SoundBuzzer_ms(50);
 					uart_state = IDLE;
 					uart_command = NONE;
-					BUZZER = BUZZER_OFF;
 				}
 			}
 		} else {
@@ -135,12 +131,7 @@ int main (void)
 					switch(uart_command)
 					{
 						case RF_CODE_LEARN:
-							InitTimer_ms(1, 50);
-							BUZZER = BUZZER_ON;
-
-							// wait until timer has finished
-							WaitTimerFinished();
-							BUZZER = BUZZER_OFF;
+							SoundBuzzer_ms(50);
 
 							// set desired RF protocol PT2260
 							desired_rf_protocol = PT2260_IDENTIFIER;
@@ -166,7 +157,6 @@ int main (void)
 							break;
 
 						case RF_CODE_SNIFFING_OFF:
-							// set desired RF protocol PT2260
 							desired_rf_protocol = PT2260_IDENTIFIER;
 							// re-enable default RF_CODE_RFIN sniffing
 							rf_sniffing_mode = MODE_DUTY_CYCLE;
@@ -185,11 +175,7 @@ int main (void)
 							break;
 
 						case RF_CODE_LEARN_NEW:
-							InitTimer_ms(1, 50);
-							BUZZER = BUZZER_ON;
-							// wait until timer has finished
-							WaitTimerFinished();
-							BUZZER = BUZZER_OFF;
+							SoundBuzzer_ms(50);
 
 							// enable sniffing for all known protocols
 							last_desired_rf_protocol = desired_rf_protocol;
@@ -275,11 +261,7 @@ int main (void)
 				// check if a RF signal got decoded
 				if ((RF_DATA_STATUS & RF_DATA_RECEIVED_MASK) != 0)
 				{
-					InitTimer_ms(1, 200);
-					BUZZER = BUZZER_ON;
-					// wait until timer has finished
-					WaitTimerFinished();
-					BUZZER = BUZZER_OFF;
+					SoundBuzzer_ms(200);
 
 					PCA0_DoSniffing(last_sniffing_command);
 					uart_put_RF_CODE_Data(RF_CODE_LEARN_OK);
@@ -291,11 +273,7 @@ int main (void)
 					ReadUARTData = true;
 				} else if (IsTimerFinished()) {
 					// check for learning timeout
-					InitTimer_ms(1, 1000);
-					BUZZER = BUZZER_ON;
-					// wait until timer has finished
-					WaitTimerFinished();
-					BUZZER = BUZZER_OFF;
+					SoundBuzzer_ms(1000);
 
 					PCA0_DoSniffing(last_sniffing_command);
 
@@ -375,8 +353,9 @@ int main (void)
 			// transmit data on RF
 			case RF_CODE_RFOUT_NEW:
 				// only do the job if all data got received by UART
-				if (uart_state != IDLE)
+				if (uart_state != IDLE) {
 					break;
+				}
 
 				// do transmit of the data
 				switch(rf_state)
@@ -449,13 +428,7 @@ int main (void)
 				if ((RF_DATA_STATUS & RF_DATA_RECEIVED_MASK) != 0)
 				{
 					uint8_t used_protocol = RF_DATA_STATUS & 0x7F;
-
-					InitTimer_ms(1, 200);
-					BUZZER = BUZZER_ON;
-
-					// wait until timer has finished
-					WaitTimerFinished();
-					BUZZER = BUZZER_OFF;
+					SoundBuzzer_ms(200);
 
 					desired_rf_protocol = last_desired_rf_protocol;
 					PCA0_DoSniffing(last_sniffing_command);
@@ -471,11 +444,7 @@ int main (void)
 				// check for learning timeout
 				else if (IsTimerFinished())
 				{
-					InitTimer_ms(1, 1000);
-					BUZZER = BUZZER_ON;
-					// wait until timer has finished
-					WaitTimerFinished();
-					BUZZER = BUZZER_OFF;
+					SoundBuzzer_ms(1000);
 
 					desired_rf_protocol = last_desired_rf_protocol;
 					PCA0_DoSniffing(last_sniffing_command);
