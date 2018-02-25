@@ -119,8 +119,9 @@ void PCA0_channel1EventCb()
 					// check if we receive a sync
 					case RF_IDLE:
 						// check first if last decoded RF signal was cleared
-						if (rf_data_status != 0)
+						if (rf_data_status != 0) {
 							break;
+						}
 
 						// check all protocols in the list
 						used_protocol = RFInSync(desired_rf_protocol, capture_period_pos, capture_period_neg);
@@ -158,7 +159,7 @@ void PCA0_channel1EventCb()
 						actual_bit++;
 
 						// calculate current duty cycle
-						current_duty_cycle = (100 * (uint32_t)capture_period_pos) / ((uint32_t)capture_period_pos + (uint32_t)capture_period_neg);
+						current_duty_cycle = (100 * (uint32_t) capture_period_pos) / ((uint32_t) capture_period_pos + (uint32_t) capture_period_neg);
 
 						if (((current_duty_cycle > (protocol_data[used_protocol].bit_high_duty - DUTY_CYCLE_TOLERANCE)) &&
 							(current_duty_cycle < (protocol_data[used_protocol].bit_high_duty + DUTY_CYCLE_TOLERANCE)) &&
