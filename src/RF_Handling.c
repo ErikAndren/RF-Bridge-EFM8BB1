@@ -14,23 +14,24 @@
 #include "uart.h"
 #include "Timer.h"
 
-SI_SEGMENT_VARIABLE(RF_DATA[RF_DATA_BUFFERSIZE], uint8_t, SI_SEG_XDATA);
-SI_SEGMENT_VARIABLE(RF_DATA_STATUS, uint8_t, SI_SEG_XDATA) = 0;
+SI_SEGMENT_VARIABLE(rf_data[RF_DATA_BUFFERSIZE], uint8_t, SI_SEG_XDATA);
+SI_SEGMENT_VARIABLE(rf_data_status, uint8_t, SI_SEG_XDATA) = 0;
 SI_SEGMENT_VARIABLE(rf_state, rf_state_t, SI_SEG_XDATA) = RF_IDLE;
 SI_SEGMENT_VARIABLE(desired_rf_protocol, uint8_t, SI_SEG_XDATA) = UNKNOWN_IDENTIFIER;
 SI_SEGMENT_VARIABLE(rf_sniffing_mode, rf_sniffing_mode_t, SI_SEG_XDATA) = MODE_DUTY_CYCLE;
 
+/* FIXME: Should be uart_command_t */
 SI_SEGMENT_VARIABLE(last_sniffing_command, uint8_t, SI_SEG_XDATA) = NONE;
 
-SI_SEGMENT_VARIABLE(DUTY_CYCLE_HIGH, uint8_t, SI_SEG_XDATA) = 0x56;
-SI_SEGMENT_VARIABLE(DUTY_CYLCE_LOW, uint8_t, SI_SEG_XDATA) = 0xAB;
-SI_SEGMENT_VARIABLE(T0_HIGH, uint8_t, SI_SEG_XDATA) = 0x00;
-SI_SEGMENT_VARIABLE(T0_LOW, uint8_t, SI_SEG_XDATA) = 0x00;
-SI_SEGMENT_VARIABLE(SYNC_HIGH, uint16_t, SI_SEG_XDATA) = 0x00;
-SI_SEGMENT_VARIABLE(SYNC_LOW, uint16_t, SI_SEG_XDATA) = 0x00;
-SI_SEGMENT_VARIABLE(BIT_HIGH, uint16_t, SI_SEG_XDATA) = 0x00;
-SI_SEGMENT_VARIABLE(BIT_LOW, uint16_t, SI_SEG_XDATA) = 0x00;
-SI_SEGMENT_VARIABLE(BIT_COUNT, uint8_t, SI_SEG_XDATA) = 0x00;
+SI_SEGMENT_VARIABLE(duty_cycle_high, uint8_t, SI_SEG_XDATA) = 0x56;
+SI_SEGMENT_VARIABLE(duty_cycle_low, uint8_t, SI_SEG_XDATA) = 0xAB;
+SI_SEGMENT_VARIABLE(t0_high, uint8_t, SI_SEG_XDATA) = 0x00;
+SI_SEGMENT_VARIABLE(t0_low, uint8_t, SI_SEG_XDATA) = 0x00;
+SI_SEGMENT_VARIABLE(sync_high, uint16_t, SI_SEG_XDATA) = 0x00;
+SI_SEGMENT_VARIABLE(sync_low, uint16_t, SI_SEG_XDATA) = 0x00;
+SI_SEGMENT_VARIABLE(bit_high, uint16_t, SI_SEG_XDATA) = 0x00;
+SI_SEGMENT_VARIABLE(bit_low, uint16_t, SI_SEG_XDATA) = 0x00;
+SI_SEGMENT_VARIABLE(bit_count, uint8_t, SI_SEG_XDATA) = 0x00;
 
 SI_SEGMENT_VARIABLE(actual_bit_of_byte, uint8_t, SI_SEG_XDATA) = 0;
 SI_SEGMENT_VARIABLE(actual_bit, uint8_t, SI_SEG_XDATA) = 0;
@@ -51,15 +52,15 @@ void PCA0_overflowCb()
 
 void PCA0_intermediateOverflowCb()
 {
-	if(((RF_DATA[actual_byte] >> actual_bit_of_byte) & 0x01) == 0x01)
+	if(((rf_data[actual_byte] >> actual_bit_of_byte) & 0x01) == 0x01)
 	{
 		// bit 1
-		SetTimer0Overflow(T0_HIGH);
+		SetTimer0Overflow(t0_high);
 	}
 	else
 	{
 		// bit 0
-		SetTimer0Overflow(T0_LOW);
+		SetTimer0Overflow(t0_low);
 	}
 }
 
@@ -72,7 +73,7 @@ void PCA0_channel0EventCb()
 		actual_bit_of_byte = 8;
 	}
 
-	if (actual_bit == BIT_COUNT)
+	if (actual_bit == bit_count)
 	{
 		PCA0_StopTransmit();
 	}
@@ -118,7 +119,7 @@ void PCA0_channel1EventCb()
 					// check if we receive a sync
 					case RF_IDLE:
 						// check first if last decoded RF signal was cleared
-						if (RF_DATA_STATUS != 0)
+						if (rf_data_status != 0)
 							break;
 
 						// check all protocols in the list
@@ -129,14 +130,14 @@ void PCA0_channel1EventCb()
 						if (used_protocol != 0x80)
 						{
 							// backup sync time
-							SYNC_HIGH = capture_period_pos;
-							SYNC_LOW = capture_period_neg;
+							sync_high = capture_period_pos;
+							sync_low = capture_period_neg;
 							actual_bit_of_byte = 8;
 							actual_byte = 0;
 							actual_bit = 0;
 							actual_sync_bit = 0;
 							low_pulse_time = 0;
-							memset(RF_DATA, 0, sizeof(RF_DATA));
+							memset(rf_data, 0, sizeof(rf_data));
 							rf_state = RF_IN_SYNC;
 							break; // switch rf_state
 						}
@@ -167,14 +168,14 @@ void PCA0_channel1EventCb()
 							)
 						{
 							// backup last bit high time
-							BIT_HIGH = capture_period_pos;
+							bit_high = capture_period_pos;
 							LED = LED_ON;
-							RF_DATA[(actual_bit - 1) / 8] |= (1 << actual_bit_of_byte);
+							rf_data[(actual_bit - 1) / 8] |= (1 << actual_bit_of_byte);
 						}
 						else
 						{
 							// backup last bit high time
-							BIT_LOW = capture_period_pos;
+							bit_low = capture_period_pos;
 							LED = LED_OFF;
 							// backup low bit pulse time to be able to determine the last bit
 							if (capture_period_pos > low_pulse_time)
@@ -187,8 +188,8 @@ void PCA0_channel1EventCb()
 						// check if all bits for this protocol got received
 						if (actual_bit == PROTOCOL_DATA[used_protocol].BIT_COUNT)
 						{
-							RF_DATA_STATUS = used_protocol;
-							RF_DATA_STATUS |= RF_DATA_RECEIVED_MASK;
+							rf_data_status = used_protocol;
+							rf_data_status |= RF_DATA_RECEIVED_MASK;
 							LED = LED_OFF;
 							rf_state = RF_IDLE;
 						}
@@ -337,7 +338,7 @@ void SendRF_SYNC(void)
 	T_DATA = 1;
 	// do high time
 	// start timer
-	InitTimer_us(5, SYNC_HIGH);
+	InitTimer_us(5, sync_high);
 	// wait until timer has finished
 	WaitTimerFinished();
 	// switch to low
@@ -345,7 +346,7 @@ void SendRF_SYNC(void)
 
 	// do low time
 	// start timer
-	InitTimer_us(5, SYNC_LOW);
+	InitTimer_us(5, sync_low);
 	// wait until timer has finished
 	WaitTimerFinished();
 	// disable P0.0 for I/O control, enter PCA mode
@@ -381,20 +382,20 @@ void PCA0_InitTransmit(uint16_t sync_high, uint16_t sync_low, uint16_t BIT_HIGH_
 
 	bit_time = (100 * (uint32_t)BIT_HIGH_TIME) / BIT_HIGH_DUTY;
 	// calculate T0_Overflow
-	T0_HIGH = (uint8_t)(0x100 - ((uint32_t)SYSCLK / (0xFF * (1000000 / (uint32_t)bit_time))));
+	t0_high = (uint8_t)(0x100 - ((uint32_t)SYSCLK / (0xFF * (1000000 / (uint32_t)bit_time))));
 
 	bit_time = (100 * (uint32_t)BIT_LOW_TIME) / BIT_LOW_DUTY;
 	// calculate T0_Overflow
-	T0_LOW = (uint8_t)(0x100 - ((uint32_t)SYSCLK / (0xFF * (1000000 / (uint32_t)bit_time))));
+	t0_low = (uint8_t)(0x100 - ((uint32_t)SYSCLK / (0xFF * (1000000 / (uint32_t)bit_time))));
 
 	// calculate high and low duty cycle
-	DUTY_CYCLE_HIGH = (uint16_t)((BIT_HIGH_DUTY * 0xFF) / 100);
-	DUTY_CYLCE_LOW = (uint16_t)((BIT_LOW_DUTY * 0xFF) / 100);
+	duty_cycle_high = (uint16_t)((BIT_HIGH_DUTY * 0xFF) / 100);
+	duty_cycle_low = (uint16_t)((BIT_LOW_DUTY * 0xFF) / 100);
 
 	// set constants
-	SYNC_HIGH = sync_high;
-	SYNC_LOW = sync_low;
-	BIT_COUNT = bitcount;
+	sync_high = sync_high;
+	sync_low = sync_low;
+	bit_count = bitcount;
 
 	// enable interrupt for RF transmitting
 	PCA0CPM0 |= PCA0CPM0_ECCF__ENABLED;
@@ -412,15 +413,15 @@ void PCA0_InitTransmit(uint16_t sync_high, uint16_t sync_low, uint16_t BIT_HIGH_
 
 void SetPCA0DutyCylce(void)
 {
-	if(((RF_DATA[actual_byte] >> actual_bit_of_byte) & 0x01) == 0x01)
+	if(((rf_data[actual_byte] >> actual_bit_of_byte) & 0x01) == 0x01)
 	{
 		// bit 1
-		PCA0_writeChannel(PCA0_CHAN0, DUTY_CYCLE_HIGH << 8);
+		PCA0_writeChannel(PCA0_CHAN0, duty_cycle_high << 8);
 	}
 	else
 	{
 		// bit 0
-		PCA0_writeChannel(PCA0_CHAN0, DUTY_CYLCE_LOW << 8);
+		PCA0_writeChannel(PCA0_CHAN0, duty_cycle_low << 8);
 	}
 }
 
@@ -494,7 +495,7 @@ uint8_t PCA0_DoSniffing(uint8_t active_command)
 	PCA0_run();
 
 	rf_state = RF_IDLE;
-	RF_DATA_STATUS = 0;
+	rf_data_status = 0;
 
 	// set uart_command back if sniffing was on
 	// FIXME: Global variable manipulation in different files
@@ -617,7 +618,7 @@ void Bucket_Received(uint16_t duration)
 		case RF_IDLE:
 			LED = LED_OFF;
 			// check first if last decoded RF signal was cleared
-			if (RF_DATA_STATUS != 0)
+			if (rf_data_status != 0)
 				break;
 
 			if (probablyFooter(duration))
@@ -683,7 +684,7 @@ void Bucket_Received(uint16_t duration)
 			// check if sync bucket got received
 			if (matchesFooter(duration))
 			{
-				RF_DATA_STATUS |= RF_DATA_RECEIVED_MASK;
+				rf_data_status |= RF_DATA_RECEIVED_MASK;
 				LED = LED_OFF;
 				rf_state = RF_IDLE;
 			}
@@ -692,17 +693,17 @@ void Bucket_Received(uint16_t duration)
 			{
 				if (actual_bit_of_byte == 4)
 				{
-					RF_DATA[actual_byte] = bucket_index << 4;
+					rf_data[actual_byte] = bucket_index << 4;
 					actual_bit_of_byte = 0;
 				}
 				else
 				{
-					RF_DATA[actual_byte] |= (bucket_index & 0x0F);
+					rf_data[actual_byte] |= (bucket_index & 0x0F);
 					actual_byte++;
 					actual_bit_of_byte = 4;
 
 					// check if maximum of array got reached
-					if (actual_byte > sizeof(RF_DATA))
+					if (actual_byte > sizeof(rf_data))
 					{
 						bucket_count = 0;
 						// restart sync

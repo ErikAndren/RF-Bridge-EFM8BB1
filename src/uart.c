@@ -173,7 +173,7 @@ void uart_put_RF_Data(uint8_t Command, uint8_t used_protocol)
 	i = 0;
 	while(i < b)
 	{
-		uart_putc(RF_DATA[i]);
+		uart_putc(rf_data[i]);
 		i++;
 	}
 	uart_putc(RF_CODE_STOP);
@@ -190,20 +190,20 @@ void uart_put_RF_CODE_Data(uint8_t Command)
 	uart_putc(Command);
 
 	// sync low time
-	uart_putc((SYNC_LOW >> 8) & 0xFF);
-	uart_putc(SYNC_LOW & 0xFF);
+	uart_putc((sync_low >> 8) & 0xFF);
+	uart_putc(sync_low & 0xFF);
 	// bit 0 high time
-	uart_putc((BIT_LOW >> 8) & 0xFF);
-	uart_putc(BIT_LOW & 0xFF);
+	uart_putc((bit_low >> 8) & 0xFF);
+	uart_putc(bit_low & 0xFF);
 	// bit 1 high time
-	uart_putc((BIT_HIGH >> 8) & 0xFF);
-	uart_putc(BIT_HIGH & 0xFF);
+	uart_putc((bit_high >> 8) & 0xFF);
+	uart_putc(bit_high & 0xFF);
 
 	// copy data to UART buffer
 	i = 0;
 	while(i < (24 / 8))
 	{
-		uart_putc(RF_DATA[i]);
+		uart_putc(rf_data[i]);
 		i++;
 	}
 	uart_putc(RF_CODE_STOP);
@@ -245,7 +245,7 @@ void uart_put_RF_buckets(uint8_t Command)
 	i = 0;
 	while(i < actual_byte)
 	{
-		uart_putc(RF_DATA[i]);
+		uart_putc(rf_data[i]);
 		i++;
 
 		// be safe to have no buffer overflow

@@ -120,7 +120,7 @@ int main (void)
 		} else {
 			l = 0;
 
-			// state machine for UART
+			// state machine for UART rx
 			switch(uart_state)
 			{
 			// check if UART_SYNC_INIT got received
@@ -179,7 +179,7 @@ int main (void)
 
 					// Receiving UART data
 				case RECEIVING:
-					RF_DATA[position] = rxdata;
+					rf_data[position] = rxdata;
 					position++;
 
 					if (position == len || position >= RF_DATA_BUFFERSIZE) {
@@ -278,7 +278,7 @@ int main (void)
 		// do original learning
 		case RF_CODE_LEARN:
 			// check if a RF signal got decoded
-			if ((RF_DATA_STATUS & RF_DATA_RECEIVED_MASK) != 0)
+			if ((rf_data_status & RF_DATA_RECEIVED_MASK) != 0)
 			{
 				SoundBuzzer_ms(LEARN_CMD_SUCCESS_MS);
 
@@ -287,7 +287,7 @@ int main (void)
 				uart_put_RF_CODE_Data(RF_CODE_LEARN_OK);
 
 				// clear RF status
-				RF_DATA_STATUS = 0;
+				rf_data_status = 0;
 
 			} else if (IsTimerFinished()) {
 				// check for learning timeout
@@ -303,12 +303,12 @@ int main (void)
 		// do original sniffing
 		case RF_CODE_RFIN:
 			// check if a RF signal got decoded
-			if ((RF_DATA_STATUS & RF_DATA_RECEIVED_MASK) != 0)
+			if ((rf_data_status & RF_DATA_RECEIVED_MASK) != 0)
 			{
 				uart_put_RF_CODE_Data(RF_CODE_RFIN);
 
 				// clear RF status
-				RF_DATA_STATUS = 0;
+				rf_data_status = 0;
 			}
 			break;
 
@@ -330,8 +330,8 @@ int main (void)
 				// byte 6..7:	24bit Data
 				// set high time of sync to (Tsyn / 3968) * 128
 				// set duty cycle of high and low bit to 75 and 25 % - unknown
-				PCA0_InitTransmit((uint16_t)((((uint32_t)(*(uint16_t *)&RF_DATA[0])) * 128) / 3968),
-						*(uint16_t *)&RF_DATA[0], *(uint16_t *)&RF_DATA[4], 75, *(uint16_t *)&RF_DATA[2], 25, 24);
+				PCA0_InitTransmit((uint16_t)((((uint32_t)(*(uint16_t *)&rf_data[0])) * 128) / 3968),
+						*(uint16_t *)&rf_data[0], *(uint16_t *)&rf_data[4], 75, *(uint16_t *)&rf_data[2], 25, 24);
 
 				actual_byte = 7;
 
@@ -353,13 +353,13 @@ int main (void)
 			// do new sniffing
 			case RF_CODE_SNIFFING_ON:
 				// check if a RF signal got decoded
-				if ((RF_DATA_STATUS & RF_DATA_RECEIVED_MASK) != 0)
+				if ((rf_data_status & RF_DATA_RECEIVED_MASK) != 0)
 				{
-					uint8_t used_protocol = RF_DATA_STATUS & 0x7F;
+					uint8_t used_protocol = rf_data_status & 0x7F;
 					uart_put_RF_Data(RF_CODE_SNIFFING_ON, used_protocol);
 
 					// clear RF status
-					RF_DATA_STATUS = 0;
+					rf_data_status = 0;
 				}
 				break;
 
@@ -387,10 +387,10 @@ int main (void)
 					// byte 10:		BIT_LOW_DUTY
 					// byte 11:		BIT_COUNT + SYNC_BIT_COUNT in front of RF data
 					// byte 12..N:	RF data to send
-					if (RF_DATA[0] == 0x7F)
+					if (rf_data[0] == 0x7F)
 					{
-						PCA0_InitTransmit(*(uint16_t *)&RF_DATA[1], *(uint16_t *)&RF_DATA[3],
-								*(uint16_t *)&RF_DATA[5], RF_DATA[7], *(uint16_t *)&RF_DATA[8], RF_DATA[10], RF_DATA[11]);
+						PCA0_InitTransmit(*(uint16_t *)&rf_data[1], *(uint16_t *)&rf_data[3],
+								*(uint16_t *)&rf_data[5], rf_data[7], *(uint16_t *)&rf_data[8], rf_data[10], rf_data[11]);
 
 						actual_byte = 12;
 					}
@@ -398,7 +398,7 @@ int main (void)
 					// byte 1..N:	data to be transmitted
 					else
 					{
-						protocol_index = PCA0_GetProtocolIndex(RF_DATA[0]);
+						protocol_index = PCA0_GetProtocolIndex(rf_data[0]);
 
 						if (protocol_index != 0xFF)
 						{
@@ -435,9 +435,9 @@ int main (void)
 				// new RF code learning
 				case RF_CODE_LEARN_NEW:
 					// check if a RF signal got decoded
-					if ((RF_DATA_STATUS & RF_DATA_RECEIVED_MASK) != 0)
+					if ((rf_data_status & RF_DATA_RECEIVED_MASK) != 0)
 					{
-						uint8_t used_protocol = RF_DATA_STATUS & 0x7F;
+						uint8_t used_protocol = rf_data_status & 0x7F;
 						SoundBuzzer_ms(LEARN_CMD_SUCCESS_MS);
 
 						desired_rf_protocol = last_desired_rf_protocol;
@@ -446,7 +446,7 @@ int main (void)
 						uart_put_RF_Data(RF_CODE_LEARN_OK_NEW, used_protocol);
 
 						// clear RF status
-						RF_DATA_STATUS = 0;
+						rf_data_status = 0;
 					}
 					// check for learning timeout
 					else if (IsTimerFinished())
@@ -462,7 +462,7 @@ int main (void)
 
 				case RF_CODE_RFOUT_BUCKET:
 				{
-					const uint8_t k = RF_DATA[0] * 2;
+					const uint8_t k = rf_data[0] * 2;
 
 					// only do the job if all data got received by UART
 					if (uart_state != IDLE) {
@@ -487,7 +487,7 @@ int main (void)
 					}
 					else
 					{
-						SendRFBuckets((uint16_t *)(RF_DATA + 2), RF_DATA + k + 2, len - k - 2, RF_DATA[1]);
+						SendRFBuckets((uint16_t *)(rf_data + 2), rf_data + k + 2, len - k - 2, rf_data[1]);
 						// send acknowledgment
 						uart_put_command(RF_CODE_ACK);
 					}
@@ -498,12 +498,12 @@ int main (void)
 
 				case RF_CODE_SNIFFING_ON_BUCKET:
 					// check if a RF signal got decoded
-					if ((RF_DATA_STATUS & RF_DATA_RECEIVED_MASK) != 0)
+					if ((rf_data_status & RF_DATA_RECEIVED_MASK) != 0)
 					{
 						uart_put_RF_buckets(RF_CODE_SNIFFING_ON_BUCKET);
 
 						// clear RF status
-						RF_DATA_STATUS = 0;
+						rf_data_status = 0;
 					}
 					break;
 		}

@@ -46,29 +46,29 @@ typedef enum
 	MODE_BUCKET
 } rf_sniffing_mode_t;
 
-#define RF_DATA_RECEIVED_MASK	0x80
+#define RF_DATA_RECEIVED_MASK 0x80
 
-extern SI_SEGMENT_VARIABLE(RF_DATA[RF_DATA_BUFFERSIZE], uint8_t, SI_SEG_XDATA);
+extern SI_SEGMENT_VARIABLE(rf_data[RF_DATA_BUFFERSIZE], uint8_t, SI_SEG_XDATA);
 
 // RF_DATA_STATUS
 // Bit 7:	1 Data received, 0 nothing received
 // Bit 6-0:	Protocol identifier
-extern SI_SEGMENT_VARIABLE(RF_DATA_STATUS, uint8_t, SI_SEG_XDATA);
+extern SI_SEGMENT_VARIABLE(rf_data_status, uint8_t, SI_SEG_XDATA);
 extern SI_SEGMENT_VARIABLE(rf_state, rf_state_t, SI_SEG_XDATA);
 extern SI_SEGMENT_VARIABLE(desired_rf_protocol, uint8_t, SI_SEG_XDATA);
 extern SI_SEGMENT_VARIABLE(rf_sniffing_mode, rf_sniffing_mode_t, SI_SEG_XDATA);
 
 extern SI_SEGMENT_VARIABLE(last_sniffing_command, uint8_t, SI_SEG_XDATA);
 
-extern SI_SEGMENT_VARIABLE(DUTY_CYCLE_HIGH, uint8_t, SI_SEG_XDATA);
-extern SI_SEGMENT_VARIABLE(DUTY_CYLCE_LOW, uint8_t, SI_SEG_XDATA);
-extern SI_SEGMENT_VARIABLE(T0_HIGH, uint8_t, SI_SEG_XDATA);
-extern SI_SEGMENT_VARIABLE(T0_LOW, uint8_t, SI_SEG_XDATA);
-extern SI_SEGMENT_VARIABLE(SYNC_HIGH, uint16_t, SI_SEG_XDATA);
-extern SI_SEGMENT_VARIABLE(SYNC_LOW, uint16_t, SI_SEG_XDATA);
-extern SI_SEGMENT_VARIABLE(BIT_HIGH, uint16_t, SI_SEG_XDATA);
-extern SI_SEGMENT_VARIABLE(BIT_LOW, uint16_t, SI_SEG_XDATA);
-extern SI_SEGMENT_VARIABLE(BIT_COUNT, uint8_t, SI_SEG_XDATA);
+extern SI_SEGMENT_VARIABLE(duty_cycle_high, uint8_t, SI_SEG_XDATA);
+extern SI_SEGMENT_VARIABLE(duty_cycle_low, uint8_t, SI_SEG_XDATA);
+extern SI_SEGMENT_VARIABLE(t0_high, uint8_t, SI_SEG_XDATA);
+extern SI_SEGMENT_VARIABLE(t0_low, uint8_t, SI_SEG_XDATA);
+extern SI_SEGMENT_VARIABLE(sync_high, uint16_t, SI_SEG_XDATA);
+extern SI_SEGMENT_VARIABLE(sync_low, uint16_t, SI_SEG_XDATA);
+extern SI_SEGMENT_VARIABLE(bit_high, uint16_t, SI_SEG_XDATA);
+extern SI_SEGMENT_VARIABLE(bit_low, uint16_t, SI_SEG_XDATA);
+extern SI_SEGMENT_VARIABLE(bit_count, uint8_t, SI_SEG_XDATA);
 
 extern SI_SEGMENT_VARIABLE(actual_bit_of_byte, uint8_t, SI_SEG_XDATA);
 extern SI_SEGMENT_VARIABLE(actual_bit, uint8_t, SI_SEG_XDATA);
