@@ -83,7 +83,7 @@ void PCA0_channel0EventCb()
 		actual_bit_of_byte--;
 
 		// set duty cycle for the next bit...
-		SetPCA0DutyCylce();
+		SetPCA0DutyCycle();
 	}
 }
 
@@ -411,7 +411,7 @@ void PCA0_InitTransmit(uint16_t sync_high_in, uint16_t sync_low_in, uint16_t bit
 	PCA0L = (0xFF << PCA0L_PCA0L__SHIFT);
 }
 
-void SetPCA0DutyCylce(void)
+void SetPCA0DutyCycle(void)
 {
 	if(((rf_data[actual_byte] >> actual_bit_of_byte) & 0x01) == 0x01)
 	{
@@ -442,7 +442,7 @@ void PCA0_StartTransmit(void)
 	rf_state = RF_TRANSMITTING;
 
 	// set first bit to be in sync when PCA0 is starting
-	SetPCA0DutyCylce();
+	SetPCA0DutyCycle();
 
 	// make RF sync pulse
 	SendRF_SYNC();
