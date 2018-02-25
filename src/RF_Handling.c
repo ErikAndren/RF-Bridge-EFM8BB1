@@ -146,8 +146,8 @@ void PCA0_channel1EventCb()
 					// one matching sync got received
 					case RF_IN_SYNC:
 						// at first skip SYNC bits
-						if ((PROTOCOL_DATA[used_protocol].SYNC_BIT_COUNT > 0) &&
-							(actual_sync_bit < PROTOCOL_DATA[used_protocol].SYNC_BIT_COUNT))
+						if ((protocol_data[used_protocol].sync_bit_count > 0) &&
+							(actual_sync_bit < protocol_data[used_protocol].sync_bit_count))
 						{
 							actual_sync_bit++;
 							break;
@@ -160,11 +160,11 @@ void PCA0_channel1EventCb()
 						// calculate current duty cycle
 						current_duty_cycle = (100 * (uint32_t)capture_period_pos) / ((uint32_t)capture_period_pos + (uint32_t)capture_period_neg);
 
-						if (((current_duty_cycle > (PROTOCOL_DATA[used_protocol].BIT_HIGH_DUTY - DUTY_CYCLE_TOLERANCE)) &&
-							(current_duty_cycle < (PROTOCOL_DATA[used_protocol].BIT_HIGH_DUTY + DUTY_CYCLE_TOLERANCE)) &&
-							(actual_bit < PROTOCOL_DATA[used_protocol].BIT_COUNT)) ||
+						if (((current_duty_cycle > (protocol_data[used_protocol].bit_high_duty - DUTY_CYCLE_TOLERANCE)) &&
+							(current_duty_cycle < (protocol_data[used_protocol].bit_high_duty + DUTY_CYCLE_TOLERANCE)) &&
+							(actual_bit < protocol_data[used_protocol].bit_count)) ||
 							// the duty cycle can not be used for the last bit because of the missing rising edge on the end
-							((capture_period_pos > low_pulse_time) && (actual_bit == PROTOCOL_DATA[used_protocol].BIT_COUNT))
+							((capture_period_pos > low_pulse_time) && (actual_bit == protocol_data[used_protocol].bit_count))
 							)
 						{
 							// backup last bit high time
@@ -186,7 +186,7 @@ void PCA0_channel1EventCb()
 							actual_bit_of_byte = 8;
 
 						// check if all bits for this protocol got received
-						if (actual_bit == PROTOCOL_DATA[used_protocol].BIT_COUNT)
+						if (actual_bit == protocol_data[used_protocol].bit_count)
 						{
 							rf_data_status = used_protocol;
 							rf_data_status |= RF_DATA_RECEIVED_MASK;
@@ -244,13 +244,13 @@ uint8_t RFInSync(uint8_t identifier, uint16_t period_pos, uint16_t period_neg)
 			for (used_protocol = 0x00 ; used_protocol < PROTOCOLCOUNT; used_protocol++)
 			{
 				// check if SYNC high and SYNC low should be compared
-				if (PROTOCOL_DATA[used_protocol].SYNC_HIGH > 0)
+				if (protocol_data[used_protocol].sync_high > 0)
 				{
 					if (
-						(period_pos > (PROTOCOL_DATA[used_protocol].SYNC_HIGH - SYNC_TOLERANCE)) &&
-						(period_pos < (PROTOCOL_DATA[used_protocol].SYNC_HIGH + SYNC_TOLERANCE)) &&
-						(period_neg > (PROTOCOL_DATA[used_protocol].SYNC_LOW - SYNC_TOLERANCE)) &&
-						(period_neg < (PROTOCOL_DATA[used_protocol].SYNC_LOW + SYNC_TOLERANCE))
+						(period_pos > (protocol_data[used_protocol].sync_high - SYNC_TOLERANCE)) &&
+						(period_pos < (protocol_data[used_protocol].sync_high + SYNC_TOLERANCE)) &&
+						(period_neg > (protocol_data[used_protocol].sync_low - SYNC_TOLERANCE)) &&
+						(period_neg < (protocol_data[used_protocol].sync_low + SYNC_TOLERANCE))
 					)
 					{
 						ret = used_protocol;
@@ -261,8 +261,8 @@ uint8_t RFInSync(uint8_t identifier, uint16_t period_pos, uint16_t period_neg)
 				else
 				{
 					if (
-						(period_neg > (PROTOCOL_DATA[used_protocol].SYNC_LOW - SYNC_TOLERANCE)) &&
-						(period_neg < (PROTOCOL_DATA[used_protocol].SYNC_LOW + SYNC_TOLERANCE))
+						(period_neg > (protocol_data[used_protocol].sync_low - SYNC_TOLERANCE)) &&
+						(period_neg < (protocol_data[used_protocol].sync_low + SYNC_TOLERANCE))
 					)
 					{
 						ret = used_protocol;
@@ -282,13 +282,13 @@ uint8_t RFInSync(uint8_t identifier, uint16_t period_pos, uint16_t period_neg)
 			}
 
 			// check if SYNC high and SYNC low should be compared
-			if (PROTOCOL_DATA[used_protocol].SYNC_HIGH > 0)
+			if (protocol_data[used_protocol].sync_high > 0)
 			{
 				if (
-					(period_pos > (PROTOCOL_DATA[used_protocol].SYNC_HIGH - SYNC_TOLERANCE_0xA1)) &&
-					(period_pos < (PROTOCOL_DATA[used_protocol].SYNC_HIGH + SYNC_TOLERANCE_0xA1)) &&
-					(period_neg > (PROTOCOL_DATA[used_protocol].SYNC_LOW - SYNC_TOLERANCE_0xA1)) &&
-					(period_neg < (PROTOCOL_DATA[used_protocol].SYNC_LOW + SYNC_TOLERANCE_0xA1))
+					(period_pos > (protocol_data[used_protocol].sync_high - SYNC_TOLERANCE_0xA1)) &&
+					(period_pos < (protocol_data[used_protocol].sync_high + SYNC_TOLERANCE_0xA1)) &&
+					(period_neg > (protocol_data[used_protocol].sync_low - SYNC_TOLERANCE_0xA1)) &&
+					(period_neg < (protocol_data[used_protocol].sync_low + SYNC_TOLERANCE_0xA1))
 				)
 				{
 					ret = used_protocol;
@@ -299,8 +299,8 @@ uint8_t RFInSync(uint8_t identifier, uint16_t period_pos, uint16_t period_neg)
 			else
 			{
 				if (
-					(period_neg > (PROTOCOL_DATA[used_protocol].SYNC_LOW - SYNC_TOLERANCE_0xA1)) &&
-					(period_neg < (PROTOCOL_DATA[used_protocol].SYNC_LOW + SYNC_TOLERANCE_0xA1))
+					(period_neg > (protocol_data[used_protocol].sync_low - SYNC_TOLERANCE_0xA1)) &&
+					(period_neg < (protocol_data[used_protocol].sync_low + SYNC_TOLERANCE_0xA1))
 				)
 				{
 					ret = used_protocol;
@@ -363,7 +363,7 @@ uint8_t PCA0_GetProtocolIndex(uint8_t identifier)
 		// find protocol index by identifier
 		for(i = 0; i < PROTOCOLCOUNT; i++)
 		{
-			if (PROTOCOL_DATA[i].IDENTIFIER == identifier)
+			if (protocol_data[i].identifier == identifier)
 			{
 				protocol_index = i;
 				break;

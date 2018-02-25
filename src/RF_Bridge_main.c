@@ -402,10 +402,10 @@ int main (void)
 
 						if (protocol_index != 0xFF)
 						{
-							PCA0_InitTransmit(PROTOCOL_DATA[protocol_index].SYNC_HIGH, PROTOCOL_DATA[protocol_index].SYNC_LOW,
-									PROTOCOL_DATA[protocol_index].BIT_HIGH_TIME, PROTOCOL_DATA[protocol_index].BIT_HIGH_DUTY,
-									PROTOCOL_DATA[protocol_index].BIT_LOW_TIME, PROTOCOL_DATA[protocol_index].BIT_LOW_DUTY,
-									PROTOCOL_DATA[protocol_index].BIT_COUNT);
+							PCA0_InitTransmit(protocol_data[protocol_index].sync_high, protocol_data[protocol_index].sync_low,
+									protocol_data[protocol_index].bit_high_data, protocol_data[protocol_index].bit_high_duty,
+									protocol_data[protocol_index].bit_low_time, protocol_data[protocol_index].bit_low_duty,
+									protocol_data[protocol_index].bit_count);
 
 							actual_byte = 1;
 						}

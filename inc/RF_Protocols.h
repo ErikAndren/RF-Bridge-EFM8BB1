@@ -20,23 +20,23 @@
 typedef struct
 {
 	// Protocol specific identifier
-	uint8_t IDENTIFIER;
+	uint8_t identifier;
 	// normal high signal time on sync pulse
-	uint16_t SYNC_HIGH;
+	uint16_t sync_high;
 	// normal low signal time on sync pulse
-	uint16_t SYNC_LOW;
+	uint16_t sync_low;
 	// bit count of SYNC bits
-	uint8_t SYNC_BIT_COUNT;
+	uint8_t sync_bit_count;
 	// high time of a logic bit 1
-	uint16_t BIT_HIGH_TIME;
+	uint16_t bit_high_data;
 	// high time of a logic bit 0
-	uint16_t BIT_LOW_TIME;
+	uint16_t bit_low_time;
 	// duty cycle for logic bit 1
-	uint8_t BIT_HIGH_DUTY;
+	uint8_t bit_high_duty;
 	// duty cycle for logic bit 0
-	uint8_t BIT_LOW_DUTY;
+	uint8_t bit_low_duty;
 	// bit count for this protocol
-	uint8_t BIT_COUNT;
+	uint8_t bit_count;
 } protocol_data_t;
 
 #define SYNC_TOLERANCE 			200
@@ -95,12 +95,12 @@ typedef struct
 /*
  * Protocol array
  */
-#define PROTOCOLCOUNT	5
+#define PROTOCOLCOUNT 5
 #if PROTOCOLCOUNT > 0x7F
 #error Too many protocols are defined, stop!
 #endif
 
-SI_SEGMENT_VARIABLE(PROTOCOL_DATA[PROTOCOLCOUNT], static const protocol_data_t, SI_SEG_CODE) =
+SI_SEGMENT_VARIABLE(protocol_data[PROTOCOLCOUNT], static const protocol_data_t, SI_SEG_CODE) =
 {
 		PT2260,
 		ROHRMOTOR24,

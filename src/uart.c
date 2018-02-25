@@ -159,7 +159,7 @@ void uart_put_RF_Data(uint8_t Command, uint8_t used_protocol)
 	uart_putc(RF_CODE_START);
 	uart_putc(Command);
 
-	while(i < PROTOCOL_DATA[used_protocol].BIT_COUNT)
+	while(i < protocol_data[used_protocol].bit_count)
 	{
 		i += 8;
 		b++;
@@ -167,7 +167,7 @@ void uart_put_RF_Data(uint8_t Command, uint8_t used_protocol)
 	uart_putc(b+1);
 
 	// set identifier for this protocol
-	uart_putc(PROTOCOL_DATA[used_protocol].IDENTIFIER);
+	uart_putc(protocol_data[used_protocol].identifier);
 
 	// copy data to UART buffer
 	i = 0;
