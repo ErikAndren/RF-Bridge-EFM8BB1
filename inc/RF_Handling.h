@@ -10,8 +10,8 @@
 
 extern uint8_t RFInSync(uint8_t identifier, uint16_t period_pos, uint16_t period_neg);
 extern uint8_t PCA0_GetProtocolIndex(uint8_t identifier);
-extern void PCA0_InitTransmit(uint16_t sync_high, uint16_t sync_low, uint16_t BIT_HIGH_TIME, uint8_t BIT_HIGH_DUTY,
-		uint16_t BIT_LOW_TIME, uint8_t BIT_LOW_DUTY, uint8_t bitcount);
+extern void PCA0_InitTransmit(uint16_t sync_high_in, uint16_t sync_low_in, uint16_t bit_high_time, uint8_t bit_high_duty,
+		uint16_t bit_low_time, uint8_t bit_low_duty, uint8_t bitcount);
 extern void SetPCA0DutyCylce(void);
 extern void SetTimer0Overflow(uint8_t T0_Overflow);
 extern void PCA0_StartTransmit(void);

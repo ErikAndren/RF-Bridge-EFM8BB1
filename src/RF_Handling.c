@@ -374,26 +374,26 @@ uint8_t PCA0_GetProtocolIndex(uint8_t identifier)
 	return protocol_index;
 }
 
-void PCA0_InitTransmit(uint16_t sync_high, uint16_t sync_low, uint16_t BIT_HIGH_TIME, uint8_t BIT_HIGH_DUTY,
-		uint16_t BIT_LOW_TIME, uint8_t BIT_LOW_DUTY, uint8_t bitcount)
+void PCA0_InitTransmit(uint16_t sync_high_in, uint16_t sync_low_in, uint16_t bit_high_time, uint8_t bit_high_duty,
+		uint16_t bit_low_time, uint8_t bit_low_duty, uint8_t bitcount)
 {
 	uint16_t bit_time;
 
-	bit_time = (100 * (uint32_t)BIT_HIGH_TIME) / BIT_HIGH_DUTY;
+	bit_time = (100 * (uint32_t)bit_high_time) / bit_high_duty;
 	// calculate T0_Overflow
-	t0_high = (uint8_t)(0x100 - ((uint32_t)SYSCLK / (0xFF * (1000000 / (uint32_t)bit_time))));
+	t0_high = (uint8_t)(0x100 - ((uint32_t)SYSCLK / (0xFF * (1000000 / (uint32_t) bit_time))));
 
-	bit_time = (100 * (uint32_t)BIT_LOW_TIME) / BIT_LOW_DUTY;
+	bit_time = (100 * (uint32_t)bit_low_time) / bit_low_duty;
 	// calculate T0_Overflow
-	t0_low = (uint8_t)(0x100 - ((uint32_t)SYSCLK / (0xFF * (1000000 / (uint32_t)bit_time))));
+	t0_low = (uint8_t)(0x100 - ((uint32_t)SYSCLK / (0xFF * (1000000 / (uint32_t) bit_time))));
 
 	// calculate high and low duty cycle
-	duty_cycle_high = (uint16_t)((BIT_HIGH_DUTY * 0xFF) / 100);
-	duty_cycle_low = (uint16_t)((BIT_LOW_DUTY * 0xFF) / 100);
+	duty_cycle_high = (uint16_t)((bit_high_duty * 0xFF) / 100);
+	duty_cycle_low = (uint16_t)((bit_low_duty * 0xFF) / 100);
 
-	// set constants
-	sync_high = sync_high;
-	sync_low = sync_low;
+	// set global variable
+	sync_high = sync_high_in;
+	sync_low = sync_low_in;
 	bit_count = bitcount;
 
 	// enable interrupt for RF transmitting
