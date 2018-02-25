@@ -54,6 +54,10 @@ int main (void)
 	uint8_t last_desired_rf_protocol;
 	uint16_t l = 0;
 	uart_command_t next_uart_command = NONE;
+	uint16_t rxdata;
+	uint8_t len;
+	uint8_t position;
+	uint8_t protocol_index;
 
 	// Call hardware initialization routine
 	enter_DefaultMode_from_RESET();
@@ -87,11 +91,7 @@ int main (void)
 		/*------------------------------------------
 		 * check if something got received by UART
 		 ------------------------------------------*/
-		uint8_t len;
-		uint8_t position;
-		uint8_t protocol_index;
-
-		uint16_t rxdata = uart_getc();
+		rxdata = uart_getc();
 
 		if (rxdata >= UART_NO_DATA)
 		{
