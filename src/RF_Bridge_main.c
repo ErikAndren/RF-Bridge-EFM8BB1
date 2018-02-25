@@ -176,7 +176,7 @@ int main (void)
 					}
 					break;
 
-					// Receiving UART data
+				// Receiving UART data
 				case RECEIVING:
 					rf_data[position] = rxdata;
 					position++;
@@ -388,8 +388,14 @@ int main (void)
 					// byte 12..N:	RF data to send
 					if (rf_data[0] == 0x7F)
 					{
-						PCA0_InitTransmit(*(uint16_t *)&rf_data[1], *(uint16_t *)&rf_data[3],
-								*(uint16_t *)&rf_data[5], rf_data[7], *(uint16_t *)&rf_data[8], rf_data[10], rf_data[11]);
+						PCA0_InitTransmit(
+								*(uint16_t *)&rf_data[1],
+								*(uint16_t *)&rf_data[3],
+								*(uint16_t *)&rf_data[5],
+								rf_data[7],
+								*(uint16_t *)&rf_data[8],
+								rf_data[10],
+								rf_data[11]);
 
 						actual_byte = 12;
 					}
@@ -401,11 +407,11 @@ int main (void)
 
 						if (protocol_index != 0xFF)
 						{
-							PCA0_InitTransmit(protocol_data[protocol_index].sync_high, protocol_data[protocol_index].sync_low,
+							PCA0_InitTransmit(
+									protocol_data[protocol_index].sync_high, protocol_data[protocol_index].sync_low,
 									protocol_data[protocol_index].bit_high_data, protocol_data[protocol_index].bit_high_duty,
 									protocol_data[protocol_index].bit_low_time, protocol_data[protocol_index].bit_low_duty,
 									protocol_data[protocol_index].bit_count);
-
 							actual_byte = 1;
 						}
 						else
@@ -420,7 +426,7 @@ int main (void)
 					}
 					break;
 
-					// wait until data got transfered
+				// wait until data got transfered
 				case RF_FINISHED:
 					// restart sniffing if it was active
 					PCA0_DoSniffing(last_sniffing_command);
