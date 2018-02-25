@@ -51,7 +51,6 @@ void SiLabs_Startup (void)
 int main (void)
 {
 	uart_state_t uart_state = IDLE;
-
 	uint8_t last_desired_rf_protocol;
 	uint16_t l = 0;
 	uart_command_t next_uart_command = NONE;
