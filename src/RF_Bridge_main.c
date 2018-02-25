@@ -51,8 +51,7 @@ void SiLabs_Startup (void)
 int main (void)
 {
 	uart_state_t uart_state = IDLE;
-	/* What is the purpose */
-	bool ReadUARTData = true;
+
 	uint8_t last_desired_rf_protocol;
 	uint16_t l = 0;
 	uart_command_t next_uart_command = NONE;
@@ -89,14 +88,11 @@ int main (void)
 		/*------------------------------------------
 		 * check if something got received by UART
 		 ------------------------------------------*/
-		uint16_t rxdata = UART_NO_DATA;
 		uint8_t len;
 		uint8_t position;
 		uint8_t protocol_index;
 
-		if (ReadUARTData == true) {
-			rxdata = uart_getc();
-		}
+		uint16_t rxdata = uart_getc();
 
 		if (rxdata >= UART_NO_DATA)
 		{
@@ -119,7 +115,6 @@ int main (void)
 
 					uart_state = IDLE;
 					uart_command = NONE;
-					ReadUARTData = true;
 				}
 			}
 		} else {
@@ -167,7 +162,6 @@ int main (void)
 				default:
 					uart_command = NONE;
 					uart_state = IDLE;
-					ReadUARTData = true;
 					break;
 				} // End uart_command switch
 				break; // End SYNC_INIT
@@ -198,7 +192,6 @@ int main (void)
 					if (rxdata == RF_CODE_STOP)
 					{
 						uart_state = IDLE;
-						ReadUARTData = false;
 						uart_command = next_uart_command;
 
 						// check if ACK should be sent
@@ -211,11 +204,9 @@ int main (void)
 						case RF_CODE_SNIFFING_ON_BUCKET:
 							// send acknowledge
 							uart_put_command(RF_CODE_ACK);
-							ReadUARTData = true;
 							break;
 
 						case RF_CODE_ACK:
-							ReadUARTData = true;
 							last_sniffing_command = PCA0_DoSniffing(last_sniffing_command);
 							break;
 						}
@@ -274,7 +265,6 @@ int main (void)
 						/* Received something else then RF_CODE_STOP */
 						uart_state = IDLE;
 						uart_command = NONE;
-						ReadUARTData = true;
 					}
 					break;
 			} // switch uart_state
@@ -299,8 +289,6 @@ int main (void)
 				// clear RF status
 				RF_DATA_STATUS = 0;
 
-				// enable UART again
-				ReadUARTData = true;
 			} else if (IsTimerFinished()) {
 				// check for learning timeout
 				SoundBuzzer_ms(LEARN_CMD_FAILURE_MS);
@@ -309,9 +297,6 @@ int main (void)
 
 				// send not-acknowledge
 				uart_put_command(RF_CODE_LEARN_KO);
-
-				// enable UART again
-				ReadUARTData = true;
 			}
 			break; // case RF_CODE_LEARN
 
@@ -361,9 +346,6 @@ int main (void)
 
 				// send acknowledge
 				uart_put_command(RF_CODE_ACK);
-
-				// enable UART again
-				ReadUARTData = true;
 				break;
 			} // rf_state
 			break;
@@ -446,9 +428,6 @@ int main (void)
 
 					// send acknowledge
 					uart_put_command(RF_CODE_ACK);
-
-					// enable UART again
-					ReadUARTData = true;
 					break;
 				} // switch rf_state
 				break;
@@ -468,9 +447,6 @@ int main (void)
 
 						// clear RF status
 						RF_DATA_STATUS = 0;
-
-						// enable UART again
-						ReadUARTData = true;
 					}
 					// check for learning timeout
 					else if (IsTimerFinished())
@@ -481,9 +457,6 @@ int main (void)
 						PCA0_DoSniffing(last_sniffing_command);
 						// send not-acknowledge
 						uart_put_command(RF_CODE_LEARN_KO_NEW);
-
-						// enable UART again
-						ReadUARTData = true;
 					}
 					break;
 
@@ -520,9 +493,6 @@ int main (void)
 					}
 
 					PCA0_DoSniffing(last_sniffing_command);
-					// re-enable UART
-					ReadUARTData = true;
-
 					break;
 				}
 
