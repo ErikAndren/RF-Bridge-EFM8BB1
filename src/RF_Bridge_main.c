@@ -55,6 +55,7 @@ int main (void)
 	bool ReadUARTData = true;
 	uint8_t last_desired_rf_protocol;
 	uint16_t l = 0;
+	uart_command_t next_uart_command = NONE;
 
 	// Call hardware initialization routine
 	enter_DefaultMode_from_RESET();
@@ -136,10 +137,10 @@ int main (void)
 
 				// sync byte got received, read command
 			case SYNC_INIT:
-				uart_command = rxdata;
+				next_uart_command = rxdata;
 				uart_state = SYNC_FINISH;
 
-				switch(uart_command)
+				switch(next_uart_command)
 				{
 				/* Do nothing here but wait for RF_CODE_STOP */
 				case RF_CODE_LEARN:
@@ -198,6 +199,7 @@ int main (void)
 					{
 						uart_state = IDLE;
 						ReadUARTData = false;
+						uart_command = next_uart_command;
 
 						// check if ACK should be sent
 						switch(uart_command)
@@ -363,7 +365,7 @@ int main (void)
 				// enable UART again
 				ReadUARTData = true;
 				break;
-			}
+			} // rf_state
 			break;
 
 			// do new sniffing
@@ -448,7 +450,7 @@ int main (void)
 					// enable UART again
 					ReadUARTData = true;
 					break;
-				}
+				} // switch rf_state
 				break;
 
 				// new RF code learning
