@@ -51,6 +51,7 @@ void SiLabs_Startup (void)
 int main (void)
 {
 	uart_state_t uart_state = IDLE;
+	/* What is the purpose */
 	bool ReadUARTData = true;
 	uint8_t last_desired_rf_protocol;
 	uint16_t l = 0;
@@ -212,7 +213,6 @@ int main (void)
 							break;
 
 						case RF_CODE_ACK:
-							// enable UART again
 							ReadUARTData = true;
 							last_sniffing_command = PCA0_DoSniffing(last_sniffing_command);
 							break;
@@ -286,6 +286,7 @@ int main (void)
 				SoundBuzzer_ms(LEARN_CMD_SUCCESS_MS);
 
 				PCA0_DoSniffing(last_sniffing_command);
+
 				uart_put_RF_CODE_Data(RF_CODE_LEARN_OK);
 
 				// clear RF status
@@ -307,7 +308,7 @@ int main (void)
 			}
 			break; // case RF_CODE_LEARN
 
-			// do original sniffing
+		// do original sniffing
 		case RF_CODE_RFIN:
 			// check if a RF signal got decoded
 			if ((RF_DATA_STATUS & RF_DATA_RECEIVED_MASK) != 0)
@@ -319,7 +320,7 @@ int main (void)
 			}
 			break;
 
-			// do original transfer
+		// do original transfer
 		case RF_CODE_RFOUT:
 			// only do the job if all data got received by UART
 			if (uart_state != IDLE) {
@@ -346,7 +347,7 @@ int main (void)
 				PCA0_StartTransmit();
 				break;
 
-				// wait until data got transfered
+			// wait until data got transfered
 			case RF_FINISHED:
 				// restart sniffing if it was active
 				PCA0_DoSniffing(last_sniffing_command);
@@ -426,9 +427,9 @@ int main (void)
 					}
 
 					// if valid RF protocol start RF transmit
-					if (uart_command != NONE)
+					if (uart_command != NONE) {
 						PCA0_StartTransmit();
-
+					}
 					break;
 
 					// wait until data got transfered
@@ -484,11 +485,15 @@ int main (void)
 					const uint8_t k = RF_DATA[0] * 2;
 
 					// only do the job if all data got received by UART
-					if (uart_state != IDLE)
+					if (uart_state != IDLE) {
 						break;
+					}
 
-					if (rf_state == RF_IDLE) PCA0_StopSniffing();
-					else if (rf_state != RF_FINISHED) break;
+					if (rf_state == RF_IDLE) {
+						PCA0_StopSniffing();
+					} else if (rf_state != RF_FINISHED) {
+						break;
+					}
 
 					// byte 0:				number of buckets: k
 					// byte 1:				number of repeats: r
@@ -502,12 +507,14 @@ int main (void)
 					}
 					else
 					{
-						SendRFBuckets((uint16_t *)(RF_DATA+2), RF_DATA+k+2, len-k-2, RF_DATA[1]);
-						uart_put_command(RF_CODE_ACK);			// send acknowledgment
+						SendRFBuckets((uint16_t *)(RF_DATA + 2), RF_DATA + k + 2, len - k - 2, RF_DATA[1]);
+						// send acknowledgment
+						uart_put_command(RF_CODE_ACK);
 					}
 
 					PCA0_DoSniffing(last_sniffing_command);
-					ReadUARTData = true;					// re-enable UART
+					// re-enable UART
+					ReadUARTData = true;
 
 					break;
 				}
