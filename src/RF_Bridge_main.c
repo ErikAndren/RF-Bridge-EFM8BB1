@@ -162,7 +162,7 @@ int main (void)
 					uart_state = RECEIVE_LEN;
 					break;
 
-					// Unknown command
+				// Unknown command
 				default:
 					uart_command = NONE;
 					uart_state = IDLE;
@@ -267,7 +267,12 @@ int main (void)
 
 						default:
 							break;
-						}
+						} // switch(uart_command)
+					} else {
+						/* Received something else then RF_CODE_STOP */
+						uart_state = IDLE;
+						uart_command = NONE;
+						ReadUARTData = true;
 					}
 					break;
 			} // switch uart_state
