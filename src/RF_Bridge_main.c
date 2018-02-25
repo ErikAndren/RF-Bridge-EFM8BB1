@@ -117,6 +117,7 @@ int main (void)
 
 					uart_state = IDLE;
 					uart_command = NONE;
+					ReadUARTData = true;
 				}
 			}
 		} else {
@@ -137,20 +138,15 @@ int main (void)
 					uart_command = rxdata;
 					uart_state = SYNC_FINISH;
 
-					// check if some data needs to be received
-					// FIXME: Why is this started now, should wait until command is fully validated?
 					switch(uart_command)
 					{
+						/* Do nothing here but wait for RF_CODE_STOP */
 						case RF_CODE_LEARN:
-							SoundBuzzer_ms(LEARN_CMD_START_MS);
-
-							// set desired RF protocol PT2260
-							desired_rf_protocol = PT2260_IDENTIFIER;
-							rf_sniffing_mode = MODE_DUTY_CYCLE;
-							last_sniffing_command = PCA0_DoSniffing(RF_CODE_LEARN);
-
-							// start timeout timer
-							InitTimer_ms(1, LEARN_CMD_TIMEOUT_MS);
+						case RF_CODE_SNIFFING_ON:
+						case RF_CODE_SNIFFING_OFF:
+						case RF_CODE_SNIFFING_ON_BUCKET:
+						case RF_CODE_LEARN_NEW:
+						case RF_CODE_ACK:
 							break;
 
 						case RF_CODE_RFOUT:
@@ -160,53 +156,16 @@ int main (void)
 							len = 9;
 							break;
 
-						case RF_CODE_SNIFFING_ON:
-							desired_rf_protocol = UNKNOWN_IDENTIFIER;
-							rf_sniffing_mode = MODE_DUTY_CYCLE;
-							PCA0_DoSniffing(RF_CODE_SNIFFING_ON);
-							last_sniffing_command = RF_CODE_SNIFFING_ON;
-							break;
-
-						case RF_CODE_SNIFFING_OFF:
-							desired_rf_protocol = PT2260_IDENTIFIER;
-							// re-enable default RF_CODE_RFIN sniffing
-							rf_sniffing_mode = MODE_DUTY_CYCLE;
-							PCA0_DoSniffing(RF_CODE_RFIN);
-							last_sniffing_command = RF_CODE_RFIN;
-							break;
-
 						case RF_CODE_RFOUT_NEW:
 						case RF_CODE_RFOUT_BUCKET:
 							uart_state = RECEIVE_LEN;
 							break;
 
-						case RF_CODE_SNIFFING_ON_BUCKET:
-							rf_sniffing_mode = MODE_BUCKET;
-							last_sniffing_command = PCA0_DoSniffing(RF_CODE_SNIFFING_ON_BUCKET);
-							break;
-
-						case RF_CODE_LEARN_NEW:
-							SoundBuzzer_ms(LEARN_CMD_START_MS);
-
-							// enable sniffing for all known protocols
-							last_desired_rf_protocol = desired_rf_protocol;
-							desired_rf_protocol = UNKNOWN_IDENTIFIER;
-							rf_sniffing_mode = MODE_DUTY_CYCLE;
-							last_sniffing_command = PCA0_DoSniffing(RF_CODE_LEARN_NEW);
-
-							// start timeout timer
-							InitTimer_ms(1, LEARN_CMD_TIMEOUT_MS);
-							break;
-						case RF_CODE_ACK:
-							// re-enable default RF_CODE_RFIN sniffing
-							last_sniffing_command = PCA0_DoSniffing(last_sniffing_command);
-							uart_state = IDLE;
-							break;
-
-						// unknown command
+						// Unknown command
 						default:
 							uart_command = NONE;
 							uart_state = IDLE;
+							ReadUARTData = true;
 							break;
 					} // End uart_command switch
 					break; // End SYNC_INIT
@@ -237,9 +196,6 @@ int main (void)
 					if (rxdata == RF_CODE_STOP)
 					{
 						uart_state = IDLE;
-						//FIXME: WHy disable here if we almost always enable below?
-						//Sometimes we are not done
-						//FIXME: Only place where we disable it
 						ReadUARTData = false;
 
 						// check if ACK should be sent
@@ -252,9 +208,64 @@ int main (void)
 							case RF_CODE_SNIFFING_ON_BUCKET:
 								// send acknowledge
 								uart_put_command(RF_CODE_ACK);
+								ReadUARTData = true;
+								break;
+
 							case RF_CODE_ACK:
 								// enable UART again
 								ReadUARTData = true;
+								last_sniffing_command = PCA0_DoSniffing(last_sniffing_command);
+							break;
+						}
+
+						/* Act upon received command */
+						switch(uart_command) {
+						case RF_CODE_LEARN:
+							SoundBuzzer_ms(LEARN_CMD_START_MS);
+
+							// set desired RF protocol PT2260
+							desired_rf_protocol = PT2260_IDENTIFIER;
+							rf_sniffing_mode = MODE_DUTY_CYCLE;
+							last_sniffing_command = PCA0_DoSniffing(RF_CODE_LEARN);
+
+							// start timeout timer
+							InitTimer_ms(1, LEARN_CMD_TIMEOUT_MS);
+							break;
+
+						case RF_CODE_SNIFFING_ON:
+							desired_rf_protocol = UNKNOWN_IDENTIFIER;
+							rf_sniffing_mode = MODE_DUTY_CYCLE;
+							PCA0_DoSniffing(RF_CODE_SNIFFING_ON);
+							last_sniffing_command = RF_CODE_SNIFFING_ON;
+							break;
+
+						case RF_CODE_SNIFFING_OFF:
+							desired_rf_protocol = PT2260_IDENTIFIER;
+							// re-enable default RF_CODE_RFIN sniffing
+							rf_sniffing_mode = MODE_DUTY_CYCLE;
+							PCA0_DoSniffing(RF_CODE_RFIN);
+							last_sniffing_command = RF_CODE_RFIN;
+							break;
+
+						case RF_CODE_SNIFFING_ON_BUCKET:
+							rf_sniffing_mode = MODE_BUCKET;
+							last_sniffing_command = PCA0_DoSniffing(RF_CODE_SNIFFING_ON_BUCKET);
+							break;
+
+						case RF_CODE_LEARN_NEW:
+							SoundBuzzer_ms(LEARN_CMD_START_MS);
+
+							// enable sniffing for all known protocols
+							last_desired_rf_protocol = desired_rf_protocol;
+							desired_rf_protocol = UNKNOWN_IDENTIFIER;
+							rf_sniffing_mode = MODE_DUTY_CYCLE;
+							last_sniffing_command = PCA0_DoSniffing(RF_CODE_LEARN_NEW);
+
+							// start timeout timer
+							InitTimer_ms(1, LEARN_CMD_TIMEOUT_MS);
+							break;
+
+						default:
 							break;
 						}
 					}
