@@ -37,13 +37,13 @@ typedef struct
 	uint8_t BIT_LOW_DUTY;
 	// bit count for this protocol
 	uint8_t BIT_COUNT;
-} PROTOCOL_DATA_t;
+} protocol_data_t;
 
 #define SYNC_TOLERANCE 			200
 #define SYNC_TOLERANCE_0xA1		1000
 #define DUTY_CYCLE_TOLERANCE 	8
 
-#define UNKNOWN_IDENTIFIER				0x00
+#define UNKNOWN_IDENTIFIER		0x00
 
 /*
  * PT2260, EV1527,... original RF bridge protocol
@@ -51,14 +51,14 @@ typedef struct
  * The built-in oscillator circuitry of PT2260 allows a frequency in a range about 100-500kHz.
  *
  * 100kHz:
- * Alpha = 10µs
+ * Alpha = 10ï¿½s
  * Sync High: 128 * Alpha = 1.28ms
  * Sync Low: 3968 * Alpha = 39.68ms
  *
  * 500kHz:
- * Alpha = 2µs
- * Sync High: 128 * Alpha = 256µs
- * Sync Low: 3968 * Alpha = 7936µs
+ * Alpha = 2ï¿½s
+ * Sync High: 128 * Alpha = 256ï¿½s
+ * Sync Low: 3968 * Alpha = 7936ï¿½s
  *
  * Setting the range from 10000, 9000 - 11000
  */
@@ -97,10 +97,10 @@ typedef struct
  */
 #define PROTOCOLCOUNT	5
 #if PROTOCOLCOUNT > 0x7F
-#error Too much protocols are defined, stop!
+#error Too many protocols are defined, stop!
 #endif
 
-SI_SEGMENT_VARIABLE(PROTOCOL_DATA[PROTOCOLCOUNT], static const PROTOCOL_DATA_t, SI_SEG_CODE) =
+SI_SEGMENT_VARIABLE(PROTOCOL_DATA[PROTOCOLCOUNT], static const protocol_data_t, SI_SEG_CODE) =
 {
 		PT2260,
 		ROHRMOTOR24,
