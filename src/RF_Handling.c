@@ -524,12 +524,20 @@ void PCA0_StopSniffing(void)
 	rf_state = RF_IDLE;
 }
 
+//FIXME: What guarantees that this busy wait actually waits the correct time?
 void usleep(uint16_t us)
 {
-	if (us < 20) return;
+	if (us < 20) {
+		return;
+	}
+
 	us -= 20;
+
+	/* Why do we bitshift here? */
 	us <<= 1;
-	while (us > 0) us--;
+	while (us > 0) {
+		us--;
+	}
 }
 
 
