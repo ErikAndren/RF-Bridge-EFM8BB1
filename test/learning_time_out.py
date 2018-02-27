@@ -1,7 +1,15 @@
 #!/usr/bin/python
 
 import serial
+from optparse import OptionParser
 
-ser = serial.Serial('/dev/cu.usbserial-00000000', 19200, timeout=1);
+parser = OptionParser()
+parser.add_option("-p", "--port", dest="port", help="serial port to use")
+
+(options, args) = parser.parse_args()
+
+ser = serial.Serial(options.port, 19200, timeout=1);
+
+
 print(ser.name)
 ser.close()
