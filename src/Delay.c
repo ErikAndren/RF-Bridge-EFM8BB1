@@ -6,9 +6,9 @@
  */
 
 #include "Timer.h"
-//#include "Delay.h"
+#include "Delay.h"
 
 void delay_ms(uint16_t delay) {
-	InitTimer_ms(1, 1, delay);
-	WaitTimerFinished(1);
+	InitTimer_ms(TIMER3, 1, delay);
+	WaitTimerFinished(TIMER3);
 }
