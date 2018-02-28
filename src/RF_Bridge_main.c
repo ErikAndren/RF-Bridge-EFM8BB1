@@ -220,7 +220,7 @@ int main (void)
 							last_sniffing_command = PCA0_DoSniffing(RF_CODE_LEARN);
 
 							// start timeout timer
-							InitTimer_ms(1, LEARN_CMD_TIMEOUT_MS);
+							InitTimer_ms(TIMER3, 1, LEARN_CMD_TIMEOUT_MS);
 							break;
 
 						case RF_CODE_SNIFFING_ON:
@@ -253,7 +253,7 @@ int main (void)
 							last_sniffing_command = PCA0_DoSniffing(RF_CODE_LEARN_NEW);
 
 							// start timeout timer
-							InitTimer_ms(1, LEARN_CMD_TIMEOUT_MS);
+							InitTimer_ms(TIMER3, 1, LEARN_CMD_TIMEOUT_MS);
 							break;
 
 						default:
@@ -287,7 +287,7 @@ int main (void)
 				// clear RF status
 				rf_data_status = 0;
 
-			} else if (IsTimerFinished()) {
+			} else if (IsTimerFinished(TIMER3)) {
 				// check for learning timeout
 				SoundBuzzer_ms(LEARN_CMD_FAILURE_MS);
 
@@ -453,7 +453,7 @@ int main (void)
 						rf_data_status = 0;
 					}
 					// check for learning timeout
-					else if (IsTimerFinished())
+					else if (IsTimerFinished(TIMER3))
 					{
 						SoundBuzzer_ms(LEARN_CMD_FAILURE_MS);
 

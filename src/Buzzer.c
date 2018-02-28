@@ -9,9 +9,9 @@
 #include "Timer.h"
 
 void SoundBuzzer_ms(uint16_t interval) {
-	InitTimer_ms(1, interval);
+	InitTimer_ms(TIMER3, 1, interval);
 	BUZZER = BUZZER_ON;
-	WaitTimerFinished();
+	WaitTimerFinished(TIMER3);
 	BUZZER = BUZZER_OFF;
 }
 

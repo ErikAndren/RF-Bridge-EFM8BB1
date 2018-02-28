@@ -27,6 +27,7 @@ extern void enter_DefaultMode_from_RESET(void) {
 	PBCFG_0_enter_DefaultMode_from_RESET();
 	CLOCK_0_enter_DefaultMode_from_RESET();
 	TIMER01_0_enter_DefaultMode_from_RESET();
+	TIMER16_2_enter_DefaultMode_from_RESET();
 	TIMER16_3_enter_DefaultMode_from_RESET();
 	TIMER_SETUP_0_enter_DefaultMode_from_RESET();
 	PCA_0_enter_DefaultMode_from_RESET();
@@ -312,13 +313,13 @@ extern void TIMER_SETUP_0_enter_DefaultMode_from_RESET(void) {
 	 - System clock divided by 12
 	 - Counter/Timer 0 uses the system clock
 	 - Timer 2 high byte uses the clock defined by T2XCLK in TMR2CN0
-	 - Timer 2 low byte uses the clock defined by T2XCLK in TMR2CN0
+	 - Timer 2 low byte uses the system clock
 	 - Timer 3 high byte uses the clock defined by T3XCLK in TMR3CN0
 	 - Timer 3 low byte uses the system clock
 	 - Timer 1 uses the clock defined by the prescale field, SCA
 	 ***********************************************************************/
 	CKCON0 = CKCON0_SCA__SYSCLK_DIV_12 | CKCON0_T0M__SYSCLK
-			| CKCON0_T2MH__EXTERNAL_CLOCK | CKCON0_T2ML__EXTERNAL_CLOCK
+			| CKCON0_T2MH__EXTERNAL_CLOCK | CKCON0_T2ML__SYSCLK
 			| CKCON0_T3MH__EXTERNAL_CLOCK | CKCON0_T3ML__SYSCLK
 			| CKCON0_T1M__PRESCALE;
 	// [CKCON0 - Clock Control 0]$
@@ -533,6 +534,40 @@ extern void INTERRUPT_0_enter_DefaultMode_from_RESET(void) {
 
 	// $[IP - Interrupt Priority]
 	// [IP - Interrupt Priority]$
+
+}
+
+extern void TIMER16_2_enter_DefaultMode_from_RESET(void) {
+	// $[Timer Initialization]
+	// Save Timer Configuration
+	uint8_t TMR2CN0_TR2_save;
+	TMR2CN0_TR2_save = TMR2CN0 & TMR2CN0_TR2__BMASK;
+	// Stop Timer
+	TMR2CN0 &= ~(TMR2CN0_TR2__BMASK);
+	// [Timer Initialization]$
+
+	// $[TMR2CN0 - Timer 2 Control]
+	// [TMR2CN0 - Timer 2 Control]$
+
+	// $[TMR2H - Timer 2 High Byte]
+	// [TMR2H - Timer 2 High Byte]$
+
+	// $[TMR2L - Timer 2 Low Byte]
+	// [TMR2L - Timer 2 Low Byte]$
+
+	// $[TMR2RLH - Timer 2 Reload High Byte]
+	// [TMR2RLH - Timer 2 Reload High Byte]$
+
+	// $[TMR2RLL - Timer 2 Reload Low Byte]
+	// [TMR2RLL - Timer 2 Reload Low Byte]$
+
+	// $[TMR2CN0]
+	// [TMR2CN0]$
+
+	// $[Timer Restoration]
+	// Restore Timer Configuration
+	TMR2CN0 |= TMR2CN0_TR2_save;
+	// [Timer Restoration]$
 
 }
 

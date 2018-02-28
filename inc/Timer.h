@@ -11,9 +11,12 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-void InitTimer_us(uint16_t interval, uint16_t timeout);
-void InitTimer_ms(uint16_t interval, uint16_t timeout);
-void WaitTimerFinished(void);
-bool IsTimerFinished(void);
+#define TIMER2 0
+#define TIMER3 1
+
+void InitTimer_us(uint8_t timer, uint16_t interval, uint16_t timeout);
+void InitTimer_ms(uint8_t timer, uint16_t interval, uint16_t timeout);
+void WaitTimerFinished(uint8_t timer);
+bool IsTimerFinished(uint8_t timer);
 
 #endif /* INC_TIMER_H_ */

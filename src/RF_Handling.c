@@ -325,30 +325,30 @@ void SendRF_SYNC(void)
 	// switch to high
 	T_DATA = 1;
 	// start timer
-	InitTimer_ms(1, 7);
+	InitTimer_ms(TIMER3, 1, 7);
 	// wait until timer has finished
-	WaitTimerFinished();
+	WaitTimerFinished(TIMER3);
 	// switch to low
 	T_DATA = 0;
 	// start timer
-	InitTimer_us(10, 100);
+	InitTimer_us(TIMER3, 10, 100);
 	// wait until timer has finished
-	WaitTimerFinished();
+	WaitTimerFinished(TIMER3);
 	// switch to high
 	T_DATA = 1;
 	// do high time
 	// start timer
-	InitTimer_us(5, sync_high);
+	InitTimer_us(TIMER3, 5, sync_high);
 	// wait until timer has finished
-	WaitTimerFinished();
+	WaitTimerFinished(TIMER3);
 	// switch to low
 	T_DATA = 0;
 
 	// do low time
 	// start timer
-	InitTimer_us(5, sync_low);
+	InitTimer_us(TIMER3, 5, sync_low);
 	// wait until timer has finished
-	WaitTimerFinished();
+	WaitTimerFinished(TIMER3);
 	// disable P0.0 for I/O control, enter PCA mode
 	XBR1 |= XBR1_PCA0ME__CEX0_CEX1;
 }
@@ -540,7 +540,6 @@ void usleep(uint16_t us)
 	}
 }
 
-
 //-----------------------------------------------------------------------------
 // Send generic signal based on n time bucket pairs (high/low timing)
 //-----------------------------------------------------------------------------
@@ -554,12 +553,12 @@ void SendRFBuckets(const uint16_t buckets[], const uint8_t rfdata[], uint8_t n, 
 	XBR1 &= ~XBR1_PCA0ME__CEX0_CEX1;	// enable P0.0 for I/O control
 
 	T_DATA = 1;							// switch to high
-	InitTimer_ms(1, 7);					// start timer (7ms)
-	WaitTimerFinished();				// wait until timer has finished
+	InitTimer_ms(TIMER3, 1, 7);					// start timer (7ms)
+	WaitTimerFinished(TIMER3);				// wait until timer has finished
 
 	T_DATA = 0;							// switch to low
-	InitTimer_us(10, 100);				// start timer (1ms)
-	WaitTimerFinished();				// wait until timer has finished
+	InitTimer_us(TIMER3, 10, 100);				// start timer (1ms)
+	WaitTimerFinished(TIMER3);				// wait until timer has finished
 
 	do
 	{
