@@ -17,16 +17,20 @@ learn_cmd = 'AAA155'
 ser.write(learn_cmd.decode("hex"))
 
 ack = ser.read(3)
-print ack.encode('hex_codec')
+if ack == binascii.unhexlify('AAA055'):
+    print "PASS: Got correct ack"
+else:
+    print "FAIL: Didn't get correct ack " + binascii.hexlify(ack)
 
 # Wait for timeout
-ack = ser.read(3)
+result = ser.read(3)
 
-if ack == binascii.unhexlify('aaa255'):
-    print("PASS: Received expected value 0xaaa255")
+if result == binascii.unhexlify('AAA255'):
+    print "PASS: Received expected value " + binascii.hexlify(result)
 else:
-     print("FAIL: Received " + binascii.hexlify(ack) + ", expected value 0xaaa255")
+    print "FAIL: Received " + binascii.hexlify(result) + ", expected value aaa255"
 
-#print ack.encode('hex_codec')
+# Reply with ack
+ser.write(binascii.unhexlify('AAA055'))
 
 ser.close()
