@@ -48,6 +48,23 @@ void SiLabs_Startup (void)
 {
 }
 
+void checkAndSendAck(uint16_t uart_command) {
+	switch(uart_command)
+	{
+	case RF_CODE_LEARN:
+	case RF_CODE_SNIFFING_ON:
+	case RF_CODE_SNIFFING_OFF:
+	case RF_CODE_SNIFFING_ON_BUCKET:
+		// send acknowledge
+		uart_put_command(RF_CODE_ACK);
+		break;
+
+	case RF_CODE_ACK:
+		last_sniffing_command = PCA0_DoSniffing(last_sniffing_command);
+		break;
+	}
+}
+
 //-----------------------------------------------------------------------------
 // main() Routine
 // ----------------------------------------------------------------------------
@@ -130,7 +147,7 @@ int main (void)
 			}
 			break;
 
-			// sync byte got received, read command
+		// sync byte got received, read command
 		case SYNC_INIT:
 			next_uart_command = rxdata;
 			uart_state = SYNC_FINISH;
@@ -194,21 +211,7 @@ int main (void)
 					uart_state = IDLE;
 					uart_command = next_uart_command;
 
-					// check if ACK should be sent
-					switch(uart_command)
-					{
-					case RF_CODE_LEARN:
-					case RF_CODE_SNIFFING_ON:
-					case RF_CODE_SNIFFING_OFF:
-					case RF_CODE_SNIFFING_ON_BUCKET:
-						// send acknowledge
-						uart_put_command(RF_CODE_ACK);
-						break;
-
-					case RF_CODE_ACK:
-						last_sniffing_command = PCA0_DoSniffing(last_sniffing_command);
-						break;
-					}
+					checkAndSendAck(uart_command);
 
 					/* Act upon received command */
 					switch(uart_command) {
