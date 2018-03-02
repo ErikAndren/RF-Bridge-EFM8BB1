@@ -174,7 +174,7 @@ int main (void)
 			} // End uart_command switch
 			break; // End SYNC_INIT
 
-			// Receiving UART data length
+			// Receive UART data length
 			case RECEIVE_LEN:
 				position = 0;
 				len = rxdata;
@@ -185,7 +185,7 @@ int main (void)
 				}
 				break;
 
-			// Receiving UART data
+			// Receive UART data
 			case RECEIVING:
 				rf_data[position] = rxdata;
 				position++;
@@ -306,11 +306,6 @@ int main (void)
 
 		// do original transfer
 		case RF_CODE_RFOUT:
-			// only do the job if all data got received by UART
-			if (uart_state != IDLE) {
-				break;
-			}
-
 			// do transmit of the data
 			switch(rf_state)
 			{
