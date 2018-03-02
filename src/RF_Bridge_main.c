@@ -34,11 +34,6 @@
 
 #define BOOT_BUZZ_LENGTH_MS 50
 
-SI_SEGMENT_VARIABLE(uart_command, uart_command_t, SI_SEG_XDATA) = NONE;
-/* FIXME: Should be uart_command_t */
-SI_SEGMENT_VARIABLE(last_sniffing_command, uint8_t, SI_SEG_XDATA) = NONE;
-
-
 //-----------------------------------------------------------------------------
 // SiLabs_Startup() Routine
 // ----------------------------------------------------------------------------
@@ -56,6 +51,8 @@ int main (void)
 	uart_state_t uart_rx_state = IDLE;
 	uint8_t last_desired_rf_protocol;
 	uart_command_t next_uart_command = NONE;
+	uart_command_t uart_command, last_sniffing_command;
+
 	uint16_t rxdata;
 	uint8_t len;
 	uint8_t position;
