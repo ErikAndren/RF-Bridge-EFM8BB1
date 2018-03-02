@@ -51,9 +51,6 @@ void SiLabs_Startup (void)
 {
 }
 
-//-----------------------------------------------------------------------------
-// main() Routine
-// ----------------------------------------------------------------------------
 int main (void)
 {
 	uart_state_t uart_state = IDLE;
@@ -354,11 +351,6 @@ int main (void)
 
 			// transmit data on RF
 			case RF_CODE_RFOUT_NEW:
-				// only do the job if all data got received by UART
-				if (uart_state != IDLE) {
-					break;
-				}
-
 				// do transmit of the data
 				switch(rf_state)
 				{
@@ -459,11 +451,6 @@ int main (void)
 				case RF_CODE_RFOUT_BUCKET:
 				{
 					const uint8_t k = rf_data[0] * 2;
-
-					// only do the job if all data got received by UART
-					if (uart_state != IDLE) {
-						break;
-					}
 
 					if (rf_state == RF_IDLE) {
 						PCA0_StopRFListen();
