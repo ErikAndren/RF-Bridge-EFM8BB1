@@ -398,7 +398,7 @@ int main (void)
 					{
 						protocol_index = PCA0_GetProtocolIndex(rf_data[0]);
 
-						if (protocol_index != 0xFF)
+						if (protocol_index != NO_PROTOCOL_FOUND)
 						{
 							PCA0_InitTransmit(
 									protocol_data[protocol_index].sync_high, protocol_data[protocol_index].sync_low,

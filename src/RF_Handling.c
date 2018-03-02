@@ -353,7 +353,7 @@ void SendRF_SYNC(void)
 uint8_t PCA0_GetProtocolIndex(uint8_t identifier)
 {
 	uint8_t i;
-	uint8_t protocol_index = 0xFF;
+	uint8_t protocol_index = NO_PROTOCOL_FOUND;
 
 	// check first for valid identifier
 	if ((identifier > UNKNOWN_IDENTIFIER) && (identifier < NO_PROTOCOL_FOUND))
