@@ -6,10 +6,10 @@
  */
 
 #include <SI_EFM8BB1_Register_Enums.h>
-#include <string.h>
 #include "Globals.h"
 #include "uart_0.h"
 #include "uart.h"
+
 #include "RF_Handling.h"
 #include "RF_Protocols.h"
 
