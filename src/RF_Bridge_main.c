@@ -327,7 +327,6 @@ int main (void)
 
 			// wait until data got transfered
 			case RF_FINISHED:
-				// restart sniffing if it was active
 				PCA0_StartRFListen();
 				uart_command = last_listen_command;
 
@@ -342,9 +341,7 @@ int main (void)
 				// check if a RF signal got decoded
 				if ((rf_data_status & RF_DATA_RECEIVED_MASK) != 0)
 				{
-					uint8_t used_protocol = rf_data_status & 0x7F;
-					uart_put_RF_Data(RF_CODE_SNIFFING_ON, used_protocol);
-
+					uart_put_RF_Data(RF_CODE_SNIFFING_ON, rf_data_status & 0x7F);
 					rf_data_status = 0;
 				}
 				break;
@@ -399,18 +396,15 @@ int main (void)
 						else
 						{
 							uart_command = NONE;
+							break;
 						}
 					}
 
-					// if valid RF protocol start RF transmit
-					if (uart_command != NONE) {
-						PCA0_StartTransmit();
-					}
+					PCA0_StartTransmit();
 					break;
 
 				// wait until data got transfered
 				case RF_FINISHED:
-					// restart sniffing if it was active
 					PCA0_StartRFListen();
 					uart_command = last_listen_command;
 
@@ -485,8 +479,6 @@ int main (void)
 					if ((rf_data_status & RF_DATA_RECEIVED_MASK) != 0)
 					{
 						uart_put_RF_buckets(RF_CODE_SNIFFING_ON_BUCKET);
-
-						// clear RF status
 						rf_data_status = 0;
 					}
 					break;
