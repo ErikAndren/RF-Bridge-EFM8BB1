@@ -144,7 +144,6 @@ int main (void)
 				break;
 
 			case RF_CODE_RFOUT:
-				PCA0_StopRFListen();
 				uart_rx_state = RECEIVING;
 				position = 0;
 				len = 9;
@@ -247,6 +246,10 @@ int main (void)
 
 						// start timeout timer
 						InitTimer_ms(TIMER3, 1, LEARN_CMD_TIMEOUT_MS);
+						break;
+
+					case RF_CODE_RFOUT:
+						PCA0_StopRFListen();
 						break;
 
 					default:
