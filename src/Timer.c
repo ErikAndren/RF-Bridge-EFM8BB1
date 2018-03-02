@@ -68,7 +68,6 @@ void InitTimer_ms(uint8_t timer, uint16_t interval, uint16_t timeout)
 	StartTimer(timer, interval, timeout);
 }
 
-
 void WaitTimerFinished(uint8_t timer)
 {
 	// wait until timer has finished
