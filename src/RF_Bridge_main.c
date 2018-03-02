@@ -53,7 +53,7 @@ void SiLabs_Startup (void)
 
 int main (void)
 {
-	uart_state_t uart_state = IDLE;
+	uart_state_t uart_rx_state = IDLE;
 	uint8_t last_desired_rf_protocol;
 	uart_command_t next_uart_command = NONE;
 	uint16_t rxdata;
@@ -96,7 +96,7 @@ int main (void)
 		 ------------------------------------------*/
 		rxdata = uart_getc();
 
-		if (uart_state != IDLE) {
+		if (uart_rx_state != IDLE) {
 			if (IsTimerFinished(TIMER2) == true) {
 				// Three beeps for timeout
 				SoundBuzzer_ms(50);
@@ -105,7 +105,7 @@ int main (void)
 				delay_ms(200);
 				SoundBuzzer_ms(50);
 
-				uart_state = IDLE;
+				uart_rx_state = IDLE;
 				uart_command = NONE;
 			}
 		}
@@ -116,17 +116,17 @@ int main (void)
 			delay_ms(200);
 			SoundBuzzer_ms(50);
 
-			uart_state = IDLE;
+			uart_rx_state = IDLE;
 			uart_command = NONE;
 		}
 
 		// state machine for UART rx
-		switch(uart_state)
+		switch(uart_rx_state)
 		{
 		// check if UART_SYNC_INIT got received
 		case IDLE:
 			if (rxdata == RF_CODE_START) {
-				uart_state = SYNC_INIT;
+				uart_rx_state = SYNC_INIT;
 				InitTimer_ms(TIMER2, 1, CMD_TIMEOUT);
 			}
 			break;
@@ -134,7 +134,7 @@ int main (void)
 		// sync byte got received, read command
 		case SYNC_INIT:
 			next_uart_command = rxdata;
-			uart_state = SYNC_FINISH;
+			uart_rx_state = SYNC_FINISH;
 
 			switch(next_uart_command)
 			{
@@ -149,20 +149,20 @@ int main (void)
 
 			case RF_CODE_RFOUT:
 				PCA0_StopRFListen();
-				uart_state = RECEIVING;
+				uart_rx_state = RECEIVING;
 				position = 0;
 				len = 9;
 				break;
 
 			case RF_CODE_RFOUT_NEW:
 			case RF_CODE_RFOUT_BUCKET:
-				uart_state = RECEIVE_LEN;
+				uart_rx_state = RECEIVE_LEN;
 				break;
 
 			// Unknown command
 			default:
 				uart_command = NONE;
-				uart_state = IDLE;
+				uart_rx_state = IDLE;
 				break;
 			} // End uart_command switch
 			break; // End SYNC_INIT
@@ -172,9 +172,9 @@ int main (void)
 				position = 0;
 				len = rxdata;
 				if (len > 0) {
-					uart_state = RECEIVING;
+					uart_rx_state = RECEIVING;
 				} else {
-					uart_state = SYNC_FINISH;
+					uart_rx_state = SYNC_FINISH;
 				}
 				break;
 
@@ -184,7 +184,7 @@ int main (void)
 				position++;
 
 				if ((position == len) || (position >= RF_DATA_BUFFERSIZE)) {
-					uart_state = SYNC_FINISH;
+					uart_rx_state = SYNC_FINISH;
 				}
 				break;
 
@@ -192,7 +192,7 @@ int main (void)
 			case SYNC_FINISH:
 				if (rxdata == RF_CODE_STOP)
 				{
-					uart_state = IDLE;
+					uart_rx_state = IDLE;
 					uart_command = next_uart_command;
 
 					if (uart_command == RF_CODE_ACK) {
@@ -258,7 +258,7 @@ int main (void)
 					} // switch(uart_command)
 				} else {
 					/* Received something else then RF_CODE_STOP */
-					uart_state = IDLE;
+					uart_rx_state = IDLE;
 					uart_command = NONE;
 				}
 				break;
