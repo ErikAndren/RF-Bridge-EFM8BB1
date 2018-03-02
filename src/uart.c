@@ -86,11 +86,6 @@ void uart_wait_until_TX_finished(void)
 	while(UART_Buffer_Write_Len > 0);
 }
 
-uint8_t uart_getlen(void)
-{
-	return UART_RX_Buffer_Position - UART_Buffer_Read_Position;
-}
-
 /*************************************************************************
 Function: uart_getc()
 Purpose:  return byte from ringbuffer
@@ -151,43 +146,40 @@ void uart_put_uint16_t(uint8_t command, uint16_t value)
 	UART0_initTxPolling();
 }
 
-void uart_put_RF_Data(uint8_t Command, uint8_t used_protocol)
+void uart_put_RF_Data(uint8_t command, uint8_t used_protocol)
 {
 	uint8_t i = 0;
-	uint8_t b = 0;
+	uint8_t bytes = 0;
 
 	uart_putc(RF_CODE_START);
-	uart_putc(Command);
+	uart_putc(command);
 
+	//FIXME: Think this through? Why not just divide by 8
 	while(i < protocol_data[used_protocol].bit_count)
 	{
 		i += 8;
-		b++;
+		bytes++;
 	}
-	uart_putc(b+1);
+	uart_putc(bytes + 1);
 
-	// set identifier for this protocol
 	uart_putc(protocol_data[used_protocol].identifier);
 
-	// copy data to UART buffer
-	i = 0;
-	while(i < b)
-	{
+	//FIXME: <=?
+	for (i = 0; i < bytes; i++) {
 		uart_putc(rf_data[i]);
-		i++;
 	}
+
 	uart_putc(RF_CODE_STOP);
 
 	UART0_initTxPolling();
 }
 
-void uart_put_RF_CODE_Data(uint8_t Command)
+void uart_put_RF_CODE_Data(uint8_t command)
 {
-	uint8_t i = 0;
-	uint8_t b = 0;
+	uint8_t i;
 
 	uart_putc(RF_CODE_START);
-	uart_putc(Command);
+	uart_putc(command);
 
 	// sync low time
 	uart_putc((sync_low >> 8) & 0xFF);
@@ -199,35 +191,32 @@ void uart_put_RF_CODE_Data(uint8_t Command)
 	uart_putc((bit_high >> 8) & 0xFF);
 	uart_putc(bit_high & 0xFF);
 
-	// copy data to UART buffer
-	i = 0;
-	while(i < (24 / 8))
-	{
+	// Send RF data to UART
+	for (i = 0; i < 24 / 8; i++) {
 		uart_putc(rf_data[i]);
-		i++;
 	}
+
 	uart_putc(RF_CODE_STOP);
 
 	UART0_initTxPolling();
 }
 
-void uart_put_RF_buckets(uint8_t Command)
+void uart_put_RF_buckets(uint8_t command)
 {
-	uint8_t i = 0;
+	uint8_t i;
 
 	uart_putc(RF_CODE_START);
-	uart_putc(Command);
+	uart_putc(command);
 	uart_putc(bucket_count);
+
 	// start and wait for transmit
 	UART0_initTxPolling();
 	uart_wait_until_TX_finished();
 
 	// send up to 16 buckets
-	while (i < bucket_count)
-	{
+	for (i = 0; i < bucket_count; i++) {
 		uart_putc((buckets[i] >> 8) & 0xFF);
 		uart_putc(buckets[i] & 0xFF);
-		i++;
 	}
 
 	// add sync bucket
@@ -239,14 +228,12 @@ void uart_put_RF_buckets(uint8_t Command)
 	uart_wait_until_TX_finished();
 
 	// increment byte position if only high nibble got filled
-	if (actual_bit_of_byte == 0)
+	if (actual_bit_of_byte == 0) {
 		actual_byte++;
+	}
 
-	i = 0;
-	while(i < actual_byte)
-	{
+	for (i = 0; i < actual_byte; i++) {
 		uart_putc(rf_data[i]);
-		i++;
 
 		// be safe to have no buffer overflow
 		if ((i % UART_TX_BUFFER_SIZE) == 0)
