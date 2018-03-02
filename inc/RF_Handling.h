@@ -16,8 +16,8 @@ extern void SetPCA0DutyCycle(void);
 extern void SetTimer0Overflow(uint8_t T0_Overflow);
 extern void PCA0_StartTransmit(void);
 extern void PCA0_StopTransmit(void);
-extern uint8_t PCA0_DoSniffing(uint8_t active_command);
-extern void PCA0_StopSniffing(void);
+extern uint8_t PCA0_StartRFListen(uint8_t active_command);
+extern void PCA0_StopRFListen(void);
 extern void SendRFBuckets(uint16_t *buckets, uint8_t *rfdata, uint8_t n, uint8_t repeats);
 extern void Bucket_Received(uint16_t duration);
 

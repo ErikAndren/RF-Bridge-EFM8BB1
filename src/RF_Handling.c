@@ -473,7 +473,7 @@ void PCA0_StopTransmit(void)
 	rf_state = RF_FINISHED;
 }
 
-uint8_t PCA0_DoSniffing(uint8_t active_command)
+uint8_t PCA0_StartRFListen(uint8_t active_command)
 {
 	//Assignment of global variable
 	uint8_t ret = last_sniffing_command;
@@ -504,7 +504,7 @@ uint8_t PCA0_DoSniffing(uint8_t active_command)
 	return ret;
 }
 
-void PCA0_StopSniffing(void)
+void PCA0_StopRFListen(void)
 {
 	// stop PCA
 	PCA0_halt();

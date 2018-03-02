@@ -50,7 +50,7 @@ void SiLabs_Startup (void)
 
 void checkAndSendAck(uint16_t uart_command) {
 	if (uart_command == RF_CODE_ACK) {
-		last_sniffing_command = PCA0_DoSniffing(last_sniffing_command);
+		last_sniffing_command = PCA0_StartRFListen(last_sniffing_command);
 	} else {
 		uart_put_command(RF_CODE_ACK);
 	}
@@ -83,10 +83,10 @@ int main (void)
 #ifdef RF_LISTEN_ON_START
 	desired_rf_protocol = PT2260_IDENTIFIER;
 	rf_sniffing_mode = MODE_DUTY_CYCLE;
-	PCA0_DoSniffing(RF_CODE_RFIN);
+	PCA0_StartRFListen(RF_CODE_RFIN);
 	last_sniffing_command = RF_CODE_RFIN;
 #elif
-	PCA0_StopSniffing();
+	PCA0_StopRFListen();
 #endif
 
 	// enable global interrupts
@@ -155,7 +155,7 @@ int main (void)
 				break;
 
 			case RF_CODE_RFOUT:
-				PCA0_StopSniffing();
+				PCA0_StopRFListen();
 				uart_state = RECEIVING;
 				position = 0;
 				len = 9;
@@ -212,7 +212,7 @@ int main (void)
 						// set desired RF protocol PT2260
 						desired_rf_protocol = PT2260_IDENTIFIER;
 						rf_sniffing_mode = MODE_DUTY_CYCLE;
-						last_sniffing_command = PCA0_DoSniffing(RF_CODE_LEARN);
+						last_sniffing_command = PCA0_StartRFListen(RF_CODE_LEARN);
 
 						// start timeout timer
 						InitTimer_ms(TIMER3, 1, LEARN_CMD_TIMEOUT_MS);
@@ -221,7 +221,7 @@ int main (void)
 					case RF_CODE_SNIFFING_ON:
 						desired_rf_protocol = UNKNOWN_IDENTIFIER;
 						rf_sniffing_mode = MODE_DUTY_CYCLE;
-						PCA0_DoSniffing(RF_CODE_SNIFFING_ON);
+						PCA0_StartRFListen(RF_CODE_SNIFFING_ON);
 						last_sniffing_command = RF_CODE_SNIFFING_ON;
 						break;
 
@@ -229,13 +229,13 @@ int main (void)
 						desired_rf_protocol = PT2260_IDENTIFIER;
 						// re-enable default RF_CODE_RFIN sniffing
 						rf_sniffing_mode = MODE_DUTY_CYCLE;
-						PCA0_DoSniffing(RF_CODE_RFIN);
+						PCA0_StartRFListen(RF_CODE_RFIN);
 						last_sniffing_command = RF_CODE_RFIN;
 						break;
 
 					case RF_CODE_SNIFFING_ON_BUCKET:
 						rf_sniffing_mode = MODE_BUCKET;
-						last_sniffing_command = PCA0_DoSniffing(RF_CODE_SNIFFING_ON_BUCKET);
+						last_sniffing_command = PCA0_StartRFListen(RF_CODE_SNIFFING_ON_BUCKET);
 						break;
 
 					case RF_CODE_LEARN_NEW:
@@ -245,7 +245,7 @@ int main (void)
 						last_desired_rf_protocol = desired_rf_protocol;
 						desired_rf_protocol = UNKNOWN_IDENTIFIER;
 						rf_sniffing_mode = MODE_DUTY_CYCLE;
-						last_sniffing_command = PCA0_DoSniffing(RF_CODE_LEARN_NEW);
+						last_sniffing_command = PCA0_StartRFListen(RF_CODE_LEARN_NEW);
 
 						// start timeout timer
 						InitTimer_ms(TIMER3, 1, LEARN_CMD_TIMEOUT_MS);
@@ -274,7 +274,7 @@ int main (void)
 			{
 				SoundBuzzer_ms(LEARN_CMD_SUCCESS_MS);
 
-				PCA0_DoSniffing(last_sniffing_command);
+				PCA0_StartRFListen(last_sniffing_command);
 
 				uart_put_RF_CODE_Data(RF_CODE_LEARN_OK);
 
@@ -285,7 +285,7 @@ int main (void)
 				// check for learning timeout
 				SoundBuzzer_ms(LEARN_CMD_FAILURE_MS);
 
-				PCA0_DoSniffing(last_sniffing_command);
+				PCA0_StartRFListen(last_sniffing_command);
 
 				// send not-acknowledge
 				uart_put_command(RF_CODE_LEARN_KO);
@@ -329,7 +329,7 @@ int main (void)
 			// wait until data got transfered
 			case RF_FINISHED:
 				// restart sniffing if it was active
-				PCA0_DoSniffing(last_sniffing_command);
+				PCA0_StartRFListen(last_sniffing_command);
 
 				// send acknowledge
 				uart_put_command(RF_CODE_ACK);
@@ -362,7 +362,7 @@ int main (void)
 				{
 				// init and start RF transmit
 				case RF_IDLE:
-					PCA0_StopSniffing();
+					PCA0_StopRFListen();
 
 					// check if unknown protocol should be used
 					// byte 0:		0x7F Protocol identifier
@@ -417,7 +417,7 @@ int main (void)
 				// wait until data got transfered
 				case RF_FINISHED:
 					// restart sniffing if it was active
-					PCA0_DoSniffing(last_sniffing_command);
+					PCA0_StartRFListen(last_sniffing_command);
 
 					// send acknowledge
 					uart_put_command(RF_CODE_ACK);
@@ -434,7 +434,7 @@ int main (void)
 						SoundBuzzer_ms(LEARN_CMD_SUCCESS_MS);
 
 						desired_rf_protocol = last_desired_rf_protocol;
-						PCA0_DoSniffing(last_sniffing_command);
+						PCA0_StartRFListen(last_sniffing_command);
 
 						uart_put_RF_Data(RF_CODE_LEARN_OK_NEW, used_protocol);
 
@@ -447,7 +447,7 @@ int main (void)
 						SoundBuzzer_ms(LEARN_CMD_FAILURE_MS);
 
 						desired_rf_protocol = last_desired_rf_protocol;
-						PCA0_DoSniffing(last_sniffing_command);
+						PCA0_StartRFListen(last_sniffing_command);
 						// send not-acknowledge
 						uart_put_command(RF_CODE_LEARN_KO_NEW);
 					}
@@ -463,7 +463,7 @@ int main (void)
 					}
 
 					if (rf_state == RF_IDLE) {
-						PCA0_StopSniffing();
+						PCA0_StopRFListen();
 					} else if (rf_state != RF_FINISHED) {
 						break;
 					}
@@ -485,7 +485,7 @@ int main (void)
 						uart_put_command(RF_CODE_ACK);
 					}
 
-					PCA0_DoSniffing(last_sniffing_command);
+					PCA0_StartRFListen(last_sniffing_command);
 					break;
 				}
 
