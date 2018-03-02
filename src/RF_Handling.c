@@ -127,8 +127,7 @@ void PCA0_channel1EventCb()
 						used_protocol = RFInSync(desired_rf_protocol, capture_period_pos, capture_period_neg);
 
 						// check if a matching protocol got found
-						//FIXME: Hard coded value
-						if (used_protocol != 0x80)
+						if (used_protocol != NO_PROTOCOL_FOUND)
 						{
 							// backup sync time
 							sync_high = capture_period_pos;
@@ -231,7 +230,7 @@ void PCA0_channel2EventCb()
 //-----------------------------------------------------------------------------
 uint8_t RFInSync(uint8_t identifier, uint16_t period_pos, uint16_t period_neg)
 {
-	uint8_t ret = 0x80;
+	uint8_t ret = NO_PROTOCOL_FOUND;
 	uint8_t used_protocol;
 
 	switch(identifier)
@@ -357,7 +356,7 @@ uint8_t PCA0_GetProtocolIndex(uint8_t identifier)
 	uint8_t protocol_index = 0xFF;
 
 	// check first for valid identifier
-	if ((identifier > 0x00) && (identifier < 0x80))
+	if ((identifier > UNKNOWN_IDENTIFIER) && (identifier < NO_PROTOCOL_FOUND))
 	{
 		// find protocol index by identifier
 		for(i = 0; i < PROTOCOLCOUNT; i++)
