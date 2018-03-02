@@ -89,16 +89,16 @@ void PCA0_channel0EventCb()
 
 void PCA0_channel1EventCb()
 {
-	static uint16_t current_capture_value;
-	static uint16_t previous_capture_value_pos, previous_capture_value_neg;
-	static uint16_t capture_period_pos, capture_period_neg;
-
-	static uint8_t used_protocol;
-	static uint16_t low_pulse_time;
+	// Store most recent capture value
+	uint16_t current_capture_value = PCA0CP1 * 10;
+	uint16_t previous_capture_value_pos;
+	uint16_t capture_period_neg;
 	uint8_t current_duty_cycle;
 
-	// Store most recent capture value
-	current_capture_value = PCA0CP1 * 10;
+	static uint16_t capture_period_pos;
+	static uint16_t previous_capture_value_neg;
+	static uint16_t low_pulse_time;
+	static uint8_t used_protocol;
 
 	// positive edge
 	if (R_DATA)
@@ -179,8 +179,9 @@ void PCA0_channel1EventCb()
 							bit_low = capture_period_pos;
 							LED = LED_OFF;
 							// backup low bit pulse time to be able to determine the last bit
-							if (capture_period_pos > low_pulse_time)
+							if (capture_period_pos > low_pulse_time) {
 								low_pulse_time = capture_period_pos;
+							}
 						}
 
 						if (actual_bit_of_byte == 0)
@@ -242,7 +243,7 @@ uint8_t RFInSync(uint8_t identifier, uint16_t period_pos, uint16_t period_neg)
 		case UNKNOWN_IDENTIFIER:
 
 			// check all protocols
-			for (used_protocol = 0x00 ; used_protocol < PROTOCOLCOUNT; used_protocol++)
+			for (used_protocol = 0x00; used_protocol < PROTOCOLCOUNT; used_protocol++)
 			{
 				// check if SYNC high and SYNC low should be compared
 				if (protocol_data[used_protocol].sync_high > 0)
@@ -582,7 +583,6 @@ void SendRFBuckets(const uint16_t buckets[], const uint8_t rfdata[], uint8_t n, 
 	XBR1 |= XBR1_PCA0ME__CEX0_CEX1;
 	LED = LED_OFF;
 }
-
 
 bool probablyFooter(uint16_t duration)
 {
