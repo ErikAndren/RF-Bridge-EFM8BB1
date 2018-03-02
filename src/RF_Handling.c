@@ -190,8 +190,7 @@ void PCA0_channel1EventCb()
 						// check if all bits for this protocol got received
 						if (actual_bit == protocol_data[used_protocol].bit_count)
 						{
-							rf_data_status = used_protocol;
-							rf_data_status |= RF_DATA_RECEIVED_MASK;
+							rf_data_status = used_protocol | RF_DATA_RECEIVED_MASK;
 							LED = LED_OFF;
 							rf_state = RF_IDLE;
 						}
