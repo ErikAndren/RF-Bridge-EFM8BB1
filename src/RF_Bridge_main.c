@@ -50,13 +50,12 @@ int main (void)
 {
 	uart_state_t uart_rx_state = IDLE;
 	uint8_t last_desired_rf_protocol;
-	uart_command_t next_uart_command = NONE;
+	uart_command_t next_uart_command;
 	uart_command_t uart_command, last_sniffing_command;
 
 	uint16_t rxdata;
 	uint8_t len;
 	uint8_t position;
-	uint8_t protocol_index;
 
 	// Call hardware initialization routine
 	enter_DefaultMode_from_RESET();
@@ -382,7 +381,7 @@ int main (void)
 					// byte 1..N:	data to be transmitted
 					else
 					{
-						protocol_index = PCA0_GetProtocolIndex(rf_data[0]);
+						uint8_t protocol_index = PCA0_GetProtocolIndex(rf_data[0]);
 
 						if (protocol_index != NO_PROTOCOL_FOUND)
 						{
