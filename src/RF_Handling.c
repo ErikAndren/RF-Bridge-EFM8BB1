@@ -184,8 +184,9 @@ void PCA0_channel1EventCb()
 							}
 						}
 
-						if (actual_bit_of_byte == 0)
+						if (actual_bit_of_byte == 0) {
 							actual_bit_of_byte = 8;
+						}
 
 						// check if all bits for this protocol got received
 						if (actual_bit == protocol_data[used_protocol].bit_count)
@@ -215,12 +216,8 @@ void PCA0_channel1EventCb()
 		capture_period_pos = current_capture_value - previous_capture_value_pos;
 
 		// do sniffing by mode
-		switch (rf_sniffing_mode)
-		{
-			// do sniffing by bucket mode
-			case MODE_BUCKET:
-				Bucket_Received(capture_period_pos);
-				break;
+		if (rf_sniffing_mode == MODE_BUCKET) {
+			Bucket_Received(capture_period_pos);
 		}
 	}
 }
