@@ -20,9 +20,6 @@ SI_SEGMENT_VARIABLE(rf_state, rf_state_t, SI_SEG_XDATA) = RF_IDLE;
 SI_SEGMENT_VARIABLE(desired_rf_protocol, uint8_t, SI_SEG_XDATA) = UNKNOWN_IDENTIFIER;
 SI_SEGMENT_VARIABLE(rf_sniffing_mode, rf_sniffing_mode_t, SI_SEG_XDATA) = MODE_DUTY_CYCLE;
 
-/* FIXME: Should be uart_command_t */
-SI_SEGMENT_VARIABLE(last_sniffing_command, uint8_t, SI_SEG_XDATA) = NONE;
-
 SI_SEGMENT_VARIABLE(duty_cycle_high, uint8_t, SI_SEG_XDATA) = 0x56;
 SI_SEGMENT_VARIABLE(duty_cycle_low, uint8_t, SI_SEG_XDATA) = 0xAB;
 SI_SEGMENT_VARIABLE(t0_high, uint8_t, SI_SEG_XDATA) = 0x00;
@@ -472,11 +469,8 @@ void PCA0_StopTransmit(void)
 	rf_state = RF_FINISHED;
 }
 
-uint8_t PCA0_StartRFListen(uint8_t active_command)
+void PCA0_StartRFListen(void)
 {
-	//Assignment of global variable
-	uint8_t ret = last_sniffing_command;
-
 	// restore timer to 100000Hz, 10s interval
 	SetTimer0Overflow(0x0B);
 
@@ -492,15 +486,6 @@ uint8_t PCA0_StartRFListen(uint8_t active_command)
 
 	rf_state = RF_IDLE;
 	rf_data_status = 0;
-
-	// set uart_command back if sniffing was on
-	// FIXME: Global variable manipulation in different files
-	uart_command = active_command;
-
-	// backup uart_command to be able to enable the sniffing again
-	last_sniffing_command = active_command;
-
-	return ret;
 }
 
 void PCA0_StopRFListen(void)

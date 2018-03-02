@@ -16,7 +16,7 @@ extern void SetPCA0DutyCycle(void);
 extern void SetTimer0Overflow(uint8_t T0_Overflow);
 extern void PCA0_StartTransmit(void);
 extern void PCA0_StopTransmit(void);
-extern uint8_t PCA0_StartRFListen(uint8_t active_command);
+extern void PCA0_StartRFListen(void);
 extern void PCA0_StopRFListen(void);
 extern void SendRFBuckets(uint16_t *buckets, uint8_t *rfdata, uint8_t n, uint8_t repeats);
 extern void Bucket_Received(uint16_t duration);
@@ -58,8 +58,6 @@ extern SI_SEGMENT_VARIABLE(rf_data_status, uint8_t, SI_SEG_XDATA);
 extern SI_SEGMENT_VARIABLE(rf_state, rf_state_t, SI_SEG_XDATA);
 extern SI_SEGMENT_VARIABLE(desired_rf_protocol, uint8_t, SI_SEG_XDATA);
 extern SI_SEGMENT_VARIABLE(rf_sniffing_mode, rf_sniffing_mode_t, SI_SEG_XDATA);
-
-extern SI_SEGMENT_VARIABLE(last_sniffing_command, uint8_t, SI_SEG_XDATA);
 
 extern SI_SEGMENT_VARIABLE(duty_cycle_high, uint8_t, SI_SEG_XDATA);
 extern SI_SEGMENT_VARIABLE(duty_cycle_low, uint8_t, SI_SEG_XDATA);
