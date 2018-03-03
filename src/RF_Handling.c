@@ -524,7 +524,7 @@ void usleep(uint16_t us)
 //-----------------------------------------------------------------------------
 // Send generic signal based on n time bucket pairs (high/low timing)
 //-----------------------------------------------------------------------------
-void SendRFBuckets(const uint16_t buckets[], const uint8_t rfdata[], uint8_t n, uint8_t repeats)
+void SendRFBuckets(const uint16_t bkts[], const uint8_t rfdata[], uint8_t n, uint8_t repeats)
 {
 	// disable interrupts for RF receiving and transmitting
 	PCA0CPM1 &= ~PCA0CPM1_ECCF__ENABLED;
@@ -547,11 +547,11 @@ void SendRFBuckets(const uint16_t buckets[], const uint8_t rfdata[], uint8_t n, 
 
 		for (i = 0; i < n; i++)			// transmit n bucket pairs
 		{
-			uint16_t j = buckets[rfdata[i] >> 4];	// high bucket
+			uint16_t j = bkts[rfdata[i] >> 4];	// high bucket
 			T_DATA = 1;					// switch to high
 			usleep(j);
 
-			j = buckets[rfdata[i] & 0x0f];			// low bucket
+			j = bkts[rfdata[i] & 0x0f];			// low bucket
 			T_DATA = 0;					// switch to low
 			usleep(j);
 		}
@@ -564,18 +564,18 @@ void SendRFBuckets(const uint16_t buckets[], const uint8_t rfdata[], uint8_t n, 
 	LED = LED_OFF;
 }
 
-bool probablyFooter(uint16_t duration)
+static bool probablyFooter(uint16_t duration)
 {
 	return duration >= MIN_FOOTER_LENGTH;
 }
 
-bool matchesFooter(uint16_t duration)
+static bool matchesFooter(uint16_t duration)
 {
   uint16_t footer_delta = bucket_sync / 4;
   return (((bucket_sync - footer_delta) < duration) && (duration < (bucket_sync + footer_delta)));
 }
 
-bool findBucket(uint16_t duration, uint8_t *index)
+static bool findBucket(uint16_t duration, uint8_t *index)
 {
 	bool ret = false;
 	uint8_t i;
@@ -584,8 +584,9 @@ bool findBucket(uint16_t duration, uint8_t *index)
 		uint16_t delta = duration / 4 + duration / 8;
 		if (((buckets[i] - delta) < duration) && (duration < (buckets[i] + delta)))
 		{
-			if (index != NULL)
+			if (index != NULL) {
 				*index = i;
+			}
 
 			ret = true;
 			break;
