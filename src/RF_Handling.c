@@ -72,7 +72,7 @@ void PCA0_channel0EventCb()
 
 	if (actual_bit == bit_count)
 	{
-		PCA0_StopTransmit();
+		PCA0_StopRFTransmit();
 	}
 	else
 	{
@@ -368,7 +368,8 @@ uint8_t PCA0_GetProtocolIndex(uint8_t identifier)
 	return protocol_index;
 }
 
-void PCA0_InitTransmit(uint16_t sync_high_in, uint16_t sync_low_in, uint16_t bit_high_time, uint8_t bit_high_duty,
+void PCA0_InitTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
+		uint16_t bit_high_time, uint8_t bit_high_duty,
 		uint16_t bit_low_time, uint8_t bit_low_duty, uint8_t bitcount)
 {
 	uint16_t bit_time;
@@ -426,7 +427,7 @@ void SetTimer0Overflow(uint8_t T0_Overflow)
 	TH0 = (T0_Overflow << TH0_TH0__SHIFT);
 }
 
-void PCA0_StartTransmit(void)
+void PCA0_StartRFTransmit(void)
 {
 	actual_bit_of_byte = 0x08;
 	actual_bit_of_byte--;
@@ -443,7 +444,7 @@ void PCA0_StartTransmit(void)
 	PCA0_run();
 }
 
-void PCA0_StopTransmit(void)
+void PCA0_StopRFTransmit(void)
 {
 	// set duty cycle to zero
 	PCA0_writeChannel(PCA0_CHAN0, 0x0000);

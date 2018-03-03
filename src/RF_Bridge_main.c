@@ -316,13 +316,19 @@ int main (void)
 				// set high time of sync to (Tsyn / 3968) * 128
 				// set duty cycle of high and low bit to 75 and 25 % - unknown
 				//FIXME: Replace with struct
-				PCA0_InitTransmit((uint16_t)((((uint32_t)(*(uint16_t *)&rf_data[0])) * 128) / 3968),
-						*(uint16_t *)&rf_data[0], *(uint16_t *)&rf_data[4], 75, *(uint16_t *)&rf_data[2], 25, 24);
+				PCA0_InitTransmit(
+						(uint16_t) ((((uint32_t)(*(uint16_t *) &rf_data[0])) * 128) / 3968),
+						*(uint16_t *) &rf_data[0],
+						*(uint16_t *) &rf_data[4],
+						75,
+						*(uint16_t *) &rf_data[2],
+						25,
+						24);
 
 				actual_byte = 7;
 
 				// start RF transmit
-				PCA0_StartTransmit();
+				PCA0_StartRFTransmit();
 				break;
 
 			// wait until data got transfered
@@ -400,7 +406,7 @@ int main (void)
 						}
 					}
 
-					PCA0_StartTransmit();
+					PCA0_StartRFTransmit();
 					break;
 
 				// wait until data got transfered
