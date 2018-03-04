@@ -98,7 +98,6 @@ int main (void)
 				SoundBuzzer_ms(50);
 
 				uart_rx_state = IDLE;
-				uart_command = NONE;
 			}
 		}
 
@@ -109,7 +108,6 @@ int main (void)
 			SoundBuzzer_ms(50);
 
 			uart_rx_state = IDLE;
-			uart_command = NONE;
 		}
 
 		// state machine for UART rx
@@ -152,7 +150,6 @@ int main (void)
 
 			// Unknown command
 			default:
-				uart_command = NONE;
 				uart_rx_state = IDLE;
 				break;
 			} // End uart_command switch
@@ -252,7 +249,6 @@ int main (void)
 				} else {
 					/* Received something else then RF_CODE_STOP */
 					uart_rx_state = IDLE;
-					uart_command = NONE;
 				}
 				break;
 		} // switch uart_state
@@ -281,7 +277,6 @@ int main (void)
 				PCA0_StartRFListen();
 				uart_command = last_listen_command;
 
-				// send not-acknowledge
 				uart_put_command(RF_CODE_LEARN_NACK);
 			}
 			break; // case RF_CODE_LEARN
