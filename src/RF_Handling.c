@@ -61,6 +61,7 @@ void PCA0_intermediateOverflowCb()
 	}
 }
 
+// Called when transmitting
 void PCA0_channel0EventCb()
 {
 	// stop transfer if all bits are transmitted
@@ -84,6 +85,7 @@ void PCA0_channel0EventCb()
 	}
 }
 
+// Called when receiving
 void PCA0_channel1EventCb()
 {
 	// Store most recent capture value
@@ -314,34 +316,32 @@ void SendRF_SYNC(void)
 {
 	// enable P0.0 for I/O control
 	XBR1 &= ~XBR1_PCA0ME__CEX0_CEX1;
+
 	// do activate the SYN115 chip
-	// switch to high
 	T_DATA = 1;
-	// start timer
+
 	InitTimer_ms(TIMER3, 1, 7);
-	// wait until timer has finished
+
 	WaitTimerFinished(TIMER3);
-	// switch to low
-	T_DATA = 0;
-	// start timer
-	InitTimer_us(TIMER3, 10, 100);
-	// wait until timer has finished
-	WaitTimerFinished(TIMER3);
-	// switch to high
-	T_DATA = 1;
-	// do high time
-	// start timer
-	InitTimer_us(TIMER3, 5, sync_high);
-	// wait until timer has finished
-	WaitTimerFinished(TIMER3);
-	// switch to low
+
 	T_DATA = 0;
 
-	// do low time
-	// start timer
-	InitTimer_us(TIMER3, 5, sync_low);
-	// wait until timer has finished
+	InitTimer_us(TIMER3, 10, 100);
+
 	WaitTimerFinished(TIMER3);
+
+	T_DATA = 1;
+
+	InitTimer_us(TIMER3, 5, sync_high);
+
+	WaitTimerFinished(TIMER3);
+
+	T_DATA = 0;
+
+	InitTimer_us(TIMER3, 5, sync_low);
+
+	WaitTimerFinished(TIMER3);
+
 	// disable P0.0 for I/O control, enter PCA mode
 	XBR1 |= XBR1_PCA0ME__CEX0_CEX1;
 }
@@ -393,7 +393,6 @@ void PCA0_InitTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
 
 	// enable interrupt for RF transmitting
 	PCA0CPM0 |= PCA0CPM0_ECCF__ENABLED;
-
 	PCA0PWM |= PCA0PWM_ECOV__COVF_MASK_ENABLED;
 
 	// disable interrupt for RF receiving
@@ -405,7 +404,7 @@ void PCA0_InitTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
 	PCA0L = (0xFF << PCA0L_PCA0L__SHIFT);
 }
 
-void SetPCA0DutyCycle(void)
+static void SetPCA0DutyCycle(void)
 {
 	if(((rf_data[actual_byte] >> actual_bit_of_byte) & 0x01) == 0x01)
 	{
@@ -447,7 +446,8 @@ void PCA0_StartRFTransmit(void)
 void PCA0_StopRFTransmit(void)
 {
 	// set duty cycle to zero
-	PCA0_writeChannel(PCA0_CHAN0, 0x0000);
+	PCA0_writeChannel(PCA0_CHAN0, 0);
+
 	// disable interrupt for RF transmitting
 	PCA0CPM0 &= ~PCA0CPM0_ECCF__ENABLED;
 	PCA0PWM &= ~PCA0PWM_ECOV__COVF_MASK_ENABLED;
@@ -708,5 +708,5 @@ void Bucket_Received(uint16_t duration)
 				rf_state = RF_IDLE;
 			}
 			break;
-	}
+		}
 }
