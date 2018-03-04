@@ -34,8 +34,8 @@ typedef enum
 	IDLE,
 	SYNC_INIT,
 	SYNC_FINISH,
-	RECEIVE_LEN,
-	RECEIVING,
+	RECEIVE_PAYLOAD_LEN,
+	RECEIVE_PAYLOAD,
 	TRANSMIT,
 	COMMAND
 } uart_state_t;
@@ -58,7 +58,6 @@ typedef enum
 	RF_CODE_RFOUT_BUCKET = 0xB0,
 	RF_CODE_SNIFFING_ON_BUCKET = 0xB1
 } uart_command_t;
-
 
 //-----------------------------------------------------------------------------
 // Global Variables
