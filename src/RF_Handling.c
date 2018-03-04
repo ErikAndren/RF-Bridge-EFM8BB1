@@ -312,7 +312,7 @@ uint8_t RFInSync(uint8_t identifier, uint16_t period_pos, uint16_t period_neg)
 //-----------------------------------------------------------------------------
 // Send RF SYNC HIGH/LOW Routine
 //-----------------------------------------------------------------------------
-void SendRF_SYNC(void)
+static void SendRF_Sync(void)
 {
 	// enable P0.0 for I/O control
 	XBR1 &= ~XBR1_PCA0ME__CEX0_CEX1;
@@ -438,7 +438,7 @@ void PCA0_StartRFTransmit(void)
 	SetPCA0DutyCycle();
 
 	// make RF sync pulse
-	SendRF_SYNC();
+	SendRF_Sync();
 
 	PCA0_run();
 }
