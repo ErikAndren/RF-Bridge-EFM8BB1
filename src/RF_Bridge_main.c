@@ -299,6 +299,7 @@ int main (void)
 			{
 				uart_put_RF_CODE_Data(RF_CODE_RFIN);
 				rf_data_status = 0;
+				//FIXME: Goto wait for ack, if not resend a number of times
 			}
 			break;
 
@@ -325,9 +326,9 @@ int main (void)
 						25,
 						24);
 
+				//FIXME: Should be 0
 				actual_byte = 7;
 
-				// start RF transmit
 				PCA0_StartRFTransmit();
 				break;
 
