@@ -144,14 +144,14 @@ int main (void)
 				break;
 
 			case RF_CODE_RFOUT:
-				uart_rx_state = RECEIVING;
+				uart_rx_state = RECEIVE_PAYLOAD;
 				position = 0;
 				len = 9;
 				break;
 
 			case RF_CODE_RFOUT_NEW:
 			case RF_CODE_RFOUT_BUCKET:
-				uart_rx_state = RECEIVE_LEN;
+				uart_rx_state = RECEIVE_PAYLOAD_LEN;
 				break;
 
 			// Unknown command
@@ -162,19 +162,17 @@ int main (void)
 			} // End uart_command switch
 			break; // End SYNC_INIT
 
-			// Receive UART data length
-			case RECEIVE_LEN:
+			case RECEIVE_PAYLOAD_LEN:
 				position = 0;
 				len = rxdata;
 				if (len > 0) {
-					uart_rx_state = RECEIVING;
+					uart_rx_state = RECEIVE_PAYLOAD;
 				} else {
 					uart_rx_state = SYNC_FINISH;
 				}
 				break;
 
-			// Receive UART data
-			case RECEIVING:
+			case RECEIVE_PAYLOAD:
 				rf_data[position] = rxdata;
 				position++;
 
