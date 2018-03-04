@@ -20,8 +20,6 @@
 #define TDATA_ON	1
 #define TDATA_OFF	0
 
-#define RF_LISTEN_ON_START	true
-
 #define SYSCLK 24500000
 
 // USER PROTOTYPES

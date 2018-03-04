@@ -68,15 +68,11 @@ int main (void)
 	// enable UART
 	UART0_init(UART0_RX_ENABLE, UART0_WIDTH_8, UART0_MULTIPROC_DISABLE);
 
-#ifdef RF_LISTEN_ON_START
 	desired_rf_protocol = PT2260_IDENTIFIER;
 	rf_sniffing_mode = MODE_DUTY_CYCLE;
 	PCA0_StartRFListen();
 	last_listen_command = RF_CODE_RFIN;
 	uart_command = RF_CODE_RFIN;
-#elif
-	PCA0_StopRFListen();
-#endif
 
 	// enable global interrupts
 	IE_EA = 1;
@@ -330,7 +326,7 @@ int main (void)
 				PCA0_StartRFTransmit();
 				break;
 
-			// wait until data got transfered
+			// Will be called once transmit is done
 			case RF_FINISHED:
 				PCA0_StartRFListen();
 				uart_command = last_listen_command;
