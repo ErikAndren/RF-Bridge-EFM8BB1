@@ -5,7 +5,6 @@
  *****************************************************************************/
 
 #include "pca_0.h"
-
 #include "assert.h"
 
 uint8_t PCA0_getIntFlags()
@@ -136,7 +135,7 @@ void PCA0_initChannel(PCA0_Channel_t channel,
                      | PCA0CPM0_MAT__ENABLED \
                      | PCA0CPM0_TOG__DISABLED \
                      | PCA0CPM0_PWM__ENABLED
-  # define IS_16BIT 0x80
+  #define IS_16BIT 0x80
 
   uint8_t pwmValue = (uint8_t) mode;
 
@@ -148,7 +147,6 @@ void PCA0_initChannel(PCA0_Channel_t channel,
   if( (mode & NBIT_MASK) == NBIT_MASK)
   {
     PCA0PWM &= PWM_MASK;
-
 
     if(mode & IS_16BIT)
     {
@@ -189,7 +187,7 @@ void PCA0_reset()
 {
   //Reset channels
   uint8_t i;
-  for (i=0; i<=2; i++)
+  for (i = 0; i <= 2; i++)
   {
     PCA0_resetChannel(i);
   }
@@ -207,21 +205,22 @@ void PCA0_resetChannel(PCA0_Channel_t channel)
   PCA0POL &= ~(0x01 << channel);
   PCA0CENT &= ~(0x01 << channel);
 
-
   switch (channel)
   {
   case 0:
     PCA0CP0 = 0x00;
     PCA0CPM0 = 0x0;
-    return;
+    break;
+
   case 1:
     PCA0CP1 = 0x00;
     PCA0CPM1 = 0x0;
-    return;
+    break;
+
   case 2:
     PCA0CP2 = 0x00;
     PCA0CPM2 = 0x0;
-    return;
+    break;
   }
 }
 
@@ -264,6 +263,5 @@ SI_INTERRUPT(PCA0_ISR, PCA0_IRQn)
     PCA0_channel2EventCb();
   }
 }
-
 
 #endif //EFM8PDL_PCA0_USE_ISR
