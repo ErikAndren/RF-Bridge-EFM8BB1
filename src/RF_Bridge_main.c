@@ -315,8 +315,8 @@ int main (void)
 						25,
 						24);
 
-				//FIXME: Should be 0
-				actual_byte = 7;
+				/* 6 is where payload starts */
+				actual_byte = 6;
 
 				PCA0_StartRFTransmit();
 				break;
