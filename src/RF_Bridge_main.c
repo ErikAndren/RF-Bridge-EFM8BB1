@@ -272,17 +272,17 @@ int main (void)
 				PCA0_StartRFListen();
 				uart_command = last_listen_command;
 
-				uart_put_RF_CODE_Data(RF_CODE_LEARN_OK);
+				uart_put_RF_CODE_Data(RF_CODE_LEARN_ACK);
 
+			// check for learning timeout
 			} else if (IsTimerFinished(TIMER3)) {
-				// check for learning timeout
 				SoundBuzzer_ms(LEARN_CMD_FAILURE_MS);
 
 				PCA0_StartRFListen();
 				uart_command = last_listen_command;
 
 				// send not-acknowledge
-				uart_put_command(RF_CODE_LEARN_KO);
+				uart_put_command(RF_CODE_LEARN_NACK);
 			}
 			break; // case RF_CODE_LEARN
 
