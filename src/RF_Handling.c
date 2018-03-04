@@ -374,13 +374,13 @@ void PCA0_InitTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
 {
 	uint16_t bit_time;
 
-	bit_time = (100 * (uint32_t)bit_high_time) / bit_high_duty;
+	bit_time = (100 * (uint32_t) bit_high_time) / bit_high_duty;
 	// calculate T0_Overflow
-	t0_high = (uint8_t)(0x100 - ((uint32_t)SYSCLK / (0xFF * (1000000 / (uint32_t) bit_time))));
+	t0_high = (uint8_t)(0x100 - ((uint32_t) SYSCLK / (0xFF * (1000000 / (uint32_t) bit_time))));
 
-	bit_time = (100 * (uint32_t)bit_low_time) / bit_low_duty;
+	bit_time = (100 * (uint32_t) bit_low_time) / bit_low_duty;
 	// calculate T0_Overflow
-	t0_low = (uint8_t)(0x100 - ((uint32_t)SYSCLK / (0xFF * (1000000 / (uint32_t) bit_time))));
+	t0_low = (uint8_t)(0x100 - ((uint32_t) SYSCLK / (0xFF * (1000000 / (uint32_t) bit_time))));
 
 	// calculate high and low duty cycle
 	duty_cycle_high = (uint16_t)((bit_high_duty * 0xFF) / 100);
