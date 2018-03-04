@@ -47,6 +47,7 @@ void PCA0_overflowCb()
 {
 }
 
+// Half of symbol transmitted, check if to change output
 void PCA0_intermediateOverflowCb()
 {
 	if(((rf_data[actual_byte] >> actual_bit_of_byte) & 0x01) == 0x01)
@@ -61,7 +62,7 @@ void PCA0_intermediateOverflowCb()
 	}
 }
 
-// Called when transmitting
+// Called when transmitting of a symbol is done
 void PCA0_channel0EventCb()
 {
 	// stop transfer if all bits are transmitted
@@ -428,10 +429,8 @@ void SetTimer0Overflow(uint8_t T0_Overflow)
 
 void PCA0_StartRFTransmit(void)
 {
-	actual_bit_of_byte = 0x08;
-	actual_bit_of_byte--;
+	actual_bit_of_byte = 7;
 	actual_bit = 1;
-
 	rf_state = RF_TRANSMITTING;
 
 	// set first bit to be in sync when PCA0 is starting
@@ -451,14 +450,15 @@ void PCA0_StopRFTransmit(void)
 	// disable interrupt for RF transmitting
 	PCA0CPM0 &= ~PCA0CPM0_ECCF__ENABLED;
 	PCA0PWM &= ~PCA0PWM_ECOV__COVF_MASK_ENABLED;
+
 	// stop PCA
 	PCA0_halt();
 
 	// clear all interrupt flags of PCA0
 	PCA0CN0 &= ~(PCA0CN0_CF__BMASK
-	  		                       | PCA0CN0_CCF0__BMASK
-	  		                       | PCA0CN0_CCF1__BMASK
-	  		                       | PCA0CN0_CCF2__BMASK);
+	  		   | PCA0CN0_CCF0__BMASK
+	  		   | PCA0CN0_CCF1__BMASK
+	  		   | PCA0CN0_CCF2__BMASK);
 
 	// enable P0.0 for I/O control
 	XBR1 &= ~XBR1_PCA0ME__CEX0_CEX1;
