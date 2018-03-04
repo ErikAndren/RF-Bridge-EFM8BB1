@@ -236,7 +236,6 @@ uint8_t RFInSync(uint8_t identifier, uint16_t period_pos, uint16_t period_neg)
 	{
 		// protocol is undefined, do loop through all protocols
 		case UNKNOWN_IDENTIFIER:
-
 			// check all protocols
 			for (used_protocol = 0x00; used_protocol < PROTOCOLCOUNT; used_protocol++)
 			{
@@ -274,7 +273,7 @@ uint8_t RFInSync(uint8_t identifier, uint16_t period_pos, uint16_t period_neg)
 			used_protocol = PCA0_GetProtocolIndex(identifier);
 
 			// check if identifier got found in list
-			if (used_protocol == 0xFF) {
+			if (used_protocol == NO_PROTOCOL_FOUND) {
 				break;
 			}
 
