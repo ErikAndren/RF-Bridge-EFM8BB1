@@ -105,7 +105,7 @@ void PCA0_halt()
   PCA0CN0_CR = 0;
 }
 
-void PCA0_init(PCA0_Timebase_t  timebase, PCA0_IdleState_t idleState)
+void PCA0_init(PCA0_Timebase_t timebase, PCA0_IdleState_t idleState)
 {
   PCA0MD &= ~(PCA0MD_CPS__FMASK | PCA0MD_CIDL__BMASK);
   PCA0MD |= timebase + idleState;
@@ -230,35 +230,30 @@ SI_INTERRUPT(PCA0_ISR, PCA0_IRQn)
 {
   //Save and clear flags
   uint8_t flags = PCA0CN0 & (PCA0CN0_CF__BMASK
-  		                       | PCA0CN0_CCF0__BMASK
-  		                       | PCA0CN0_CCF1__BMASK
-  		                       | PCA0CN0_CCF2__BMASK);
+  		                   | PCA0CN0_CCF0__BMASK
+  		                   | PCA0CN0_CCF1__BMASK
+  		                   | PCA0CN0_CCF2__BMASK);
   PCA0CN0 &= ~flags;
 
-  if( (PCA0PWM & PCA0PWM_COVF__BMASK)
-      && (PCA0PWM & PCA0PWM_ECOV__BMASK))
+  if ((PCA0PWM & PCA0PWM_COVF__BMASK) && (PCA0PWM & PCA0PWM_ECOV__BMASK))
   {
     PCA0_intermediateOverflowCb();
   }
   PCA0PWM &= ~PCA0PWM_COVF__BMASK;
 
-  if((flags & PCA0CN0_CF__BMASK)
-     && (PCA0MD & PCA0MD_ECF__BMASK))
+  if ((flags & PCA0CN0_CF__BMASK) && (PCA0MD & PCA0MD_ECF__BMASK))
   {
     PCA0_overflowCb();
   }
-  if((flags & PCA0CN0_CCF0__BMASK)
-     && (PCA0CPM0 & PCA0CPM0_ECCF__BMASK))
+  if ((flags & PCA0CN0_CCF0__BMASK) && (PCA0CPM0 & PCA0CPM0_ECCF__BMASK))
   {
     PCA0_channel0EventCb();
   }
-  if((flags & PCA0CN0_CCF1__BMASK)
-    && (PCA0CPM1 & PCA0CPM1_ECCF__BMASK))
+  if ((flags & PCA0CN0_CCF1__BMASK) && (PCA0CPM1 & PCA0CPM1_ECCF__BMASK))
   {
     PCA0_channel1EventCb();
   }
-  if((flags & PCA0CN0_CCF2__BMASK)
-      && (PCA0CPM2 & PCA0CPM2_ECCF__BMASK))
+  if ((flags & PCA0CN0_CCF2__BMASK) && (PCA0CPM2 & PCA0CPM2_ECCF__BMASK))
   {
     PCA0_channel2EventCb();
   }
