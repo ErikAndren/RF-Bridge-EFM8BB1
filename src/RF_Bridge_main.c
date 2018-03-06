@@ -193,7 +193,6 @@ int main (void)
 				case RF_CODE_LEARN:
 					SoundBuzzer_ms(LEARN_CMD_START_MS);
 
-					// set desired RF protocol PT2260
 					desired_rf_protocol = PT2260_IDENTIFIER;
 					rf_sniffing_mode = MODE_DUTY_CYCLE;
 					PCA0_StartRFListen();

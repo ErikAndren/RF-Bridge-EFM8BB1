@@ -124,7 +124,7 @@ void PCA0_channel1EventCb()
 						}
 
 						// check all protocols in the list
-						used_protocol = RFInSync(desired_rf_protocol, capture_period_pos, capture_period_neg);
+						used_protocol = IdentifyRFProtocol(desired_rf_protocol, capture_period_pos, capture_period_neg);
 
 						// check if a matching protocol got found
 						if (used_protocol != NO_PROTOCOL_FOUND)
@@ -227,7 +227,7 @@ void PCA0_channel2EventCb()
 //-----------------------------------------------------------------------------
 // Check for a RF sync
 //-----------------------------------------------------------------------------
-uint8_t RFInSync(uint8_t identifier, uint16_t period_pos, uint16_t period_neg)
+uint8_t IdentifyRFProtocol(uint8_t identifier, uint16_t period_pos, uint16_t period_neg)
 {
 	uint8_t ret = NO_PROTOCOL_FOUND;
 	uint8_t used_protocol;
