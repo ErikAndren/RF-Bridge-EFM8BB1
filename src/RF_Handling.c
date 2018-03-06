@@ -224,10 +224,7 @@ void PCA0_channel2EventCb()
 {
 }
 
-//-----------------------------------------------------------------------------
-// Check for a RF sync
-//-----------------------------------------------------------------------------
-uint8_t IdentifyRFProtocol(uint8_t identifier, uint16_t period_pos, uint16_t period_neg)
+static uint8_t IdentifyRFProtocol(uint8_t identifier, uint16_t period_pos, uint16_t period_neg)
 {
 	uint8_t protocol_found = NO_PROTOCOL_FOUND;
 	uint8_t used_protocol;
@@ -262,27 +259,12 @@ uint8_t IdentifyRFProtocol(uint8_t identifier, uint16_t period_pos, uint16_t per
 				break;
 			}
 
-			// check if SYNC high and SYNC low should be compared
-			if (protocol_data[used_protocol].sync_high > 0)
+			if ((period_neg > (protocol_data[used_protocol].sync_low - SYNC_TOLERANCE_0xA1)) &&
+				(period_neg < (protocol_data[used_protocol].sync_low + SYNC_TOLERANCE_0xA1)))
 			{
-				if (
-					(period_pos > (protocol_data[used_protocol].sync_high - SYNC_TOLERANCE_0xA1)) &&
-					(period_pos < (protocol_data[used_protocol].sync_high + SYNC_TOLERANCE_0xA1)) &&
-					(period_neg > (protocol_data[used_protocol].sync_low - SYNC_TOLERANCE_0xA1)) &&
-					(period_neg < (protocol_data[used_protocol].sync_low + SYNC_TOLERANCE_0xA1))
-				)
-				{
-					protocol_found = used_protocol;
-					break;
-				}
-			}
-			// only SYNC low should be checked
-			else
-			{
-				if (
-					(period_neg > (protocol_data[used_protocol].sync_low - SYNC_TOLERANCE_0xA1)) &&
-					(period_neg < (protocol_data[used_protocol].sync_low + SYNC_TOLERANCE_0xA1))
-				)
+				if ((protocol_data[used_protocol].sync_high == 0) ||
+				   ((period_pos > (protocol_data[used_protocol].sync_high - SYNC_TOLERANCE_0xA1)) &&
+					(period_pos < (protocol_data[used_protocol].sync_high + SYNC_TOLERANCE_0xA1))))
 				{
 					protocol_found = used_protocol;
 					break;
