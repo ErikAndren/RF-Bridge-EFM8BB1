@@ -229,7 +229,7 @@ void PCA0_channel2EventCb()
 //-----------------------------------------------------------------------------
 uint8_t IdentifyRFProtocol(uint8_t identifier, uint16_t period_pos, uint16_t period_neg)
 {
-	uint8_t ret = NO_PROTOCOL_FOUND;
+	uint8_t protocol_found = NO_PROTOCOL_FOUND;
 	uint8_t used_protocol;
 
 	switch(identifier)
@@ -237,31 +237,16 @@ uint8_t IdentifyRFProtocol(uint8_t identifier, uint16_t period_pos, uint16_t per
 		// protocol is undefined, do loop through all protocols
 		case UNKNOWN_IDENTIFIER:
 			// check all protocols
-			for (used_protocol = 0x00; used_protocol < PROTOCOLCOUNT; used_protocol++)
+			for (used_protocol = 0; used_protocol < PROTOCOLCOUNT; used_protocol++)
 			{
-				// check if SYNC high and SYNC low should be compared
-				if (protocol_data[used_protocol].sync_high > 0)
+				if ((period_neg > (protocol_data[used_protocol].sync_low - SYNC_TOLERANCE)) &&
+					(period_neg < (protocol_data[used_protocol].sync_low + SYNC_TOLERANCE)))
 				{
-					if (
-						(period_pos > (protocol_data[used_protocol].sync_high - SYNC_TOLERANCE)) &&
-						(period_pos < (protocol_data[used_protocol].sync_high + SYNC_TOLERANCE)) &&
-						(period_neg > (protocol_data[used_protocol].sync_low - SYNC_TOLERANCE)) &&
-						(period_neg < (protocol_data[used_protocol].sync_low + SYNC_TOLERANCE))
-					)
+					if ((protocol_data[used_protocol].sync_high == 0) ||
+					   ((period_pos > (protocol_data[used_protocol].sync_high - SYNC_TOLERANCE)) &&
+						(period_pos < (protocol_data[used_protocol].sync_high + SYNC_TOLERANCE))))
 					{
-						ret = used_protocol;
-						break;
-					}
-				}
-				// only SYNC low should be checked
-				else
-				{
-					if (
-						(period_neg > (protocol_data[used_protocol].sync_low - SYNC_TOLERANCE)) &&
-						(period_neg < (protocol_data[used_protocol].sync_low + SYNC_TOLERANCE))
-					)
-					{
-						ret = used_protocol;
+						protocol_found = used_protocol;
 						break;
 					}
 				}
@@ -287,7 +272,7 @@ uint8_t IdentifyRFProtocol(uint8_t identifier, uint16_t period_pos, uint16_t per
 					(period_neg < (protocol_data[used_protocol].sync_low + SYNC_TOLERANCE_0xA1))
 				)
 				{
-					ret = used_protocol;
+					protocol_found = used_protocol;
 					break;
 				}
 			}
@@ -299,14 +284,14 @@ uint8_t IdentifyRFProtocol(uint8_t identifier, uint16_t period_pos, uint16_t per
 					(period_neg < (protocol_data[used_protocol].sync_low + SYNC_TOLERANCE_0xA1))
 				)
 				{
-					ret = used_protocol;
+					protocol_found = used_protocol;
 					break;
 				}
 			}
 			break;
 	}
 
-	return ret;
+	return protocol_found;
 }
 
 //-----------------------------------------------------------------------------
