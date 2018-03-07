@@ -82,6 +82,16 @@ typedef struct
  * Setting the range from 10000, 9000 - 11000
  */
 
+#define RF_TSYN_SZ 2
+#define RF_TSYN_POS 0
+#define RF_TLOW_SZ 2
+#define RF_TLOW_POS 2
+#define RF_THIGH_SZ 2
+#define RF_THIGH_POS 4
+#define RF_DATA_SZ 3
+#define RF_DATA_POS 6
+#define RF_INSTR_SZ (RF_TSYN_SZ + RF_TLOW_SZ + RF_THIGH_SZ + RF_DATA_SZ)
+
 #define PT2260_IDENTIFIER				0x01
 #define PT2260_ALPHA_STEP 128
 #define PT2260_SYNC_PERIOD 4096
@@ -90,7 +100,7 @@ typedef struct
 #define PT2260_BIT_PERIOD 1024
 
 #define PT2260				{PT2260_IDENTIFIER, 0, 10000, 1080, 360, 75, 25, 24, 0}
-
+#define PT2260_INDEX 0
 /*
  * Rohrmotor24
  * https://github.com/bjwelker/Raspi-Rollo/tree/master/Arduino/Rollo_Code_Receiver
