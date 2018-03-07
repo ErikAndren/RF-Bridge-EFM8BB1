@@ -297,15 +297,19 @@ int main (void)
 			{
 			// init and start RF transmit
 			case RF_IDLE:
-				// byte 0..1:	Tsyn syncronization time in us
+				// byte 0..1:	Tsyn synchronization time in us
 				// byte 2..3:	Tlow low level time in us
 				// byte 4..5:	Thigh high level time in us
 				// byte 6..7:	24bit Data
+				// FIXME: Should 3968 be 4096 which is the real period?
+				// FIXME: high = tsyn / 4096 * 128
+				// FIXME: low = tsyn / 4096 | 3968
+				// FIXME: Should
 				// set high time of sync to (Tsyn / 3968) * 128
 				// set duty cycle of high and low bit to 75 and 25 % - unknown
 				//FIXME: Replace with struct
 				PCA0_InitTransmit(
-						(uint16_t) ((((uint32_t)(*(uint16_t *) &rf_data[0])) * 128) / 3968),
+						(uint16_t) ((((uint32_t)(*(uint16_t *) &rf_data[0])) * PT2260_ALPHA_STEP) / 3968),
 						*(uint16_t *) &rf_data[0],
 						*(uint16_t *) &rf_data[4],
 						75,
