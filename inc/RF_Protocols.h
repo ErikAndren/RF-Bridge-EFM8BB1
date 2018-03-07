@@ -78,11 +78,17 @@ typedef struct
  * Sync High: 128 * Alpha = 256 us
  * Sync Low: 3968 * Alpha = 7936 us
  *
- * Where does this value come frome?
+ * Where does this value come from?
  * Setting the range from 10000, 9000 - 11000
  */
 
 #define PT2260_IDENTIFIER				0x01
+#define PT2260_ALPHA_STEP 128
+#define PT2260_SYNC_PERIOD 4096
+#define PT2260_SYNC_HIGH PT2260_ALPHA_STEP
+#define PT2260_SYNC_LOW (PT2260_SYNC_PERIOD - PT2260_SYNC_HIGH)
+#define PT2260_BIT_PERIOD 1024
+
 #define PT2260				{PT2260_IDENTIFIER, 0, 10000, 1080, 360, 75, 25, 24, 0}
 
 /*
