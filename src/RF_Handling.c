@@ -65,13 +65,14 @@ void PCA0_intermediateOverflowCb()
 // Called when transmitting of a symbol is done
 void PCA0_channel0EventCb()
 {
-	// stop transfer if all bits are transmitted
+	// Move on to next byte
 	if (actual_bit_of_byte == 0)
 	{
 		actual_byte++;
 		actual_bit_of_byte = 8;
 	}
 
+	// stop transfer if all bits are transmitted
 	if (actual_bit == bit_count)
 	{
 		PCA0_StopRFTransmit();
@@ -81,7 +82,7 @@ void PCA0_channel0EventCb()
 		actual_bit++;
 		actual_bit_of_byte--;
 
-		// set duty cycle for the next bit...
+		// set duty cycle for the next bit
 		SetPCA0DutyCycle();
 	}
 }
@@ -90,6 +91,7 @@ void PCA0_channel0EventCb()
 void PCA0_channel1EventCb()
 {
 	// Store most recent capture value
+	// FIXME: Why do we multiply this by 10?
 	uint16_t current_capture_value = PCA0CP1 * 10;
 	uint16_t previous_capture_value_pos;
 	uint16_t capture_period_neg;
@@ -119,17 +121,16 @@ void PCA0_channel1EventCb()
 					// check if we receive a sync
 					case RF_IDLE:
 						// check first if last decoded RF signal was cleared
+						// FIXME: Should we just drop the incoming message on the ground?
 						if (rf_data_status != 0) {
 							break;
 						}
 
-						// check all protocols in the list
 						used_protocol = IdentifyRFProtocol(desired_rf_protocol, capture_period_pos, capture_period_neg);
 
 						// check if a matching protocol got found
 						if (used_protocol != NO_PROTOCOL_FOUND)
 						{
-							// backup sync time
 							sync_high = capture_period_pos;
 							sync_low = capture_period_neg;
 							actual_bit_of_byte = 8;
@@ -139,9 +140,8 @@ void PCA0_channel1EventCb()
 							low_pulse_time = 0;
 							memset(rf_data, 0, sizeof(rf_data));
 							rf_state = RF_IN_SYNC;
-							break; // switch rf_state
 						}
-						break; // switch(rf_sniffing_mode)
+						break; // switch rf_state
 
 					// one matching sync got received
 					case RF_IN_SYNC:
@@ -171,9 +171,7 @@ void PCA0_channel1EventCb()
 							bit_high = capture_period_pos;
 							LED = LED_ON;
 							rf_data[(actual_bit - 1) / 8] |= (1 << actual_bit_of_byte);
-						}
-						else
-						{
+						} else {
 							// backup last bit high time
 							bit_low = capture_period_pos;
 							LED = LED_OFF;
@@ -196,7 +194,7 @@ void PCA0_channel1EventCb()
 						}
 						break;
 				}
-				break;
+				break; // switch(rf_sniffing_mode)
 
 				// do sniffing by bucket mode
 				case MODE_BUCKET:
@@ -284,29 +282,18 @@ static void SendRF_Sync(void)
 	// enable P0.0 for I/O control
 	XBR1 &= ~XBR1_PCA0ME__CEX0_CEX1;
 
-	// do activate the SYN115 chip
+	// Send ASK/On-off keying to SYN115 chip
 	T_DATA = 1;
-
 	InitTimer_ms(TIMER3, 1, 7);
-
 	WaitTimerFinished(TIMER3);
-
 	T_DATA = 0;
-
 	InitTimer_us(TIMER3, 10, 100);
-
 	WaitTimerFinished(TIMER3);
-
 	T_DATA = 1;
-
 	InitTimer_us(TIMER3, 5, sync_high);
-
 	WaitTimerFinished(TIMER3);
-
 	T_DATA = 0;
-
 	InitTimer_us(TIMER3, 5, sync_low);
-
 	WaitTimerFinished(TIMER3);
 
 	// disable P0.0 for I/O control, enter PCA mode
@@ -336,8 +323,8 @@ uint8_t PCA0_GetProtocolIndex(uint8_t identifier)
 }
 
 void PCA0_InitTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
-		uint16_t bit_high_time, uint8_t bit_high_duty,
-		uint16_t bit_low_time, uint8_t bit_low_duty, uint8_t bitcount)
+					   uint16_t bit_high_time, uint8_t bit_high_duty,
+		               uint16_t bit_low_time, uint8_t bit_low_duty, uint8_t bitcount)
 {
 	uint16_t bit_time;
 
@@ -346,6 +333,7 @@ void PCA0_InitTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
 	t0_high = (uint8_t)(0x100 - ((uint32_t) SYSCLK / (0xFF * (1000000 / (uint32_t) bit_time))));
 
 	bit_time = (100 * (uint32_t) bit_low_time) / bit_low_duty;
+
 	// calculate T0_Overflow
 	t0_low = (uint8_t)(0x100 - ((uint32_t) SYSCLK / (0xFF * (1000000 / (uint32_t) bit_time))));
 
@@ -373,13 +361,11 @@ void PCA0_InitTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
 
 static void SetPCA0DutyCycle(void)
 {
-	if(((rf_data[actual_byte] >> actual_bit_of_byte) & 0x01) == 0x01)
+	if (((rf_data[actual_byte] >> actual_bit_of_byte) & 0x01) == 0x01)
 	{
 		// bit 1
 		PCA0_writeChannel(PCA0_CHAN0, duty_cycle_high << 8);
-	}
-	else
-	{
+	} else {
 		// bit 0
 		PCA0_writeChannel(PCA0_CHAN0, duty_cycle_low << 8);
 	}
@@ -438,7 +424,8 @@ void PCA0_StopRFTransmit(void)
 
 void PCA0_StartRFListen(void)
 {
-	// restore timer to 100000Hz, 10s interval
+	// restore timer to 100000 Hz, 10 s interval
+	// FIXME: I don't understand this
 	SetTimer0Overflow(0x0B);
 
 	// enable interrupt for RF receiving
