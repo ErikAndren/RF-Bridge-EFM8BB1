@@ -284,11 +284,14 @@ static void SendRF_Sync(void)
 
 	// Send ASK/On-off keying to SYN115 chip
 	T_DATA = 1;
+
+	// What is happening here?
 	InitTimer_ms(TIMER3, 1, 7);
 	WaitTimerFinished(TIMER3);
 	T_DATA = 0;
 	InitTimer_us(TIMER3, 10, 100);
 	WaitTimerFinished(TIMER3);
+
 	T_DATA = 1;
 	InitTimer_us(TIMER3, 5, sync_high);
 	WaitTimerFinished(TIMER3);
@@ -328,22 +331,20 @@ void PCA0_InitRFTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
 {
 	uint16_t bit_time;
 
+	// set global variable
+	sync_high = sync_high_in;
+	sync_low = sync_low_in;
+
+	// calculate T0_Overflow
 	bit_time = (100 * (uint32_t) bit_high_time) / bit_high_duty;
-	// calculate T0_Overflow
 	t0_high = (uint8_t)(0x100 - ((uint32_t) SYSCLK / (0xFF * (1000000 / (uint32_t) bit_time))));
-
 	bit_time = (100 * (uint32_t) bit_low_time) / bit_low_duty;
-
-	// calculate T0_Overflow
 	t0_low = (uint8_t)(0x100 - ((uint32_t) SYSCLK / (0xFF * (1000000 / (uint32_t) bit_time))));
 
 	// calculate high and low duty cycle
 	duty_cycle_high = (uint16_t)((bit_high_duty * 0xFF) / 100);
 	duty_cycle_low = (uint16_t)((bit_low_duty * 0xFF) / 100);
 
-	// set global variable
-	sync_high = sync_high_in;
-	sync_low = sync_low_in;
 	bit_count = bitcount;
 
 	// enable interrupt for RF transmitting
@@ -389,6 +390,7 @@ void PCA0_StartRFTransmit(void)
 	SetPCA0DutyCycle();
 
 	// make RF sync pulse
+	// FIXME: According to PT2260 docs, sync pulse comes after payload
 	SendRF_Sync();
 
 	PCA0_run();
