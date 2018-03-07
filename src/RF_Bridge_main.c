@@ -297,33 +297,23 @@ int main (void)
 			{
 			// init and start RF transmit
 			case RF_IDLE:
-				// byte 0..1:	Tsyn synchronization time in us
-				// byte 2..3:	Tlow low level time in us
-				// byte 4..5:	Thigh high level time in us
-				// byte 6..7:	24bit Data
-				// FIXME: Should 3968 be 4096 which is the real period?
-				// FIXME: high = tsyn / 4096 * 128
-				// FIXME: low = tsyn / 4096 | 3968
-				// FIXME: Should
-				// set high time of sync to (Tsyn / 3968) * 128
-				// set duty cycle of high and low bit to 75 and 25 % - unknown
-				//FIXME: Replace with struct
-				PCA0_InitRFTransmit(
-						(uint16_t) ((((uint32_t)(*(uint16_t *) &rf_data[0])) * PT2260_ALPHA_STEP) / PT2260_SYNC_PERIOD),
-						*(uint16_t *) &rf_data[0],
-						*(uint16_t *) &rf_data[4],
-						75,
-						*(uint16_t *) &rf_data[2],
-						25,
-						24);
+			{
+				uint16_t sync_high = (uint16_t) ((((uint32_t) (*(uint16_t *) &rf_data[RF_TSYN_POS])) * PT2260_SYNC_HIGH) / PT2260_SYNC_PERIOD);
+				uint16_t sync_low = (uint16_t) ((((uint32_t) (*(uint16_t *) &rf_data[RF_TSYN_POS])) * PT2260_SYNC_LOW) / PT2260_SYNC_PERIOD);
+				uint16_t bit_high_t = *(uint16_t *) &rf_data[RF_THIGH_POS];
+				uint16_t bit_low_t = *(uint16_t *) &rf_data[RF_TLOW_POS];
 
-				/* 6 is where payload starts */
-				actual_byte = 6;
+				PCA0_InitRFTransmit(sync_high, sync_low,
+						bit_high_t, protocol_data[PT2260_INDEX].bit_high_duty,
+						bit_low_t, protocol_data[PT2260_INDEX].bit_low_duty,
+						protocol_data[PT2260_INDEX].bit_count);
+				actual_byte = RF_DATA_POS;
 
 				PCA0_StartRFTransmit();
 				break;
+			}
 
-				// Will be called once transmit is done
+			// Will be called once transmit is done
 			case RF_FINISHED:
 				PCA0_StartRFListen();
 				uart_command = last_listen_command;
