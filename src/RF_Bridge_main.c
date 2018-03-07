@@ -343,35 +343,31 @@ int main (void)
 				case RF_IDLE:
 					PCA0_StopRFListen();
 
-					// check if unknown protocol should be used
-					// byte 0:		0x7F Protocol identifier
-					// byte 1..2:	SYNC_HIGH
-					// byte 3..4:	SYNC_LOW
-					// byte 5..6:	BIT_HIGH_TIME
-					// byte 7:		BIT_HIGH_DUTY
-					// byte 8..9:	BIT_LOW_TIME
-					// byte 10:		BIT_LOW_DUTY
-					// byte 11:		BIT_COUNT + SYNC_BIT_COUNT in front of RF data
-					// byte 12..N:	RF data to send
-					if (rf_data[0] == 0x7F)
+					if (rf_data[RF_PROTOCOL_IDENT_POS] == CUSTOM_PROTOCOL_IDENT)
 					{
+						uint16_t sync_high = *(uint16_t *) &rf_data[CUSTOM_PROTOCOL_SYNC_HIGH_POS];
+						uint16_t sync_low = *(uint16_t *) &rf_data[CUSTOM_PROTOCOL_SYNC_LOW_POS];
+						uint16_t bit_high_t = *(uint16_t *) &rf_data[CUSTOM_PROTOCOL_BIT_HIGH_TIME_POS];
+						uint8_t bit_high_duty = rf_data[CUSTOM_PROTOCOL_BIT_HIGH_DUTY_POS];
+						uint16_t bit_low_t = *(uint16_t *) &rf_data[CUSTOM_PROTOCOL_BIT_LOW_TIME_POS];
+						uint8_t bit_low_duty = rf_data[CUSTOM_PROTOCOL_BIT_LOW_DUTY_POS];
+						uint8_t bit_count = rf_data[CUSTOM_PROTOCOL_BIT_COUNT_POS];
 
 						PCA0_InitRFTransmit(
-								*(uint16_t *)&rf_data[1],
-								*(uint16_t *)&rf_data[3],
-								*(uint16_t *)&rf_data[5],
-								rf_data[7],
-								*(uint16_t *)&rf_data[8],
-								rf_data[10],
-								rf_data[11]);
-
+								sync_high,
+								sync_low,
+								bit_high_t,
+								bit_high_duty,
+								bit_low_t,
+								bit_low_duty,
+								bit_count);
 						actual_byte = 12;
 					}
-					// byte 0:		Protocol identifier 0x01..0x7E
-					// byte 1..N:	data to be transmitted
 					else
 					{
-						uint8_t protocol_index = PCA0_GetProtocolIndex(rf_data[0]);
+						// byte 0:		Protocol identifier 0x01..0x7E
+						// byte 1..N:	data to be transmitted
+						uint8_t protocol_index = PCA0_GetProtocolIndex(rf_data[RF_PROTOCOL_IDENT_POS]);
 
 						if (protocol_index != NO_PROTOCOL_FOUND)
 						{
