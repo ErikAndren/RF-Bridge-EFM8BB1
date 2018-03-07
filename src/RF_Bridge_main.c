@@ -291,16 +291,15 @@ int main (void)
 			}
 			break;
 
-			// do original transfer
 		case RF_CODE_RFOUT:
 			// do transmit of the data
 			switch(rf_state)
 			{
 			// init and start RF transmit
 			case RF_IDLE:
-				// byte 0..1:	Tsyn
-				// byte 2..3:	Tlow
-				// byte 4..5:	Thigh
+				// byte 0..1:	Tsyn syncronization time in us
+				// byte 2..3:	Tlow low level time in us
+				// byte 4..5:	Thigh high level time in us
 				// byte 6..7:	24bit Data
 				// set high time of sync to (Tsyn / 3968) * 128
 				// set duty cycle of high and low bit to 75 and 25 % - unknown
@@ -362,7 +361,6 @@ int main (void)
 					// byte 12..N:	RF data to send
 					if (rf_data[0] == 0x7F)
 					{
-
 
 						PCA0_InitTransmit(
 								*(uint16_t *)&rf_data[1],
