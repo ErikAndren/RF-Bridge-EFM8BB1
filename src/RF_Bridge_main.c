@@ -309,7 +309,7 @@ int main (void)
 				// set duty cycle of high and low bit to 75 and 25 % - unknown
 				//FIXME: Replace with struct
 				PCA0_InitRFTransmit(
-						(uint16_t) ((((uint32_t)(*(uint16_t *) &rf_data[0])) * PT2260_ALPHA_STEP) / 3968),
+						(uint16_t) ((((uint32_t)(*(uint16_t *) &rf_data[0])) * PT2260_ALPHA_STEP) / PT2260_SYNC_PERIOD),
 						*(uint16_t *) &rf_data[0],
 						*(uint16_t *) &rf_data[4],
 						75,
