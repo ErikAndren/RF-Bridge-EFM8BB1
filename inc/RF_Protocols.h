@@ -65,7 +65,8 @@ typedef struct
  * This is only 12 bits but Sonoff format specifies 24 bit of payload
  * Takeaway is that Sonoff format transmits the encoded codeword i. e. each two bit set
  * would need to be parsed down to a one bit pattern.
- * This is probably fine and even better if floating bits are used
+ * This is probably fine and even better if floating bits are used.
+ * Also the sync bits come at the end but as it is likely sending multiple iterations one might just as well interpret it as the start
  *
  * 100kHz:
  * Alpha = 10 us
@@ -77,6 +78,7 @@ typedef struct
  * Sync High: 128 * Alpha = 256 us
  * Sync Low: 3968 * Alpha = 7936 us
  *
+ * Where does this value come frome?
  * Setting the range from 10000, 9000 - 11000
  */
 
