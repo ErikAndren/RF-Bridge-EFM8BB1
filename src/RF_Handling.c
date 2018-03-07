@@ -322,7 +322,7 @@ uint8_t PCA0_GetProtocolIndex(uint8_t identifier)
 	return protocol_index;
 }
 
-void PCA0_InitTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
+void PCA0_InitRFTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
 					   uint16_t bit_high_time, uint8_t bit_high_duty,
 		               uint16_t bit_low_time, uint8_t bit_low_duty, uint8_t bitcount)
 {
@@ -354,7 +354,7 @@ void PCA0_InitTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
 	PCA0CPM1 &= ~PCA0CPM1_ECCF__ENABLED;
 
 	/***********************************************************************
-	 - PCA Counter/Timer Low Byte = 0xFF
+	 - PCA Counter/Timer Low Byte = 0xFF, why?
 	 ***********************************************************************/
 	PCA0L = (0xFF << PCA0L_PCA0L__SHIFT);
 }

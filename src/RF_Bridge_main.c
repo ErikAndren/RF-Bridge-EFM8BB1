@@ -308,7 +308,7 @@ int main (void)
 				// set high time of sync to (Tsyn / 3968) * 128
 				// set duty cycle of high and low bit to 75 and 25 % - unknown
 				//FIXME: Replace with struct
-				PCA0_InitTransmit(
+				PCA0_InitRFTransmit(
 						(uint16_t) ((((uint32_t)(*(uint16_t *) &rf_data[0])) * PT2260_ALPHA_STEP) / 3968),
 						*(uint16_t *) &rf_data[0],
 						*(uint16_t *) &rf_data[4],
@@ -366,7 +366,7 @@ int main (void)
 					if (rf_data[0] == 0x7F)
 					{
 
-						PCA0_InitTransmit(
+						PCA0_InitRFTransmit(
 								*(uint16_t *)&rf_data[1],
 								*(uint16_t *)&rf_data[3],
 								*(uint16_t *)&rf_data[5],
@@ -385,7 +385,7 @@ int main (void)
 
 						if (protocol_index != NO_PROTOCOL_FOUND)
 						{
-							PCA0_InitTransmit(
+							PCA0_InitRFTransmit(
 									protocol_data[protocol_index].sync_high, protocol_data[protocol_index].sync_low,
 									protocol_data[protocol_index].bit_high_data, protocol_data[protocol_index].bit_high_duty,
 									protocol_data[protocol_index].bit_low_time, protocol_data[protocol_index].bit_low_duty,
