@@ -14,12 +14,12 @@ SI_SEGMENT_VARIABLE(Timer_Timeout[NO_TIMERS], uint16_t, SI_SEG_XDATA) = 0x0000;
 SI_SEGMENT_VARIABLE(Timer_Interval[NO_TIMERS], uint16_t, SI_SEG_XDATA) = 0x0000;
 
 static void StartTimer(uint8_t timer, uint16_t interval, uint16_t timeout) {
-	if (timer == 0) {
+	if (timer == TIMER2) {
 		TMR2CN0 |= TMR2CN0_TR2__RUN;
 		Timer_Timeout[0] = timeout;
 		Timer_Interval[0] = interval;
 
-	} else if (timer == 1) {
+	} else if (timer == TIMER3) {
 		TMR3CN0 |= TMR3CN0_TR3__RUN;
 		Timer_Timeout[1] = timeout;
 		Timer_Interval[1] = interval;
