@@ -11,8 +11,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define TIMER2 0
-#define TIMER3 1
+#define TIMER2 2
+#define TIMER3 3
 
 void InitTimer_us(uint8_t timer, uint16_t interval, uint16_t timeout);
 void InitTimer_ms(uint8_t timer, uint16_t interval, uint16_t timeout);
