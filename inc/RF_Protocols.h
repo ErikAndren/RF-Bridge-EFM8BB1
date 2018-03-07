@@ -37,7 +37,6 @@ typedef struct
 	uint8_t bit_count;
 	// bit count of SYNC bits
 	uint8_t sync_bit_count;
-
 } protocol_data_t;
 
 #define SYNC_TOLERANCE 			200
@@ -50,19 +49,37 @@ typedef struct
  * PT2260, EV1527,... original RF bridge protocol
  * http://www.princeton.com.tw/Portals/0/Product/PT2260_4.pdf
  * The built-in oscillator circuitry of PT2260 allows a frequency in a range about 100-500kHz.
+ * Only 100 - 300 kHz according to the datasheet
+ *
+ * Alpha is oscillating clock period
+ * Period is 4096 Alpha
+ * Sync high width is 128 Alpha
+ * Sync low width is 3968 Alpha
+ *
+ * Each bit is 1024 alpha
+ * Each bit is divided into two pulse cycles
+ * bit 0 is in 128 alpha steps: -___-___
+ * bit 1 is in 128 alpha steps: ---_---_
+ * Float is in 128 alpha steps: -___---_
+ * A message consists of A0 A1 A2 A3 A4 A5 A6 A7 A8/D3 A9/D2 D1 D0 Sync bit
+ * This is only 12 bits but Sonoff format specifies 24 bit of payload
+ * Takeaway is that Sonoff format transmits the encoded codeword i. e. each two bit set
+ * would need to be parsed down to a one bit pattern.
+ * This is probably fine and even better if floating bits are used
  *
  * 100kHz:
- * Alpha = 10�s
- * Sync High: 128 * Alpha = 1.28ms
- * Sync Low: 3968 * Alpha = 39.68ms
+ * Alpha = 10 us
+ * Sync High: 128 * Alpha = 1.28 ms
+ * Sync Low: 3968 * Alpha = 39.68 ms
  *
  * 500kHz:
- * Alpha = 2�s
- * Sync High: 128 * Alpha = 256�s
- * Sync Low: 3968 * Alpha = 7936�s
+ * Alpha = 2 us
+ * Sync High: 128 * Alpha = 256 us
+ * Sync Low: 3968 * Alpha = 7936 us
  *
  * Setting the range from 10000, 9000 - 11000
  */
+
 #define PT2260_IDENTIFIER				0x01
 #define PT2260				{PT2260_IDENTIFIER, 0, 10000, 1080, 360, 75, 25, 24, 0}
 
