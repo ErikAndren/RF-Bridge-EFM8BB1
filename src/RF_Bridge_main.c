@@ -307,9 +307,7 @@ int main (void)
 						bit_high_t, protocol_data[PT2260_INDEX].bit_high_duty,
 						bit_low_t, protocol_data[PT2260_INDEX].bit_low_duty,
 						protocol_data[PT2260_INDEX].bit_count);
-				actual_byte = RF_DATA_POS;
-
-				PCA0_StartRFTransmit();
+				PCA0_StartRFTransmit(RF_DATA_POS);
 				break;
 			}
 
@@ -361,7 +359,7 @@ int main (void)
 								bit_low_t,
 								bit_low_duty,
 								bit_count);
-						actual_byte = CUSTOM_PROTOCOL_DATA_POS;
+						PCA0_StartRFTransmit(CUSTOM_PROTOCOL_DATA_POS);
 					} else {
 						uint8_t protocol_index = PCA0_GetProtocolIndex(rf_data[RF_PROTOCOL_IDENT_POS]);
 
@@ -372,14 +370,9 @@ int main (void)
 									protocol_data[protocol_index].bit_high_data, protocol_data[protocol_index].bit_high_duty,
 									protocol_data[protocol_index].bit_low_time, protocol_data[protocol_index].bit_low_duty,
 									protocol_data[protocol_index].bit_count);
-							actual_byte = RF_PROTOCOL_START_POS;
-						} else {
-							uart_command = NONE;
-							break;
+							PCA0_StartRFTransmit(RF_PROTOCOL_START_POS);
 						}
 					}
-
-					PCA0_StartRFTransmit();
 					break;
 
 					// wait until data got transfered

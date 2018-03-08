@@ -380,10 +380,11 @@ void SetTimer0Overflow(uint8_t T0_Overflow)
 	TH0 = (T0_Overflow << TH0_TH0__SHIFT);
 }
 
-void PCA0_StartRFTransmit(void)
+void PCA0_StartRFTransmit(uint8_t payload_pos)
 {
 	actual_bit_of_byte = 7;
 	actual_bit = 1;
+	actual_byte = payload_pos;
 	rf_state = RF_TRANSMITTING;
 
 	// set first bit to be in sync when PCA0 is starting
