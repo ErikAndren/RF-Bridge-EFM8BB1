@@ -361,12 +361,8 @@ int main (void)
 								bit_low_t,
 								bit_low_duty,
 								bit_count);
-						actual_byte = 12;
-					}
-					else
-					{
-						// byte 0:		Protocol identifier 0x01..0x7E
-						// byte 1..N:	data to be transmitted
+						actual_byte = CUSTOM_PROTOCOL_DATA_POS;
+					} else {
 						uint8_t protocol_index = PCA0_GetProtocolIndex(rf_data[RF_PROTOCOL_IDENT_POS]);
 
 						if (protocol_index != NO_PROTOCOL_FOUND)
@@ -376,10 +372,8 @@ int main (void)
 									protocol_data[protocol_index].bit_high_data, protocol_data[protocol_index].bit_high_duty,
 									protocol_data[protocol_index].bit_low_time, protocol_data[protocol_index].bit_low_duty,
 									protocol_data[protocol_index].bit_count);
-							actual_byte = 1;
-						}
-						else
-						{
+							actual_byte = RF_PROTOCOL_START_POS;
+						} else {
 							uart_command = NONE;
 							break;
 						}
