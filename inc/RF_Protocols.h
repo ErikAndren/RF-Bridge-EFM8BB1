@@ -45,6 +45,11 @@ typedef struct
 
 #define UNKNOWN_IDENTIFIER		0x00
 
+#define RF_DATA_RECEIVED_MASK 0x80
+#define RF_PROTOCOL_MASK 0x7F
+#define NO_PROTOCOL_FOUND 0x80
+
+
 /*
  * PT2260, EV1527,... original RF bridge protocol
  * http://www.princeton.com.tw/Portals/0/Product/PT2260_4.pdf

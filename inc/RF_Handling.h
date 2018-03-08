@@ -46,9 +46,6 @@ typedef enum
 	MODE_BUCKET
 } rf_sniffing_mode_t;
 
-#define RF_DATA_RECEIVED_MASK 0x80
-#define NO_PROTOCOL_FOUND 0x80
-
 extern SI_SEGMENT_VARIABLE(rf_data[RF_DATA_BUFFERSIZE], uint8_t, SI_SEG_XDATA);
 
 // RF_DATA_STATUS

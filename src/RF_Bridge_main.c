@@ -329,7 +329,7 @@ int main (void)
 				// check if a RF signal got decoded
 				if ((rf_data_status & RF_DATA_RECEIVED_MASK) != 0)
 				{
-					uart_put_RF_Data(RF_CODE_SNIFFING_ON, rf_data_status & 0x7F);
+					uart_put_RF_Data(RF_CODE_SNIFFING_ON, rf_data_status & RF_PROTOCOL_MASK);
 					rf_data_status = 0;
 				}
 				break;
@@ -404,7 +404,7 @@ int main (void)
 						PCA0_StartRFListen();
 						uart_command = last_listen_command;
 
-						uart_put_RF_Data(RF_CODE_LEARN_OK_NEW, rf_data_status & 0x7F);
+						uart_put_RF_Data(RF_CODE_LEARN_OK_NEW, rf_data_status & RF_PROTOCOL_MASK);
 
 					}
 					// check for learning timeout
