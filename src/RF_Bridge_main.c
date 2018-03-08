@@ -269,7 +269,7 @@ int main (void)
 
 				uart_put_RF_CODE_Data(RF_CODE_LEARN_ACK);
 
-				// check for learning timeout
+			// check for learning timeout
 			} else if (IsTimerFinished(TIMER3)) {
 				SoundBuzzer_ms(LEARN_CMD_FAILURE_MS);
 
@@ -280,7 +280,7 @@ int main (void)
 			}
 			break; // case RF_CODE_LEARN
 
-			// do original sniffing
+		// do original sniffing
 		case RF_CODE_RFIN:
 			// check if a RF signal got decoded
 			if ((rf_data_status & RF_DATA_RECEIVED_MASK) != 0)
@@ -303,6 +303,7 @@ int main (void)
 				uint16_t bit_high_t = *(uint16_t *) &rf_data[RF_THIGH_POS];
 				uint16_t bit_low_t = *(uint16_t *) &rf_data[RF_TLOW_POS];
 
+				PCA0_StopRFListen();
 				PCA0_InitRFTransmit(sync_high, sync_low,
 						bit_high_t, protocol_data[PT2260_INDEX].bit_high_duty,
 						bit_low_t, protocol_data[PT2260_INDEX].bit_low_duty,
@@ -375,7 +376,7 @@ int main (void)
 					}
 					break;
 
-					// wait until data got transfered
+				// wait until data got transfered
 				case RF_FINISHED:
 					PCA0_StartRFListen();
 					uart_command = last_listen_command;
@@ -433,9 +434,7 @@ int main (void)
 					{
 						uart_command = NONE;
 						break;
-					}
-					else
-					{
+					} else {
 						SendRFBuckets((uint16_t *)(rf_data + 2), rf_data + k + 2, len - k - 2, rf_data[1]);
 						// send acknowledgment
 						uart_put_command(RF_CODE_ACK);
