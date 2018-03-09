@@ -121,12 +121,6 @@ void PCA0_channel1EventCb()
 				{
 					// check if we receive a sync
 					case RF_IDLE:
-						// check first if last decoded RF signal was cleared
-						// FIXME: Should we just drop the incoming message on the ground?
-						if (rf_data_status != 0) {
-							break;
-						}
-
 						used_protocol = IdentifyRFProtocol(desired_rf_protocol, capture_period_pos, capture_period_neg);
 
 						// check if a matching protocol got found
@@ -191,7 +185,7 @@ void PCA0_channel1EventCb()
 						{
 							rf_data_status = used_protocol | RF_DATA_RECEIVED_MASK;
 							LED = LED_OFF;
-							rf_state = RF_IDLE;
+							rf_state = RF_FINISHED;
 						}
 						break;
 				}
@@ -200,7 +194,7 @@ void PCA0_channel1EventCb()
 				// do sniffing by bucket mode
 				case MODE_BUCKET:
 					Bucket_Received(capture_period_neg);
-					break;
+				break;
 		}
 	}
 	// negative edge
@@ -407,7 +401,6 @@ void PCA0_StopRFTransmit(void)
 	PCA0CPM0 &= ~PCA0CPM0_ECCF__ENABLED;
 	PCA0PWM &= ~PCA0PWM_ECOV__COVF_MASK_ENABLED;
 
-	// stop PCA
 	PCA0_halt();
 
 	// clear all interrupt flags of PCA0
@@ -550,9 +543,6 @@ void Bucket_Received(uint16_t duration)
 		// check if we receive a sync
 		case RF_IDLE:
 			LED = LED_OFF;
-			// check first if last decoded RF signal was cleared
-			if (rf_data_status != 0)
-				break;
 
 			if (probablyFooter(duration))
 			{
@@ -614,12 +604,13 @@ void Bucket_Received(uint16_t duration)
 		case RF_DECODE_BUCKET:
 			// toggle led
 			LED = !LED;
+
 			// check if sync bucket got received
 			if (matchesFooter(duration))
 			{
 				rf_data_status |= RF_DATA_RECEIVED_MASK;
 				LED = LED_OFF;
-				rf_state = RF_IDLE;
+				rf_state = RF_FINISHED;
 			}
 			// check if bucket can be decoded
 			else if (findBucket(duration, &bucket_index))

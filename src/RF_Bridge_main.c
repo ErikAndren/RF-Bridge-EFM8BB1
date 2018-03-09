@@ -242,7 +242,7 @@ int main (void)
 					break;
 				} // switch(uart_command)
 			} else {
-				/* Received something else then RF_CODE_STOP */
+				// Received something else then RF_CODE_STOP
 				uart_rx_state = IDLE;
 			}
 			break;
@@ -256,7 +256,7 @@ int main (void)
 		// do original learning
 		case RF_CODE_LEARN:
 			// check if a RF signal got decoded
-			if ((rf_data_status & RF_DATA_RECEIVED_MASK) != 0)
+			if (rf_state == RF_FINISHED)
 			{
 				SoundBuzzer_ms(LEARN_CMD_SUCCESS_MS);
 
@@ -292,7 +292,7 @@ int main (void)
 						PCA0_StartRFListen();
 					}
 				}
-			} else if ((rf_data_status & RF_DATA_RECEIVED_MASK) != 0) {
+			} else if (rf_state == RF_FINISHED) {
 				// start wait for ack timeout timer
 				InitTimer_ms(TIMER3, 1, RFIN_CMD_TIMEOUT_MS);
 				waiting_for_uart_ack = true;
@@ -351,8 +351,7 @@ int main (void)
 						PCA0_StartRFListen();
 					}
 				}
-			} else if ((rf_data_status & RF_DATA_RECEIVED_MASK) != 0) {
-				// check if a RF signal got decoded
+			} else if (rf_state == RF_FINISHED) {
 				uart_put_RF_Data(RF_CODE_SNIFFING_ON, rf_data_status & RF_PROTOCOL_MASK);
 				waiting_for_uart_ack = true;
 			}
@@ -418,7 +417,7 @@ int main (void)
 			// new RF code learning
 			case RF_CODE_LEARN_NEW:
 				// check if a RF signal got decoded
-				if ((rf_data_status & RF_DATA_RECEIVED_MASK) != 0)
+				if (rf_state == RF_FINISHED)
 				{
 					SoundBuzzer_ms(LEARN_CMD_SUCCESS_MS);
 
@@ -475,7 +474,7 @@ int main (void)
 
 			case RF_CODE_SNIFFING_ON_BUCKET:
 				// check if a RF signal got decoded
-				if ((rf_data_status & RF_DATA_RECEIVED_MASK) != 0)
+				if (rf_state == RF_FINISHED)
 				{
 					uart_put_RF_buckets(RF_CODE_SNIFFING_ON_BUCKET);
 					rf_data_status = 0;
