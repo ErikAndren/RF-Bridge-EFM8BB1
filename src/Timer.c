@@ -104,13 +104,17 @@ SI_INTERRUPT (TIMER3_ISR, TIMER3_IRQn)
 	TMR3CN0 &= ~TMR3CN0_TF3H__SET;
 
 	// check if pulse time is over
-	if (Timer_Timeout[1] <= 0)
+	if (Timer_Timeout[1] == 0)
 	{
 		// stop timer
 		TMR3CN0 &= ~TMR3CN0_TR3__RUN;
 	}
 
-	Timer_Timeout[1] -= Timer_Interval[1];
+	if (Timer_Timeout[1] > Timer_Interval[1]) {
+		Timer_Timeout[1] -= Timer_Interval[1];
+	} else {
+		Timer_Timeout[1] = 0;
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -128,11 +132,15 @@ SI_INTERRUPT (TIMER2_ISR, TIMER2_IRQn)
 	TMR2CN0 &= ~TMR2CN0_TF2H__SET;
 
 	// check if pulse time is over
-	if (Timer_Timeout[0] <= 0)
+	if (Timer_Timeout[0] == 0)
 	{
 		// stop timer
 		TMR2CN0 &= ~TMR2CN0_TR2__RUN;
 	}
 
-	Timer_Timeout[0] -= Timer_Interval[0];
+	if (Timer_Timeout[0] > Timer_Interval[0]) {
+		Timer_Timeout[0] -= Timer_Interval[0];
+	} else {
+		Timer_Timeout[0] = 0;
+	}
 }
