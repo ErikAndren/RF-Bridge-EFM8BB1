@@ -28,7 +28,7 @@ static void StartTimer(uint8_t timer, uint16_t interval, uint16_t timeout) {
 
 void SetTimerReload(uint8_t timer, uint16_t reload)
 {
-	if (timer == 0) {
+	if (timer == TIMER2) {
 		/***********************************************************************
 	 	 - Timer 2 Reload High Byte
 		 ***********************************************************************/
@@ -38,7 +38,7 @@ void SetTimerReload(uint8_t timer, uint16_t reload)
 		 ***********************************************************************/
 		TMR2RLL = ((reload & 0xFF) << TMR2RLL_TMR2RLL__SHIFT);
 	}
-	if (timer == 1) {
+	if (timer == TIMER3) {
 		/***********************************************************************
 	 	 - Timer 3 Reload High Byte
 		 ***********************************************************************/
@@ -71,18 +71,18 @@ void InitTimer_ms(uint8_t timer, uint16_t interval, uint16_t timeout)
 void WaitTimerFinished(uint8_t timer)
 {
 	// wait until timer has finished
-	if (timer == 0) {
+	if (timer == TIMER2) {
 		while((TMR2CN0 & TMR2CN0_TR2__BMASK) == TMR2CN0_TR2__RUN);
-	} else if (timer == 1) {
+	} else if (timer == TIMER3) {
 		while((TMR3CN0 & TMR3CN0_TR3__BMASK) == TMR3CN0_TR3__RUN);
 	}
 }
 
 bool IsTimerFinished(uint8_t timer)
 {
-	if (timer == 0) {
+	if (timer == TIMER2) {
 		return ((TMR2CN0 & TMR2CN0_TR2__BMASK) != TMR2CN0_TR2__RUN);
-	} else if (timer == 1) {
+	} else if (timer == TIMER3) {
 		return ((TMR3CN0 & TMR3CN0_TR3__BMASK) != TMR3CN0_TR3__RUN);
 	} else {
 		return true;
@@ -122,7 +122,7 @@ SI_INTERRUPT (TIMER3_ISR, TIMER3_IRQn)
 //-----------------------------------------------------------------------------
 //
 // TIMER2 ISR Content goes here. Remember to clear flag bits:
-// TMR2CN0::TF3H (Timer # High Byte Overflow Flag)
+// TMR2CN0::TF2H (Timer # High Byte Overflow Flag)
 // TMR2CN0::TF3L (Timer # Low Byte Overflow Flag)
 //
 //-----------------------------------------------------------------------------
