@@ -119,7 +119,7 @@ void PCA0_channel1EventCb()
 			case MODE_DUTY_CYCLE:
 				switch (rf_state)
 				{
-					// check if we receive a sync
+					// check if we receive a sync from a known protocol
 					case RF_IDLE:
 						used_protocol = IdentifyRFProtocol(desired_rf_protocol, capture_period_pos, capture_period_neg);
 
@@ -133,9 +133,6 @@ void PCA0_channel1EventCb()
 							actual_bit = 0;
 							actual_sync_bit = 0;
 							low_pulse_time = 0;
-
-							//FIXME: Remove this, no need to clear data path
-							memset(rf_data, 0, sizeof(rf_data));
 							rf_state = RF_IN_SYNC;
 						}
 						break; // switch rf_state
