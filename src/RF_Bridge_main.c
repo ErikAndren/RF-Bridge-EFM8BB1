@@ -124,19 +124,9 @@ int main (void)
 			// sync byte got received, read command
 		case SYNC_INIT:
 			next_uart_command = rxdata;
-			uart_rx_state = SYNC_FINISH;
 
 			switch(next_uart_command)
 			{
-			/* Do nothing here but wait for RF_CODE_STOP */
-			case RF_CODE_LEARN:
-			case RF_CODE_SNIFFING_ON:
-			case RF_CODE_SNIFFING_OFF:
-			case RF_CODE_SNIFFING_ON_BUCKET:
-			case RF_CODE_LEARN_NEW:
-			case RF_CODE_ACK:
-				break;
-
 			case RF_CODE_RFOUT:
 				uart_rx_state = RECEIVE_PAYLOAD;
 				position = 0;
@@ -148,9 +138,8 @@ int main (void)
 				uart_rx_state = RECEIVE_PAYLOAD_LEN;
 				break;
 
-			// Unknown command
 			default:
-				uart_rx_state = IDLE;
+				uart_rx_state = SYNC_FINISH;
 				break;
 			} // End uart_command switch
 			break; // End SYNC_INIT
@@ -174,7 +163,6 @@ int main (void)
 			}
 			break;
 
-				// wait and check for UART_SYNC_END
 		case SYNC_FINISH:
 			if (rxdata == RF_CODE_STOP)
 			{
