@@ -405,12 +405,11 @@ int main (void)
 			case RF_TRANSMITTING:
 				break;
 
-				// wait until data got transfered
+			// wait until data got transfered
 			case RF_FINISHED:
 				PCA0_StartRFListen();
 				uart_command = last_uart_command;
 
-				// send acknowledge
 				uart_put_command(RF_CODE_ACK);
 				break;
 			} // switch rf_state
