@@ -51,7 +51,7 @@ void PCA0_overflowCb()
 // Half of symbol transmitted, check if to change output
 void PCA0_intermediateOverflowCb()
 {
-	if(((rf_data[actual_byte] >> actual_bit_of_byte) & 0x01) == 0x01)
+	if (((rf_data[actual_byte] >> actual_bit_of_byte) & 0x01) == 0x01)
 	{
 		// bit 1
 		SetTimer0Overflow(t0_high);
@@ -304,7 +304,7 @@ uint8_t PCA0_GetProtocolIndex(uint8_t identifier)
 	if ((identifier > UNKNOWN_IDENTIFIER) && (identifier < NO_PROTOCOL_FOUND))
 	{
 		// find protocol index by identifier
-		for(i = 0; i < PROTOCOLCOUNT; i++)
+		for (i = 0; i < PROTOCOLCOUNT; i++)
 		{
 			if (protocol_data[i].identifier == identifier)
 			{
