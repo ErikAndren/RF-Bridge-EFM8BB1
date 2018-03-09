@@ -130,7 +130,7 @@ int main (void)
 			case RF_CODE_RFOUT:
 				uart_rx_state = RECEIVE_PAYLOAD;
 				position = 0;
-				len = 9;
+				len = RF_INSTR_SZ;
 				break;
 
 			case RF_CODE_RFOUT_NEW:
@@ -140,7 +140,6 @@ int main (void)
 
 			default:
 				uart_rx_state = SYNC_FINISH;
-				break;
 			} // End uart_command switch
 			break; // End SYNC_INIT
 
@@ -167,13 +166,12 @@ int main (void)
 			if (rxdata == RF_CODE_STOP)
 			{
 				uart_rx_state = IDLE;
-				uart_command = next_uart_command;
 
-				if (uart_command == RF_CODE_ACK) {
-					PCA0_StartRFListen();
-					uart_command = last_listen_command;
+				if (next_uart_command == RF_CODE_ACK) {
+					StartRFListen();
 				} else {
 					uart_put_command(RF_CODE_ACK);
+					uart_command = next_uart_command;
 				}
 
 				/* Act upon received command */
