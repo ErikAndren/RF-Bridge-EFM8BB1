@@ -19,7 +19,7 @@ SI_SEGMENT_VARIABLE(rf_data[RF_DATA_BUFFERSIZE], uint8_t, SI_SEG_XDATA);
 SI_SEGMENT_VARIABLE(rf_data_status, uint8_t, SI_SEG_XDATA) = 0;
 SI_SEGMENT_VARIABLE(rf_state, rf_state_t, SI_SEG_XDATA) = RF_IDLE;
 SI_SEGMENT_VARIABLE(desired_rf_protocol, uint8_t, SI_SEG_XDATA) = UNKNOWN_IDENTIFIER;
-SI_SEGMENT_VARIABLE(rf_sniffing_mode, rf_sniffing_mode_t, SI_SEG_XDATA) = MODE_DUTY_CYCLE;
+SI_SEGMENT_VARIABLE(rf_listen_mode, rf_sniffing_mode_t, SI_SEG_XDATA) = MODE_DUTY_CYCLE;
 
 SI_SEGMENT_VARIABLE(duty_cycle_high, uint8_t, SI_SEG_XDATA) = 0x56;
 SI_SEGMENT_VARIABLE(duty_cycle_low, uint8_t, SI_SEG_XDATA) = 0xAB;
@@ -113,7 +113,7 @@ void PCA0_channel1EventCb()
 		capture_period_neg = current_capture_value - previous_capture_value_neg;
 
 		// do sniffing by mode
-		switch (rf_sniffing_mode)
+		switch (rf_listen_mode)
 		{
 			// do sniffing by duty cycle mode
 			case MODE_DUTY_CYCLE:
@@ -213,7 +213,7 @@ void PCA0_channel1EventCb()
 		capture_period_pos = current_capture_value - previous_capture_value_pos;
 
 		// do sniffing by mode
-		if (rf_sniffing_mode == MODE_BUCKET) {
+		if (rf_listen_mode == MODE_BUCKET) {
 			Bucket_Received(capture_period_pos);
 		}
 	}

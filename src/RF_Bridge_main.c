@@ -48,14 +48,13 @@ void SiLabs_Startup (void)
 
 int main (void)
 {
-	uart_state_t uart_rx_state = IDLE;
+	uart_state_t uart_rx_state;
 	uint8_t last_desired_rf_protocol;
 	uart_command_t next_uart_command;
-	uart_command_t uart_command, last_listen_command;
-
-	uint16_t rxdata;
-	uint8_t len;
-	uint8_t position;
+	uart_command_t uart_command, last_uart_command;
+	uint16_t uart_rx_data;
+	uint8_t uart_payload_len;
+	uint8_t uart_payload_pos;
 
 	// Call hardware initialization routine
 	enter_DefaultMode_from_RESET();
@@ -64,14 +63,14 @@ int main (void)
 	LED = LED_OFF;
 	BUZZER = BUZZER_OFF;
 	T_DATA = 1;
+	uart_rx_state = IDLE;
 
-	// enable UART
 	UART0_init(UART0_RX_ENABLE, UART0_WIDTH_8, UART0_MULTIPROC_DISABLE);
 
 	desired_rf_protocol = PT2260_IDENTIFIER;
-	rf_sniffing_mode = MODE_DUTY_CYCLE;
+	rf_listen_mode = MODE_DUTY_CYCLE;
 	PCA0_StartRFListen();
-	last_listen_command = RF_CODE_RFIN;
+	last_uart_command = RF_CODE_RFIN;
 	uart_command = RF_CODE_RFIN;
 
 	// enable global interrupts
@@ -86,7 +85,7 @@ int main (void)
 		/*------------------------------------------
 		 * check if something got received by UART
 		 ------------------------------------------*/
-		rxdata = uart_getc();
+		uart_rx_data = uart_getc();
 
 		if (uart_rx_state != IDLE) {
 			if (IsTimerFinished(TIMER2) == true) {
@@ -101,7 +100,7 @@ int main (void)
 			}
 		}
 
-		if (rxdata > UART_NO_DATA) {
+		if (uart_rx_data > UART_NO_DATA) {
 			// Two beeps for uart rx error
 			SoundBuzzer_ms(50);
 			delay_ms(200);
@@ -115,7 +114,7 @@ int main (void)
 		{
 		// check if UART_SYNC_INIT got received
 		case IDLE:
-			if (rxdata == RF_CODE_START) {
+			if (uart_rx_data == RF_CODE_START) {
 				uart_rx_state = SYNC_INIT;
 				InitTimer_ms(TIMER2, 1, CMD_TIMEOUT);
 			}
@@ -123,14 +122,14 @@ int main (void)
 
 			// sync byte got received, read command
 		case SYNC_INIT:
-			next_uart_command = rxdata;
+			next_uart_command = uart_rx_data;
 
 			switch(next_uart_command)
 			{
 			case RF_CODE_RFOUT:
 				uart_rx_state = RECEIVE_PAYLOAD;
-				position = 0;
-				len = RF_INSTR_SZ;
+				uart_payload_pos = 0;
+				uart_payload_len = RF_INSTR_SZ;
 				break;
 
 			case RF_CODE_RFOUT_NEW:
@@ -144,9 +143,9 @@ int main (void)
 			break; // End SYNC_INIT
 
 		case RECEIVE_PAYLOAD_LEN:
-			position = 0;
-			len = rxdata;
-			if (len > 0) {
+			uart_payload_pos = 0;
+			uart_payload_len = uart_rx_data;
+			if (uart_payload_len > 0) {
 				uart_rx_state = RECEIVE_PAYLOAD;
 			} else {
 				uart_rx_state = SYNC_FINISH;
@@ -154,21 +153,21 @@ int main (void)
 			break;
 
 		case RECEIVE_PAYLOAD:
-			rf_data[position] = rxdata;
-			position++;
+			rf_data[uart_payload_pos] = uart_rx_data;
+			uart_payload_pos++;
 
-			if ((position == len) || (position >= RF_DATA_BUFFERSIZE)) {
+			if ((uart_payload_pos == uart_payload_len) || (uart_payload_pos >= RF_DATA_BUFFERSIZE)) {
 				uart_rx_state = SYNC_FINISH;
 			}
 			break;
 
 		case SYNC_FINISH:
-			if (rxdata == RF_CODE_STOP)
+			if (uart_rx_data == RF_CODE_STOP)
 			{
 				uart_rx_state = IDLE;
 
 				if (next_uart_command == RF_CODE_ACK) {
-					StartRFListen();
+					PCA0_StartRFListen();
 				} else {
 					uart_put_command(RF_CODE_ACK);
 					uart_command = next_uart_command;
@@ -180,34 +179,34 @@ int main (void)
 					SoundBuzzer_ms(LEARN_CMD_START_MS);
 
 					desired_rf_protocol = PT2260_IDENTIFIER;
-					rf_sniffing_mode = MODE_DUTY_CYCLE;
+					rf_listen_mode = MODE_DUTY_CYCLE;
 					PCA0_StartRFListen();
-					last_listen_command = RF_CODE_LEARN;
+					last_uart_command = RF_CODE_LEARN;
 
-					// start timeout timer
+					// start learn timeout timer
 					InitTimer_ms(TIMER3, 1, LEARN_CMD_TIMEOUT_MS);
 					break;
 
 				case RF_CODE_SNIFFING_ON:
 					desired_rf_protocol = UNKNOWN_IDENTIFIER;
-					rf_sniffing_mode = MODE_DUTY_CYCLE;
+					rf_listen_mode = MODE_DUTY_CYCLE;
 					PCA0_StartRFListen();
-					last_listen_command = RF_CODE_SNIFFING_ON;
+					last_uart_command = RF_CODE_SNIFFING_ON;
 					break;
 
 				case RF_CODE_SNIFFING_OFF:
 					desired_rf_protocol = PT2260_IDENTIFIER;
 
 					// re-enable default RF_CODE_RFIN sniffing
-					rf_sniffing_mode = MODE_DUTY_CYCLE;
+					rf_listen_mode = MODE_DUTY_CYCLE;
 					PCA0_StartRFListen();
-					last_listen_command = RF_CODE_RFIN;
+					last_uart_command = RF_CODE_RFIN;
 					break;
 
 				case RF_CODE_SNIFFING_ON_BUCKET:
-					rf_sniffing_mode = MODE_BUCKET;
+					rf_listen_mode = MODE_BUCKET;
 					PCA0_StartRFListen();
-					last_listen_command = RF_CODE_SNIFFING_ON_BUCKET;
+					last_uart_command = RF_CODE_SNIFFING_ON_BUCKET;
 					break;
 
 				case RF_CODE_LEARN_NEW:
@@ -216,9 +215,9 @@ int main (void)
 					// enable sniffing for all known protocols
 					last_desired_rf_protocol = desired_rf_protocol;
 					desired_rf_protocol = UNKNOWN_IDENTIFIER;
-					rf_sniffing_mode = MODE_DUTY_CYCLE;
+					rf_listen_mode = MODE_DUTY_CYCLE;
 					PCA0_StartRFListen();
-					last_listen_command = RF_CODE_LEARN_NEW;
+					last_uart_command = RF_CODE_LEARN_NEW;
 
 					// start timeout timer
 					InitTimer_ms(TIMER3, 1, LEARN_CMD_TIMEOUT_MS);
@@ -251,7 +250,7 @@ int main (void)
 				SoundBuzzer_ms(LEARN_CMD_SUCCESS_MS);
 
 				PCA0_StartRFListen();
-				uart_command = last_listen_command;
+				uart_command = last_uart_command;
 
 				uart_put_RF_CODE_Data(RF_CODE_LEARN_ACK);
 
@@ -260,7 +259,7 @@ int main (void)
 				SoundBuzzer_ms(LEARN_CMD_FAILURE_MS);
 
 				PCA0_StartRFListen();
-				uart_command = last_listen_command;
+				uart_command = last_uart_command;
 
 				uart_put_command(RF_CODE_LEARN_NACK);
 			}
@@ -301,7 +300,7 @@ int main (void)
 			// Will be called once transmit is done
 			case RF_FINISHED:
 				PCA0_StartRFListen();
-				uart_command = last_listen_command;
+				uart_command = last_uart_command;
 
 				// send acknowledge
 				uart_put_command(RF_CODE_ACK);
@@ -365,7 +364,7 @@ int main (void)
 				// wait until data got transfered
 				case RF_FINISHED:
 					PCA0_StartRFListen();
-					uart_command = last_listen_command;
+					uart_command = last_uart_command;
 
 					// send acknowledge
 					uart_put_command(RF_CODE_ACK);
@@ -382,7 +381,7 @@ int main (void)
 
 						desired_rf_protocol = last_desired_rf_protocol;
 						PCA0_StartRFListen();
-						uart_command = last_listen_command;
+						uart_command = last_uart_command;
 
 						uart_put_RF_Data(RF_CODE_LEARN_OK_NEW, rf_data_status & RF_PROTOCOL_MASK);
 
@@ -394,7 +393,7 @@ int main (void)
 
 						desired_rf_protocol = last_desired_rf_protocol;
 						PCA0_StartRFListen();
-						uart_command = last_listen_command;
+						uart_command = last_uart_command;
 
 						// send not-acknowledge
 						uart_put_command(RF_CODE_LEARN_KO_NEW);
@@ -416,18 +415,18 @@ int main (void)
 					// byte 2*(1..k):		bucket time high
 					// byte 2*(1..k)+1:		bucket time low
 					// byte 2*k+2..N:		RF buckets to send
-					if ((k == 0) || (len < 4))
+					if ((k == 0) || (uart_payload_len < 4))
 					{
 						uart_command = NONE;
 						break;
 					} else {
-						SendRFBuckets((uint16_t *)(rf_data + 2), rf_data + k + 2, len - k - 2, rf_data[1]);
+						SendRFBuckets((uint16_t *)(rf_data + 2), rf_data + k + 2, uart_payload_len - k - 2, rf_data[1]);
 						// send acknowledgment
 						uart_put_command(RF_CODE_ACK);
 					}
 
 					PCA0_StartRFListen();
-					uart_command = last_listen_command;
+					uart_command = last_uart_command;
 					break;
 				}
 
