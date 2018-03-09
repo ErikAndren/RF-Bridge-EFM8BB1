@@ -76,8 +76,8 @@ int main (void)
 	desired_rf_protocol = PT2260_IDENTIFIER;
 	rf_listen_mode = MODE_DUTY_CYCLE;
 	PCA0_StartRFListen();
-	last_uart_command = RF_CODE_RFIN;
-	uart_command = RF_CODE_RFIN;
+	last_uart_command = RF_CODE_IN;
+	uart_command = RF_CODE_IN;
 
 	// enable global interrupts
 	IE_EA = 1;
@@ -132,14 +132,14 @@ int main (void)
 
 			switch(next_uart_command)
 			{
-			case RF_CODE_RFOUT:
+			case RF_CODE_OUT:
 				uart_rx_state = RECEIVE_PAYLOAD;
 				uart_payload_pos = 0;
 				uart_payload_len = RF_INSTR_SZ;
 				break;
 
-			case RF_CODE_RFOUT_NEW:
-			case RF_CODE_RFOUT_BUCKET:
+			case RF_PROTOCOL_OUT:
+			case RF_BUCKET_OUT:
 				uart_rx_state = RECEIVE_PAYLOAD_LEN;
 				break;
 
@@ -197,34 +197,34 @@ int main (void)
 					InitTimer_ms(TIMER3, 1, LEARN_CMD_TIMEOUT_MS);
 					break;
 
-				case RF_CODE_SNIFFING_ON:
+				case RF_PROTOCOL_SNIFFING_ON:
 					uart_put_command(RF_CODE_ACK);
 
 					desired_rf_protocol = UNKNOWN_IDENTIFIER;
 					rf_listen_mode = MODE_DUTY_CYCLE;
 
 					PCA0_StartRFListen();
-					last_uart_command = RF_CODE_SNIFFING_ON;
+					last_uart_command = RF_PROTOCOL_SNIFFING_ON;
 					break;
 
-				case RF_CODE_SNIFFING_OFF:
+				case RF_PROTOCOL_SNIFFING_OFF:
 					uart_put_command(RF_CODE_ACK);
 
 					desired_rf_protocol = PT2260_IDENTIFIER;
 					rf_listen_mode = MODE_DUTY_CYCLE;
 					PCA0_StartRFListen();
-					last_uart_command = RF_CODE_RFIN;
+					last_uart_command = RF_CODE_IN;
 					break;
 
-				case RF_CODE_SNIFFING_ON_BUCKET:
+				case RF_BUCKET_SNIFFING_ON:
 					uart_put_command(RF_CODE_ACK);
 
 					rf_listen_mode = MODE_BUCKET;
 					PCA0_StartRFListen();
-					last_uart_command = RF_CODE_SNIFFING_ON_BUCKET;
+					last_uart_command = RF_BUCKET_SNIFFING_ON;
 					break;
 
-				case RF_CODE_LEARN_NEW:
+				case RF_PROTOCOL_LEARN:
 					uart_put_command(RF_CODE_ACK);
 
 					SoundBuzzer_ms(LEARN_CMD_START_MS);
@@ -234,7 +234,7 @@ int main (void)
 					desired_rf_protocol = UNKNOWN_IDENTIFIER;
 					rf_listen_mode = MODE_DUTY_CYCLE;
 					PCA0_StartRFListen();
-					last_uart_command = RF_CODE_LEARN_NEW;
+					last_uart_command = RF_PROTOCOL_LEARN;
 
 					// start timeout timer
 					InitTimer_ms(TIMER3, 1, LEARN_CMD_TIMEOUT_MS);
@@ -265,7 +265,7 @@ int main (void)
 				PCA0_StartRFListen();
 				uart_command = last_uart_command;
 
-				uart_put_RF_CODE_Data(RF_CODE_LEARN_ACK);
+				uart_put_RF_CODE_Data(RF_CODE_LEARN_SUCCESS);
 
 			// check for learning timeout
 			} else if (IsTimerFinished(TIMER3) == true) {
@@ -274,18 +274,17 @@ int main (void)
 				PCA0_StartRFListen();
 				uart_command = last_uart_command;
 
-				uart_put_command(RF_CODE_LEARN_NACK);
+				uart_put_command(RF_CODE_LEARN_TIMEOUT);
 			}
 			break; // case RF_CODE_LEARN
 
-		// do original sniffing
-		case RF_CODE_RFIN:
+		case RF_CODE_IN:
 			// check if a RF signal got decoded
 			if (waiting_for_uart_ack == true) {
 				if (IsTimerFinished(TIMER3) == true) {
 					// Did not receive reply within the expected timeout, retry again
 					InitTimer_ms(TIMER3, 1, RFIN_CMD_TIMEOUT_MS);
-					uart_put_RF_CODE_Data(RF_CODE_RFIN);
+					uart_put_RF_CODE_Data(RF_CODE_IN);
 					uart_cmd_retry_cnt++;
 
 					if (uart_cmd_retry_cnt == RFIN_CMD_RETRIES) {
@@ -299,11 +298,11 @@ int main (void)
 				InitTimer_ms(TIMER3, 1, RFIN_CMD_TIMEOUT_MS);
 				waiting_for_uart_ack = true;
 				uart_cmd_retry_cnt = 0;
-				uart_put_RF_CODE_Data(RF_CODE_RFIN);
+				uart_put_RF_CODE_Data(RF_CODE_IN);
 			}
 			break;
 
-		case RF_CODE_RFOUT:
+		case RF_CODE_OUT:
 			// do transmit of the data
 			switch(rf_state)
 			{
@@ -339,12 +338,12 @@ int main (void)
 			break;
 
 		// do new sniffing
-		case RF_CODE_SNIFFING_ON:
+		case RF_PROTOCOL_SNIFFING_ON:
 			if (waiting_for_uart_ack == true) {
 				if (IsTimerFinished(TIMER3) == true) {
 					// Did not receive reply within the expected timeout, retry again
 					InitTimer_ms(TIMER3, 1, RFIN_CMD_TIMEOUT_MS);
-					uart_put_RF_CODE_Data(RF_CODE_RFIN);
+					uart_put_RF_CODE_Data(RF_CODE_IN);
 					uart_cmd_retry_cnt++;
 
 					if (uart_cmd_retry_cnt == RFIN_CMD_RETRIES) {
@@ -354,13 +353,13 @@ int main (void)
 					}
 				}
 			} else if (rf_state == RF_FINISHED) {
-				uart_put_RF_Data(RF_CODE_SNIFFING_ON, rf_protocol);
+				uart_put_RF_Data(RF_PROTOCOL_SNIFFING_ON, rf_protocol);
 				waiting_for_uart_ack = true;
 			}
 			break;
 
 		// transmit data on RF
-		case RF_CODE_RFOUT_NEW:
+		case RF_PROTOCOL_OUT:
 			// do transmit of the data
 			switch(rf_state)
 			{
@@ -415,59 +414,58 @@ int main (void)
 			} // switch rf_state
 			break;
 
-			// new RF code learning
-			case RF_CODE_LEARN_NEW:
-				// check if a RF signal got decoded
-				if (rf_state == RF_FINISHED)
-				{
-					SoundBuzzer_ms(LEARN_CMD_SUCCESS_MS);
-
-					desired_rf_protocol = last_desired_rf_protocol;
-					PCA0_StartRFListen();
-					uart_command = last_uart_command;
-
-					uart_put_RF_Data(RF_CODE_LEARN_OK_NEW, rf_protocol);
-
-				}
-				// check for learning timeout
-				else if (IsTimerFinished(TIMER3))
-				{
-					SoundBuzzer_ms(LEARN_CMD_FAILURE_MS);
-
-					desired_rf_protocol = last_desired_rf_protocol;
-					PCA0_StartRFListen();
-					uart_command = last_uart_command;
-
-					// send not-acknowledge
-					uart_put_command(RF_CODE_LEARN_KO_NEW);
-				}
-				break;
-
-			case RF_CODE_RFOUT_BUCKET:
+		// new RF code learning
+		case RF_PROTOCOL_LEARN:
+			// check if a RF signal got decoded
+			if (rf_state == RF_FINISHED)
 			{
-				// FIXME: Why * 2?
-				const uint8_t bkts = rf_data[BUCKET_NO_POS] * 2;
-				PCA0_StopRFListen();
+				SoundBuzzer_ms(LEARN_CMD_SUCCESS_MS);
 
-				// byte 2*(1..bkts):		bucket time high
-				// byte 2*(1..bkts)+1:		bucket time low
-				// byte 2*k+2..N:		RF buckets to send
-				SendRFBuckets((uint16_t *)(rf_data + 2), rf_data + bkts + 2, uart_payload_len - bkts - 2, rf_data[BUCKET_REP_POS]);
-
-				uart_put_command(RF_CODE_ACK);
-
+				desired_rf_protocol = last_desired_rf_protocol;
 				PCA0_StartRFListen();
 				uart_command = last_uart_command;
-				break;
-			}
 
-			case RF_CODE_SNIFFING_ON_BUCKET:
-				// check if a RF signal got decoded
-				if (rf_state == RF_FINISHED)
-				{
-					uart_put_RF_buckets(RF_CODE_SNIFFING_ON_BUCKET);
-				}
-				break;
+				uart_put_RF_Data(RF_PROTOCOL_LEARN_SUCCESS, rf_protocol);
+			}
+			// check for learning timeout
+			else if (IsTimerFinished(TIMER3))
+			{
+				SoundBuzzer_ms(LEARN_CMD_FAILURE_MS);
+
+				desired_rf_protocol = last_desired_rf_protocol;
+				PCA0_StartRFListen();
+				uart_command = last_uart_command;
+
+				// send not-acknowledge
+				uart_put_command(RF_PROTOCOL_LEARN_TIMEOUT);
+			}
+			break;
+
+		case RF_BUCKET_OUT:
+		{
+			// FIXME: Why * 2?
+			const uint8_t bkts = rf_data[BUCKET_NO_POS] * 2;
+			PCA0_StopRFListen();
+
+			// byte 2*(1..bkts):		bucket time high
+			// byte 2*(1..bkts)+1:		bucket time low
+			// byte 2*k+2..N:		RF buckets to send
+			SendRFBuckets((uint16_t *)(rf_data + 2), rf_data + bkts + 2, uart_payload_len - bkts - 2, rf_data[BUCKET_REP_POS]);
+
+			uart_put_command(RF_CODE_ACK);
+
+			PCA0_StartRFListen();
+			uart_command = last_uart_command;
+			break;
+		}
+
+		case RF_BUCKET_SNIFFING_ON:
+			// check if a RF signal got decoded
+			if (rf_state == RF_FINISHED)
+			{
+				uart_put_RF_buckets(RF_BUCKET_SNIFFING_ON);
+			}
+			break;
 		}
 	}
 }
