@@ -151,6 +151,8 @@ int main (void)
 		case RECEIVE_PAYLOAD_LEN:
 			uart_payload_pos = 0;
 			uart_payload_len = uart_rx_data;
+
+			//FIXME: Add check for if payload lenght is too small
 			if (uart_payload_len > 0) {
 				uart_rx_state = RECEIVE_PAYLOAD;
 			} else {
@@ -444,28 +446,16 @@ int main (void)
 
 			case RF_CODE_RFOUT_BUCKET:
 			{
-				const uint8_t k = rf_data[0] * 2;
+				// FIXME: Why * 2?
+				const uint8_t bkts = rf_data[BUCKET_NO_POS] * 2;
+				PCA0_StopRFListen();
 
-				if (rf_state == RF_IDLE) {
-					PCA0_StopRFListen();
-				} else if (rf_state != RF_FINISHED) {
-					break;
-				}
-
-				// byte 0:				number of buckets: k
-				// byte 1:				number of repeats: r
-				// byte 2*(1..k):		bucket time high
-				// byte 2*(1..k)+1:		bucket time low
+				// byte 2*(1..bkts):		bucket time high
+				// byte 2*(1..bkts)+1:		bucket time low
 				// byte 2*k+2..N:		RF buckets to send
-				if ((k == 0) || (uart_payload_len < 4))
-				{
-					uart_command = NONE;
-					break;
-				} else {
-					SendRFBuckets((uint16_t *)(rf_data + 2), rf_data + k + 2, uart_payload_len - k - 2, rf_data[1]);
-					// send acknowledgment
-					uart_put_command(RF_CODE_ACK);
-				}
+				SendRFBuckets((uint16_t *)(rf_data + 2), rf_data + bkts + 2, uart_payload_len - bkts - 2, rf_data[BUCKET_REP_POS]);
+
+				uart_put_command(RF_CODE_ACK);
 
 				PCA0_StartRFListen();
 				uart_command = last_uart_command;
