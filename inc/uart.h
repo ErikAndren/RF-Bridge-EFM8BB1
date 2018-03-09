@@ -14,6 +14,43 @@
 #define RF_CODE_START		0xAA
 #define RF_CODE_STOP		0x55
 
+#define SONOFF_TSYN_SZ 2
+#define SONOFF_TSYN_POS 0
+#define SONOFF_TLOW_SZ 2
+#define SONOFF_TLOW_POS 2
+#define SONOFF_THIGH_SZ 2
+#define SONOFF_THIGH_POS 4
+#define SONOFF_DATA_SZ 3
+#define SONOFF_DATA_POS 6
+#define SONOFF_INSTR_SZ (SONOFF_TSYN_SZ + SONOFF_TLOW_SZ + SONOFF_THIGH_SZ + SONOFF_DATA_SZ)
+
+#define RF_PROTOCOL_IDENT_POS 0
+#define RF_PROTOCOL_IDENT_SZ 1
+#define RF_PROTOCOL_START_POS 1
+
+#define CUSTOM_PROTOCOL_IDENT 0x7F
+#define CUSTOM_PROTOCOL_SYNC_HIGH_SZ 2
+#define CUSTOM_PROTOCOL_SYNC_HIGH_POS 1
+#define CUSTOM_PROTOCOL_SYNC_LOW_SZ 2
+#define CUSTOM_PROTOCOL_SYNC_LOW_POS 3
+#define CUSTOM_PROTOCOL_BIT_HIGH_TIME_SZ 2
+#define CUSTOM_PROTOCOL_BIT_HIGH_TIME_POS 5
+#define CUSTOM_PROTOCOL_BIT_HIGH_DUTY_SZ 1
+#define CUSTOM_PROTOCOL_BIT_HIGH_DUTY_POS 7
+#define CUSTOM_PROTOCOL_BIT_LOW_TIME_SZ 2
+#define CUSTOM_PROTOCOL_BIT_LOW_TIME_POS 8
+#define CUSTOM_PROTOCOL_BIT_LOW_DUTY_SZ 1
+#define CUSTOM_PROTOCOL_BIT_LOW_DUTY_POS 10
+#define CUSTOM_PROTOCOL_BIT_COUNT_SZ 1
+#define CUSTOM_PROTOCOL_BIT_COUNT_POS 11
+#define CUSTOM_PROTOCOL_BIT_COUNT_SZ 1
+#define CUSTOM_PROTOCOL_DATA_POS 12
+
+#define BUCKET_NO_POS 0
+#define BUCKET_NO_SZ 1
+#define BUCKET_REP_POS 1
+#define BUCKET_REP_SZ 1
+
 #define UART_RX_BUFFER_SIZE	16 + 4
 #define UART_TX_BUFFER_SIZE	32
 
@@ -63,8 +100,6 @@ typedef enum
 //-----------------------------------------------------------------------------
 extern SI_SEGMENT_VARIABLE(UART_RX_Buffer[UART_RX_BUFFER_SIZE], uint8_t, SI_SEG_XDATA);
 extern SI_SEGMENT_VARIABLE(UART_TX_Buffer[UART_TX_BUFFER_SIZE], uint8_t, SI_SEG_DATA);
-extern SI_SEGMENT_VARIABLE(uart_state, uart_state_t, SI_SEG_XDATA);
-extern SI_SEGMENT_VARIABLE(uart_command, uart_command_t, SI_SEG_XDATA);
 
 extern void uart_buffer_reset(void);
 extern void uart_wait_until_TX_finished(void);
@@ -77,6 +112,5 @@ extern void uart_put_uint16_t(uint8_t command, uint16_t value);
 extern void uart_put_RF_Data(uint8_t Command, uint8_t used_protocol);
 extern void uart_put_RF_CODE_Data(uint8_t Command);
 extern void uart_put_RF_buckets(uint8_t Command);
-
 
 #endif /* INC_UART_H_ */

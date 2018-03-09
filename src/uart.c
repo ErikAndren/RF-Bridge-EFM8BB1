@@ -192,7 +192,7 @@ void uart_put_RF_CODE_Data(uint8_t command)
 	uart_putc(bit_high & 0xFF);
 
 	// Send RF data to UART
-	for (i = 0; i < RF_DATA_SZ; i++) {
+	for (i = 0; i < SONOFF_DATA_SZ; i++) {
 		uart_putc(rf_data[i]);
 	}
 

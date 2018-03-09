@@ -135,7 +135,7 @@ int main (void)
 			case RF_CODE_OUT:
 				uart_rx_state = RECEIVE_PAYLOAD;
 				uart_payload_pos = 0;
-				uart_payload_len = RF_INSTR_SZ;
+				uart_payload_len = SONOFF_INSTR_SZ;
 				break;
 
 			case RF_PROTOCOL_OUT:
@@ -309,17 +309,17 @@ int main (void)
 			// init and start RF transmit
 			case RF_IDLE:
 			{
-				uint16_t sync_high = (uint16_t) ((((uint32_t) (*(uint16_t *) &rf_data[RF_TSYN_POS])) * PT2260_SYNC_HIGH) / PT2260_SYNC_PERIOD);
-				uint16_t sync_low = (uint16_t) ((((uint32_t) (*(uint16_t *) &rf_data[RF_TSYN_POS])) * PT2260_SYNC_LOW) / PT2260_SYNC_PERIOD);
-				uint16_t bit_high_t = *(uint16_t *) &rf_data[RF_THIGH_POS];
-				uint16_t bit_low_t = *(uint16_t *) &rf_data[RF_TLOW_POS];
+				uint16_t sync_high = (uint16_t) ((((uint32_t) (*(uint16_t *) &rf_data[SONOFF_TSYN_POS])) * PT2260_SYNC_HIGH) / PT2260_SYNC_PERIOD);
+				uint16_t sync_low = (uint16_t) ((((uint32_t) (*(uint16_t *) &rf_data[SONOFF_TSYN_POS])) * PT2260_SYNC_LOW) / PT2260_SYNC_PERIOD);
+				uint16_t bit_high_t = *(uint16_t *) &rf_data[SONOFF_THIGH_POS];
+				uint16_t bit_low_t = *(uint16_t *) &rf_data[SONOFF_TLOW_POS];
 
 				PCA0_StopRFListen();
 				PCA0_InitRFTransmit(sync_high, sync_low,
 						bit_high_t, protocol_data[PT2260_INDEX].bit_high_duty,
 						bit_low_t, protocol_data[PT2260_INDEX].bit_low_duty,
 						protocol_data[PT2260_INDEX].bit_count);
-				PCA0_StartRFTransmit(RF_DATA_POS);
+				PCA0_StartRFTransmit(SONOFF_DATA_POS);
 				break;
 			}
 
