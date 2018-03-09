@@ -13,6 +13,7 @@
 #include "pca_0.h"
 #include "uart.h"
 #include "Timer.h"
+#include "Delay.h"
 
 SI_SEGMENT_VARIABLE(rf_data[RF_DATA_BUFFERSIZE], uint8_t, SI_SEG_XDATA);
 SI_SEGMENT_VARIABLE(rf_data_status, uint8_t, SI_SEG_XDATA) = 0;
@@ -285,7 +286,7 @@ static void SendRF_Sync(void)
 	// Send ASK/On-off keying to SYN115 chip
 	T_DATA = 1;
 
-	// What is happening here?
+	// What is happening here? Activation?
 	InitTimer_ms(TIMER3, 1, 7);
 	WaitTimerFinished(TIMER3);
 	T_DATA = 0;
@@ -462,22 +463,6 @@ void PCA0_StopRFListen(void)
 	rf_state = RF_IDLE;
 }
 
-//FIXME: What guarantees that this busy wait actually waits the correct time?
-void usleep(uint16_t us)
-{
-	if (us < 20) {
-		return;
-	}
-
-	us -= 20;
-
-	/* Why do we bitshift here? */
-	us <<= 1;
-	while (us > 0) {
-		us--;
-	}
-}
-
 //-----------------------------------------------------------------------------
 // Send generic signal based on n time bucket pairs (high/low timing)
 //-----------------------------------------------------------------------------
@@ -502,19 +487,22 @@ void SendRFBuckets(const uint16_t bkts[], const uint8_t rfdata[], uint8_t n, uin
 	{
 		uint8_t i;
 
-		for (i = 0; i < n; i++)			// transmit n bucket pairs
+		// transmit n bucket pairs
+		for (i = 0; i < n; i++)
 		{
-			uint16_t j = bkts[rfdata[i] >> 4];	// high bucket
-			T_DATA = 1;					// switch to high
-			usleep(j);
+			// high bucket
+			uint16_t j = bkts[rfdata[i] >> 4];
+			T_DATA = 1;
 
-			j = bkts[rfdata[i] & 0x0f];			// low bucket
-			T_DATA = 0;					// switch to low
-			usleep(j);
+			delay_us(j);
+
+			// low bucket
+			j = bkts[rfdata[i] & 0x0F];
+			T_DATA = 0;
+			delay_us(j);
 		}
 		LED = !LED;
-	}
-	while (repeats-- != 0);				// how many times do I need to repeat?
+	} while (repeats-- != 0);				// how many times do I need to repeat?
 
 	// disable P0.0 for I/O control, enter PCA mode
 	XBR1 |= XBR1_PCA0ME__CEX0_CEX1;

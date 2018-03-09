@@ -9,5 +9,6 @@
 #define INC_DELAY_H_
 
 void delay_ms(uint16_t delay);
+void delay_us(uint16_t delay);
 
 #endif /* INC_DELAY_H_ */

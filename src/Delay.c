@@ -12,3 +12,8 @@ void delay_ms(uint16_t delay) {
 	InitTimer_ms(TIMER3, 1, delay);
 	WaitTimerFinished(TIMER3);
 }
+
+void delay_us(uint16_t delay) {
+	InitTimer_us(TIMER3, 1, delay);
+	WaitTimerFinished(TIMER3);
+}
