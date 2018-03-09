@@ -101,7 +101,6 @@ void PCA0_channel1EventCb()
 	static uint16_t capture_period_pos;
 	static uint16_t previous_capture_value_neg;
 	static uint16_t low_pulse_time;
-	static uint8_t used_protocol;
 
 	// positive edge
 	if (R_DATA)
@@ -121,10 +120,10 @@ void PCA0_channel1EventCb()
 				{
 					// check if we receive a sync from a known protocol
 					case RF_IDLE:
-						used_protocol = IdentifyRFProtocol(desired_rf_protocol, capture_period_pos, capture_period_neg);
+						rf_protocol = IdentifyRFProtocol(desired_rf_protocol, capture_period_pos, capture_period_neg);
 
 						// check if a matching protocol got found
-						if (used_protocol != NO_PROTOCOL_FOUND)
+						if (rf_protocol != NO_PROTOCOL_FOUND)
 						{
 							sync_high = capture_period_pos;
 							sync_low = capture_period_neg;
@@ -140,8 +139,8 @@ void PCA0_channel1EventCb()
 					// one matching sync got received
 					case RF_IN_SYNC:
 						// at first skip SYNC bits
-						if ((protocol_data[used_protocol].sync_bit_count > 0) &&
-							(actual_sync_bit < protocol_data[used_protocol].sync_bit_count))
+						if ((protocol_data[rf_protocol].sync_bit_count > 0) &&
+							(actual_sync_bit < protocol_data[rf_protocol].sync_bit_count))
 						{
 							actual_sync_bit++;
 							break;
@@ -154,11 +153,11 @@ void PCA0_channel1EventCb()
 						// calculate current duty cycle
 						current_duty_cycle = (100 * (uint32_t) capture_period_pos) / ((uint32_t) capture_period_pos + (uint32_t) capture_period_neg);
 
-						if (((current_duty_cycle > (protocol_data[used_protocol].bit_high_duty - DUTY_CYCLE_TOLERANCE)) &&
-							(current_duty_cycle < (protocol_data[used_protocol].bit_high_duty + DUTY_CYCLE_TOLERANCE)) &&
-							(actual_bit < protocol_data[used_protocol].bit_count)) ||
+						if (((current_duty_cycle > (protocol_data[rf_protocol].bit_high_duty - DUTY_CYCLE_TOLERANCE)) &&
+							(current_duty_cycle < (protocol_data[rf_protocol].bit_high_duty + DUTY_CYCLE_TOLERANCE)) &&
+							(actual_bit < protocol_data[rf_protocol].bit_count)) ||
 							// the duty cycle can not be used for the last bit because of the missing rising edge on the end
-							((capture_period_pos > low_pulse_time) && (actual_bit == protocol_data[used_protocol].bit_count))
+							((capture_period_pos > low_pulse_time) && (actual_bit == protocol_data[rf_protocol].bit_count))
 							)
 						{
 							// backup last bit high time
@@ -180,9 +179,8 @@ void PCA0_channel1EventCb()
 						}
 
 						// check if all bits for this protocol got received
-						if (actual_bit == protocol_data[used_protocol].bit_count)
+						if (actual_bit == protocol_data[rf_protocol].bit_count)
 						{
-							rf_protocol = used_protocol;
 							LED = LED_OFF;
 							rf_state = RF_FINISHED;
 						}
