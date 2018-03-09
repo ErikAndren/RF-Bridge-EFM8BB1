@@ -352,7 +352,7 @@ int main (void)
 					}
 				}
 			} else if (rf_state == RF_FINISHED) {
-				uart_put_RF_Data(RF_CODE_SNIFFING_ON, rf_data_status & RF_PROTOCOL_MASK);
+				uart_put_RF_Data(RF_CODE_SNIFFING_ON, rf_protocol);
 				waiting_for_uart_ack = true;
 			}
 			break;
@@ -425,7 +425,7 @@ int main (void)
 					PCA0_StartRFListen();
 					uart_command = last_uart_command;
 
-					uart_put_RF_Data(RF_CODE_LEARN_OK_NEW, rf_data_status & RF_PROTOCOL_MASK);
+					uart_put_RF_Data(RF_CODE_LEARN_OK_NEW, rf_protocol);
 
 				}
 				// check for learning timeout
@@ -477,7 +477,6 @@ int main (void)
 				if (rf_state == RF_FINISHED)
 				{
 					uart_put_RF_buckets(RF_CODE_SNIFFING_ON_BUCKET);
-					rf_data_status = 0;
 				}
 				break;
 		}

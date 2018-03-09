@@ -45,8 +45,6 @@ typedef struct
 
 #define UNKNOWN_IDENTIFIER		0x00
 
-#define RF_DATA_RECEIVED_MASK 0x80
-#define RF_PROTOCOL_MASK 0x7F
 #define NO_PROTOCOL_FOUND 0x80
 
 

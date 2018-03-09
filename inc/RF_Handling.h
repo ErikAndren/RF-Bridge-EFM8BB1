@@ -51,7 +51,7 @@ extern SI_SEGMENT_VARIABLE(rf_data[RF_DATA_BUFFERSIZE], uint8_t, SI_SEG_XDATA);
 // RF_DATA_STATUS
 // Bit 7:	1 Data received, 0 nothing received
 // Bit 6-0:	Protocol identifier
-extern SI_SEGMENT_VARIABLE(rf_data_status, uint8_t, SI_SEG_XDATA);
+extern SI_SEGMENT_VARIABLE(rf_protocol, uint8_t, SI_SEG_XDATA);
 extern SI_SEGMENT_VARIABLE(rf_state, rf_state_t, SI_SEG_XDATA);
 extern SI_SEGMENT_VARIABLE(desired_rf_protocol, uint8_t, SI_SEG_XDATA);
 extern SI_SEGMENT_VARIABLE(rf_listen_mode, rf_sniffing_mode_t, SI_SEG_XDATA);

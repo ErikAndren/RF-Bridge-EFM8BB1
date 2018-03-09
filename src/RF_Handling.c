@@ -16,7 +16,7 @@
 #include "Delay.h"
 
 SI_SEGMENT_VARIABLE(rf_data[RF_DATA_BUFFERSIZE], uint8_t, SI_SEG_XDATA);
-SI_SEGMENT_VARIABLE(rf_data_status, uint8_t, SI_SEG_XDATA) = 0;
+SI_SEGMENT_VARIABLE(rf_protocol, uint8_t, SI_SEG_XDATA) = 0;
 SI_SEGMENT_VARIABLE(rf_state, rf_state_t, SI_SEG_XDATA) = RF_IDLE;
 SI_SEGMENT_VARIABLE(desired_rf_protocol, uint8_t, SI_SEG_XDATA) = UNKNOWN_IDENTIFIER;
 SI_SEGMENT_VARIABLE(rf_listen_mode, rf_sniffing_mode_t, SI_SEG_XDATA) = MODE_DUTY_CYCLE;
@@ -133,6 +133,8 @@ void PCA0_channel1EventCb()
 							actual_bit = 0;
 							actual_sync_bit = 0;
 							low_pulse_time = 0;
+
+							//FIXME: Remove this, no need to clear data path
 							memset(rf_data, 0, sizeof(rf_data));
 							rf_state = RF_IN_SYNC;
 						}
@@ -183,7 +185,7 @@ void PCA0_channel1EventCb()
 						// check if all bits for this protocol got received
 						if (actual_bit == protocol_data[used_protocol].bit_count)
 						{
-							rf_data_status = used_protocol | RF_DATA_RECEIVED_MASK;
+							rf_protocol = used_protocol;
 							LED = LED_OFF;
 							rf_state = RF_FINISHED;
 						}
@@ -432,11 +434,10 @@ void PCA0_StartRFListen(void)
 	PCA0CPM0 &= ~PCA0CPM0_ECCF__ENABLED;
 	PCA0PWM &= ~PCA0PWM_ECOV__COVF_MASK_ENABLED;
 
-	// start PCA
-	PCA0_run();
-
 	rf_state = RF_IDLE;
-	rf_data_status = 0;
+	rf_protocol = 0;
+
+	PCA0_run();
 }
 
 void PCA0_StopRFListen(void)
@@ -608,7 +609,6 @@ void Bucket_Received(uint16_t duration)
 			// check if sync bucket got received
 			if (matchesFooter(duration))
 			{
-				rf_data_status |= RF_DATA_RECEIVED_MASK;
 				LED = LED_OFF;
 				rf_state = RF_FINISHED;
 			}
