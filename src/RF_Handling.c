@@ -186,12 +186,12 @@ void PCA0_channel1EventCb()
 						}
 						break;
 				}
-				break; // switch(rf_sniffing_mode)
+				break; // switch(rf_listen_mode)
 
 				// do sniffing by bucket mode
 				case MODE_BUCKET:
 					Bucket_Received(capture_period_neg);
-				break;
+					break;
 		}
 	}
 	// negative edge
@@ -455,7 +455,7 @@ void PCA0_StopRFListen(void)
 //-----------------------------------------------------------------------------
 // Send generic signal based on n time bucket pairs (high/low timing)
 //-----------------------------------------------------------------------------
-void SendRFBuckets(const uint16_t bkts[], const uint8_t rfdata[], uint8_t n, uint8_t repeats)
+void SendRFBuckets(const uint16_t bkts[], const uint8_t rfdata[], uint8_t bucket_pairs, uint8_t repeats)
 {
 	// disable interrupts for RF receiving and transmitting
 	PCA0CPM1 &= ~PCA0CPM1_ECCF__ENABLED;
@@ -464,6 +464,7 @@ void SendRFBuckets(const uint16_t bkts[], const uint8_t rfdata[], uint8_t n, uin
 
 	XBR1 &= ~XBR1_PCA0ME__CEX0_CEX1;	// enable P0.0 for I/O control
 
+	//FIXME: Why are we doing this separately?
 	T_DATA = 1;							// switch to high
 	InitTimer_ms(TIMER3, 1, 7);					// start timer (7ms)
 	WaitTimerFinished(TIMER3);				// wait until timer has finished
@@ -475,9 +476,7 @@ void SendRFBuckets(const uint16_t bkts[], const uint8_t rfdata[], uint8_t n, uin
 	do
 	{
 		uint8_t i;
-
-		// transmit n bucket pairs
-		for (i = 0; i < n; i++)
+		for (i = 0; i < bucket_pairs; i++)
 		{
 			// high bucket
 			uint16_t j = bkts[rfdata[i] >> 4];
