@@ -322,6 +322,9 @@ int main (void)
 				break;
 			}
 
+			case RF_TRANSMITTING:
+				break;
+
 			// Will be called once transmit is done
 			case RF_FINISHED:
 				PCA0_StartRFListen();
@@ -333,148 +336,151 @@ int main (void)
 			} // rf_state
 			break;
 
-			// do new sniffing
-			case RF_CODE_SNIFFING_ON:
-				if (waiting_for_uart_ack == true) {
-					if (IsTimerFinished(TIMER3) == true) {
-						// Did not receive reply within the expected timeout, retry again
-						InitTimer_ms(TIMER3, 1, RFIN_CMD_TIMEOUT_MS);
-						uart_put_RF_CODE_Data(RF_CODE_RFIN);
-						uart_cmd_retry_cnt++;
+		// do new sniffing
+		case RF_CODE_SNIFFING_ON:
+			if (waiting_for_uart_ack == true) {
+				if (IsTimerFinished(TIMER3) == true) {
+					// Did not receive reply within the expected timeout, retry again
+					InitTimer_ms(TIMER3, 1, RFIN_CMD_TIMEOUT_MS);
+					uart_put_RF_CODE_Data(RF_CODE_RFIN);
+					uart_cmd_retry_cnt++;
 
-						if (uart_cmd_retry_cnt == RFIN_CMD_RETRIES) {
-							//Give up
-							waiting_for_uart_ack = false;
-							PCA0_StartRFListen();
-						}
+					if (uart_cmd_retry_cnt == RFIN_CMD_RETRIES) {
+						//Give up
+						waiting_for_uart_ack = false;
+						PCA0_StartRFListen();
 					}
-				} else if ((rf_data_status & RF_DATA_RECEIVED_MASK) != 0) {
-					// check if a RF signal got decoded
-					uart_put_RF_Data(RF_CODE_SNIFFING_ON, rf_data_status & RF_PROTOCOL_MASK);
-					waiting_for_uart_ack = true;
+				}
+			} else if ((rf_data_status & RF_DATA_RECEIVED_MASK) != 0) {
+				// check if a RF signal got decoded
+				uart_put_RF_Data(RF_CODE_SNIFFING_ON, rf_data_status & RF_PROTOCOL_MASK);
+				waiting_for_uart_ack = true;
+			}
+			break;
+
+		// transmit data on RF
+		case RF_CODE_RFOUT_NEW:
+			// do transmit of the data
+			switch(rf_state)
+			{
+			// init and start RF transmit
+			case RF_IDLE:
+				PCA0_StopRFListen();
+
+				if (rf_data[RF_PROTOCOL_IDENT_POS] == CUSTOM_PROTOCOL_IDENT)
+				{
+					uint16_t sync_high = *(uint16_t *) &rf_data[CUSTOM_PROTOCOL_SYNC_HIGH_POS];
+					uint16_t sync_low = *(uint16_t *) &rf_data[CUSTOM_PROTOCOL_SYNC_LOW_POS];
+					uint16_t bit_high_t = *(uint16_t *) &rf_data[CUSTOM_PROTOCOL_BIT_HIGH_TIME_POS];
+					uint8_t bit_high_duty = rf_data[CUSTOM_PROTOCOL_BIT_HIGH_DUTY_POS];
+					uint16_t bit_low_t = *(uint16_t *) &rf_data[CUSTOM_PROTOCOL_BIT_LOW_TIME_POS];
+					uint8_t bit_low_duty = rf_data[CUSTOM_PROTOCOL_BIT_LOW_DUTY_POS];
+					uint8_t bit_count = rf_data[CUSTOM_PROTOCOL_BIT_COUNT_POS];
+
+					PCA0_InitRFTransmit(
+							sync_high,
+							sync_low,
+							bit_high_t,
+							bit_high_duty,
+							bit_low_t,
+							bit_low_duty,
+							bit_count);
+					PCA0_StartRFTransmit(CUSTOM_PROTOCOL_DATA_POS);
+				} else {
+					uint8_t protocol_index = PCA0_GetProtocolIndex(rf_data[RF_PROTOCOL_IDENT_POS]);
+
+					if (protocol_index != NO_PROTOCOL_FOUND)
+					{
+						PCA0_InitRFTransmit(
+								protocol_data[protocol_index].sync_high, protocol_data[protocol_index].sync_low,
+								protocol_data[protocol_index].bit_high_data, protocol_data[protocol_index].bit_high_duty,
+								protocol_data[protocol_index].bit_low_time, protocol_data[protocol_index].bit_low_duty,
+								protocol_data[protocol_index].bit_count);
+						PCA0_StartRFTransmit(RF_PROTOCOL_START_POS);
+					}
 				}
 				break;
 
-			// transmit data on RF
-			case RF_CODE_RFOUT_NEW:
-				// do transmit of the data
-				switch(rf_state)
-				{
-				// init and start RF transmit
-				case RF_IDLE:
-					PCA0_StopRFListen();
-
-					if (rf_data[RF_PROTOCOL_IDENT_POS] == CUSTOM_PROTOCOL_IDENT)
-					{
-						uint16_t sync_high = *(uint16_t *) &rf_data[CUSTOM_PROTOCOL_SYNC_HIGH_POS];
-						uint16_t sync_low = *(uint16_t *) &rf_data[CUSTOM_PROTOCOL_SYNC_LOW_POS];
-						uint16_t bit_high_t = *(uint16_t *) &rf_data[CUSTOM_PROTOCOL_BIT_HIGH_TIME_POS];
-						uint8_t bit_high_duty = rf_data[CUSTOM_PROTOCOL_BIT_HIGH_DUTY_POS];
-						uint16_t bit_low_t = *(uint16_t *) &rf_data[CUSTOM_PROTOCOL_BIT_LOW_TIME_POS];
-						uint8_t bit_low_duty = rf_data[CUSTOM_PROTOCOL_BIT_LOW_DUTY_POS];
-						uint8_t bit_count = rf_data[CUSTOM_PROTOCOL_BIT_COUNT_POS];
-
-						PCA0_InitRFTransmit(
-								sync_high,
-								sync_low,
-								bit_high_t,
-								bit_high_duty,
-								bit_low_t,
-								bit_low_duty,
-								bit_count);
-						PCA0_StartRFTransmit(CUSTOM_PROTOCOL_DATA_POS);
-					} else {
-						uint8_t protocol_index = PCA0_GetProtocolIndex(rf_data[RF_PROTOCOL_IDENT_POS]);
-
-						if (protocol_index != NO_PROTOCOL_FOUND)
-						{
-							PCA0_InitRFTransmit(
-									protocol_data[protocol_index].sync_high, protocol_data[protocol_index].sync_low,
-									protocol_data[protocol_index].bit_high_data, protocol_data[protocol_index].bit_high_duty,
-									protocol_data[protocol_index].bit_low_time, protocol_data[protocol_index].bit_low_duty,
-									protocol_data[protocol_index].bit_count);
-							PCA0_StartRFTransmit(RF_PROTOCOL_START_POS);
-						}
-					}
-					break;
+			case RF_TRANSMITTING:
+				break;
 
 				// wait until data got transfered
-				case RF_FINISHED:
+			case RF_FINISHED:
+				PCA0_StartRFListen();
+				uart_command = last_uart_command;
+
+				// send acknowledge
+				uart_put_command(RF_CODE_ACK);
+				break;
+			} // switch rf_state
+			break;
+
+			// new RF code learning
+			case RF_CODE_LEARN_NEW:
+				// check if a RF signal got decoded
+				if ((rf_data_status & RF_DATA_RECEIVED_MASK) != 0)
+				{
+					SoundBuzzer_ms(LEARN_CMD_SUCCESS_MS);
+
+					desired_rf_protocol = last_desired_rf_protocol;
 					PCA0_StartRFListen();
 					uart_command = last_uart_command;
 
-					// send acknowledge
-					uart_put_command(RF_CODE_ACK);
-					break;
-				} // switch rf_state
+					uart_put_RF_Data(RF_CODE_LEARN_OK_NEW, rf_data_status & RF_PROTOCOL_MASK);
+
+				}
+				// check for learning timeout
+				else if (IsTimerFinished(TIMER3))
+				{
+					SoundBuzzer_ms(LEARN_CMD_FAILURE_MS);
+
+					desired_rf_protocol = last_desired_rf_protocol;
+					PCA0_StartRFListen();
+					uart_command = last_uart_command;
+
+					// send not-acknowledge
+					uart_put_command(RF_CODE_LEARN_KO_NEW);
+				}
 				break;
 
-				// new RF code learning
-				case RF_CODE_LEARN_NEW:
-					// check if a RF signal got decoded
-					if ((rf_data_status & RF_DATA_RECEIVED_MASK) != 0)
-					{
-						SoundBuzzer_ms(LEARN_CMD_SUCCESS_MS);
+			case RF_CODE_RFOUT_BUCKET:
+			{
+				const uint8_t k = rf_data[0] * 2;
 
-						desired_rf_protocol = last_desired_rf_protocol;
-						PCA0_StartRFListen();
-						uart_command = last_uart_command;
-
-						uart_put_RF_Data(RF_CODE_LEARN_OK_NEW, rf_data_status & RF_PROTOCOL_MASK);
-
-					}
-					// check for learning timeout
-					else if (IsTimerFinished(TIMER3))
-					{
-						SoundBuzzer_ms(LEARN_CMD_FAILURE_MS);
-
-						desired_rf_protocol = last_desired_rf_protocol;
-						PCA0_StartRFListen();
-						uart_command = last_uart_command;
-
-						// send not-acknowledge
-						uart_put_command(RF_CODE_LEARN_KO_NEW);
-					}
-					break;
-
-				case RF_CODE_RFOUT_BUCKET:
-				{
-					const uint8_t k = rf_data[0] * 2;
-
-					if (rf_state == RF_IDLE) {
-						PCA0_StopRFListen();
-					} else if (rf_state != RF_FINISHED) {
-						break;
-					}
-
-					// byte 0:				number of buckets: k
-					// byte 1:				number of repeats: r
-					// byte 2*(1..k):		bucket time high
-					// byte 2*(1..k)+1:		bucket time low
-					// byte 2*k+2..N:		RF buckets to send
-					if ((k == 0) || (uart_payload_len < 4))
-					{
-						uart_command = NONE;
-						break;
-					} else {
-						SendRFBuckets((uint16_t *)(rf_data + 2), rf_data + k + 2, uart_payload_len - k - 2, rf_data[1]);
-						// send acknowledgment
-						uart_put_command(RF_CODE_ACK);
-					}
-
-					PCA0_StartRFListen();
-					uart_command = last_uart_command;
+				if (rf_state == RF_IDLE) {
+					PCA0_StopRFListen();
+				} else if (rf_state != RF_FINISHED) {
 					break;
 				}
 
-				case RF_CODE_SNIFFING_ON_BUCKET:
-					// check if a RF signal got decoded
-					if ((rf_data_status & RF_DATA_RECEIVED_MASK) != 0)
-					{
-						uart_put_RF_buckets(RF_CODE_SNIFFING_ON_BUCKET);
-						rf_data_status = 0;
-					}
+				// byte 0:				number of buckets: k
+				// byte 1:				number of repeats: r
+				// byte 2*(1..k):		bucket time high
+				// byte 2*(1..k)+1:		bucket time low
+				// byte 2*k+2..N:		RF buckets to send
+				if ((k == 0) || (uart_payload_len < 4))
+				{
+					uart_command = NONE;
 					break;
+				} else {
+					SendRFBuckets((uint16_t *)(rf_data + 2), rf_data + k + 2, uart_payload_len - k - 2, rf_data[1]);
+					// send acknowledgment
+					uart_put_command(RF_CODE_ACK);
+				}
+
+				PCA0_StartRFListen();
+				uart_command = last_uart_command;
+				break;
+			}
+
+			case RF_CODE_SNIFFING_ON_BUCKET:
+				// check if a RF signal got decoded
+				if ((rf_data_status & RF_DATA_RECEIVED_MASK) != 0)
+				{
+					uart_put_RF_buckets(RF_CODE_SNIFFING_ON_BUCKET);
+					rf_data_status = 0;
+				}
+				break;
 		}
 	}
 }
