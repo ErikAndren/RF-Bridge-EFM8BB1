@@ -331,7 +331,6 @@ int main (void)
 				PCA0_StartRFListen();
 				uart_command = last_uart_command;
 
-				// send acknowledge
 				uart_put_command(RF_CODE_ACK);
 				break;
 			} // rf_state
