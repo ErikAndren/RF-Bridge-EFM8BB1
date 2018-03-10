@@ -63,6 +63,7 @@
 #define UART_OVERRUN_ERROR    0x0800              /* Overrun condition by UART   */
 #define UART_PARITY_ERROR     0x0400              /* Parity Error by UART        */
 #define UART_BUFFER_OVERFLOW  0x0200              /* receive ringbuffer overflow */
+
 //-----------------------------------------------------------------------------
 // Global Enums
 //-----------------------------------------------------------------------------
@@ -98,9 +99,6 @@ typedef enum
 //-----------------------------------------------------------------------------
 // Global Variables
 //-----------------------------------------------------------------------------
-extern SI_SEGMENT_VARIABLE(UART_RX_Buffer[UART_RX_BUFFER_SIZE], uint8_t, SI_SEG_XDATA);
-extern SI_SEGMENT_VARIABLE(UART_TX_Buffer[UART_TX_BUFFER_SIZE], uint8_t, SI_SEG_DATA);
-
 extern void uart_buffer_reset(void);
 extern void uart_wait_until_TX_finished(void);
 extern uint8_t uart_getlen(void);
