@@ -34,17 +34,16 @@ void SetTimerReload(uint8_t timer, uint16_t reload)
 		 ***********************************************************************/
 		TMR2RLH = (((reload >> 8) & 0xFF) << TMR2RLH_TMR2RLH__SHIFT);
 		/***********************************************************************
-	 	 - Timer 2 Reload Low Byte = 0x86
+	 	 - Timer 2 Reload Low Byte
 		 ***********************************************************************/
 		TMR2RLL = ((reload & 0xFF) << TMR2RLL_TMR2RLL__SHIFT);
-	}
-	if (timer == TIMER3) {
+	} else if (timer == TIMER3) {
 		/***********************************************************************
 	 	 - Timer 3 Reload High Byte
 		 ***********************************************************************/
 		TMR3RLH = (((reload >> 8) & 0xFF) << TMR3RLH_TMR3RLH__SHIFT);
 		/***********************************************************************
-	 	 - Timer 3 Reload Low Byte = 0x86
+	 	 - Timer 3 Reload Low Byte
 		 ***********************************************************************/
 		TMR3RLL = ((reload & 0xFF) << TMR3RLL_TMR3RLL__SHIFT);
 	}
