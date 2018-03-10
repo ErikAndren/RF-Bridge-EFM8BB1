@@ -126,7 +126,7 @@ int main (void)
 			}
 			break;
 
-			// sync byte got received, read command
+		// sync byte got received, read command
 		case SYNC_INIT:
 			next_uart_command = uart_rx_data;
 
@@ -145,14 +145,13 @@ int main (void)
 
 			default:
 				uart_rx_state = SYNC_FINISH;
-			} // End uart_command switch
+			}
 			break; // End SYNC_INIT
 
 		case RECEIVE_PAYLOAD_LEN:
 			uart_payload_pos = 0;
 			uart_payload_len = uart_rx_data;
 
-			//FIXME: Add check for if payload lenght is too small
 			if (uart_payload_len > 0) {
 				uart_rx_state = RECEIVE_PAYLOAD;
 			} else {
