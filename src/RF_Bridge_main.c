@@ -121,13 +121,13 @@ int main (void)
 		// check if UART_SYNC_INIT got received
 		case IDLE:
 			if (uart_rx_data == RF_CODE_START) {
-				uart_rx_state = SYNC_INIT;
+				uart_rx_state = RECEIVE_COMMAND;
 				InitTimer_ms(TIMER2, 1, CMD_TIMEOUT_MS);
 			}
 			break;
 
 		// sync byte got received, read command
-		case SYNC_INIT:
+		case RECEIVE_COMMAND:
 			next_uart_command = uart_rx_data;
 
 			switch(next_uart_command)
@@ -144,7 +144,7 @@ int main (void)
 				break;
 
 			default:
-				uart_rx_state = SYNC_FINISH;
+				uart_rx_state = RECEIVE_END;
 			}
 			break; // End SYNC_INIT
 
@@ -155,7 +155,7 @@ int main (void)
 			if (uart_payload_len > 0) {
 				uart_rx_state = RECEIVE_PAYLOAD;
 			} else {
-				uart_rx_state = SYNC_FINISH;
+				uart_rx_state = RECEIVE_END;
 			}
 			break;
 
@@ -164,11 +164,11 @@ int main (void)
 			uart_payload_pos++;
 
 			if ((uart_payload_pos == uart_payload_len) || (uart_payload_pos >= RF_DATA_BUFFERSIZE)) {
-				uart_rx_state = SYNC_FINISH;
+				uart_rx_state = RECEIVE_END;
 			}
 			break;
 
-		case SYNC_FINISH:
+		case RECEIVE_END:
 			if (uart_rx_data == RF_CODE_STOP)
 			{
 				uart_rx_state = IDLE;
