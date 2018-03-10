@@ -242,7 +242,7 @@ static uint8_t IdentifyRFProtocol(uint8_t identifier, uint16_t period_pos, uint1
 
 		// check other protocols
 		default:
-			used_protocol = PCA0_GetProtocolIndex(identifier);
+			used_protocol = GetProtocolIndex(identifier);
 
 			// check if identifier got found in list
 			if (used_protocol == NO_PROTOCOL_FOUND) {
@@ -285,6 +285,7 @@ static void SendRF_Sync(void)
 	WaitTimerFinished(TIMER3);
 
 	T_DATA = 1;
+	//FIXME: Why 5 interval?
 	InitTimer_us(TIMER3, 5, sync_high);
 	WaitTimerFinished(TIMER3);
 	T_DATA = 0;
@@ -295,7 +296,7 @@ static void SendRF_Sync(void)
 	XBR1 |= XBR1_PCA0ME__CEX0_CEX1;
 }
 
-uint8_t PCA0_GetProtocolIndex(uint8_t identifier)
+uint8_t GetProtocolIndex(uint8_t identifier)
 {
 	uint8_t i;
 	uint8_t protocol_index = NO_PROTOCOL_FOUND;

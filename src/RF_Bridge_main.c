@@ -386,7 +386,7 @@ int main (void)
 							bit_count);
 					PCA0_StartRFTransmit(CUSTOM_PROTOCOL_DATA_POS);
 				} else {
-					uint8_t protocol_index = PCA0_GetProtocolIndex(rf_data[RF_PROTOCOL_IDENT_POS]);
+					uint8_t protocol_index = GetProtocolIndex(rf_data[RF_PROTOCOL_IDENT_POS]);
 
 					if (protocol_index != NO_PROTOCOL_FOUND)
 					{
