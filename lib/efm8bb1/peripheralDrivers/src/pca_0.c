@@ -193,7 +193,7 @@ void PCA0_reset()
 
   //Reset PCA regs
   PCA0MD  = 0x0;
-  PCA0CN0  = 0x0;
+  PCA0CN0 = 0x0;
   PCA0    = 0x0;
   PCA0PWM = 0x0;
 }
