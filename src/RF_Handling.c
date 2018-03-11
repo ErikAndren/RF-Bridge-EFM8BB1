@@ -133,6 +133,7 @@ void PCA0_channel1EventCb()
 							actual_sync_bit = 0;
 							low_pulse_time = 0;
 							rf_state = RF_IN_SYNC;
+							rf_data[0] = 0;
 						}
 						break; // switch rf_state
 
@@ -174,6 +175,7 @@ void PCA0_channel1EventCb()
 
 						if (actual_bit_of_byte == 0) {
 							actual_bit_of_byte = 8;
+							rf_data[actual_bit / 8] = 0;
 						}
 
 						// check if all bits for this protocol got received
