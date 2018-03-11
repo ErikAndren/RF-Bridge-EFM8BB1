@@ -30,6 +30,7 @@ uint8_t UART0_read(void)
 {
   return SBUF0;
 }
+
 void UART0_writeWithExtraBit(uint16_t value)
 {
 	SCON0_TB8 = value >> 8;
