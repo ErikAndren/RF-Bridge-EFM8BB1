@@ -95,6 +95,7 @@ void PCA0_channel1EventCb()
 							low_pulse_time = 0;
 							rf_state = RF_IN_SYNC;
 							rf_data[0] = 0;
+							LED = LED_ON;
 						}
 						break; // switch rf_state
 
@@ -110,6 +111,7 @@ void PCA0_channel1EventCb()
 						// check the rest of the bits
 						actual_bit_of_byte--;
 						actual_bit++;
+						LED = !LED;
 
 						// calculate current duty cycle
 						current_duty_cycle = (100 * (uint32_t) capture_period_pos) / ((uint32_t) capture_period_pos + (uint32_t) capture_period_neg);
@@ -122,12 +124,10 @@ void PCA0_channel1EventCb()
 						{
 							// backup last bit high time
 							bit_high = capture_period_pos;
-							LED = LED_ON;
 							rf_data[(actual_bit - 1) / 8] |= (1 << actual_bit_of_byte);
 						} else {
 							// backup last bit low time
 							bit_low = capture_period_pos;
-							LED = LED_OFF;
 							// backup low bit pulse time to be able to determine the last bit
 							if (capture_period_pos > low_pulse_time) {
 								low_pulse_time = capture_period_pos;
@@ -144,6 +144,7 @@ void PCA0_channel1EventCb()
 						{
 							LED = LED_OFF;
 							rf_state = RF_FINISHED;
+							LED = LED_OFF;
 						}
 						break;
 				}
