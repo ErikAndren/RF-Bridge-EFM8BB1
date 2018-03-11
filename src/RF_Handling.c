@@ -278,6 +278,7 @@ static void SendRF_Sync(void)
 	T_DATA = 1;
 
 	// What is happening here? Activation?
+	// FIXME: Should not be needed
 	InitTimer_ms(TIMER3, 1, 7);
 	WaitTimerFinished(TIMER3);
 	T_DATA = 0;
@@ -334,17 +335,14 @@ void PCA0_InitRFTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
 	t0_low = (uint8_t)(0x100 - ((uint32_t) SYSCLK / (0xFF * (1000000 / (uint32_t) bit_time))));
 
 	// calculate high and low duty cycle
-	duty_cycle_high = (uint16_t)((bit_high_duty * 0xFF) / 100);
-	duty_cycle_low = (uint16_t)((bit_low_duty * 0xFF) / 100);
+	duty_cycle_high = (uint16_t) ((bit_high_duty * 0xFF) / 100);
+	duty_cycle_low = (uint16_t) ((bit_low_duty * 0xFF) / 100);
 
 	bit_count = bitcount;
 
 	// enable interrupt for RF transmitting
 	PCA0CPM0 |= PCA0CPM0_ECCF__ENABLED;
 	PCA0PWM |= PCA0PWM_ECOV__COVF_MASK_ENABLED;
-
-	// disable interrupt for RF receiving
-	PCA0CPM1 &= ~PCA0CPM1_ECCF__ENABLED;
 
 	/***********************************************************************
 	 - PCA Counter/Timer Low Byte = 0xFF, why?
