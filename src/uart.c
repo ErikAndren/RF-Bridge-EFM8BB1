@@ -145,13 +145,13 @@ void uart_put_RF_Data(uint8_t command, uint8_t used_protocol)
 	uart_putc(command);
 
 	//FIXME: Think this through? Why not just divide by 8
-	while (i < protocol_data[used_protocol].bit_count)
+	while (i < PROTOCOLS[used_protocol].bit_count)
 	{
 		i += 8;
 		bytes++;
 	}
 	uart_putc(bytes + 1);
-	uart_putc(protocol_data[used_protocol].identifier);
+	uart_putc(PROTOCOLS[used_protocol].identifier);
 
 	//FIXME: <=?
 	for (i = 0; i < bytes; i++) {

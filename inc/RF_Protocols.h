@@ -128,7 +128,7 @@ typedef struct
 #error Too many protocols are defined, stop!
 #endif
 
-SI_SEGMENT_VARIABLE(protocol_data[PROTOCOLCOUNT], static const protocol_data_t, SI_SEG_CODE) =
+SI_SEGMENT_VARIABLE(PROTOCOLS[PROTOCOLCOUNT], static const protocol_data_t, SI_SEG_CODE) =
 {
 		PT2260,
 		ROHRMOTOR24,

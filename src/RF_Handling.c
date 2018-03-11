@@ -139,7 +139,7 @@ void PCA0_channel1EventCb()
 					// one matching sync got received
 					case RF_IN_SYNC:
 						// Skip SYNC bits, if any
-						if (actual_sync_bit < protocol_data[rf_protocol].sync_bit_count)
+						if (actual_sync_bit < PROTOCOLS[rf_protocol].sync_bit_count)
 						{
 							actual_sync_bit++;
 							break;
@@ -152,11 +152,11 @@ void PCA0_channel1EventCb()
 						// calculate current duty cycle
 						current_duty_cycle = (100 * (uint32_t) capture_period_pos) / ((uint32_t) capture_period_pos + (uint32_t) capture_period_neg);
 
-						if (((current_duty_cycle > (protocol_data[rf_protocol].bit_high_duty - DUTY_CYCLE_TOLERANCE)) &&
-							(current_duty_cycle < (protocol_data[rf_protocol].bit_high_duty + DUTY_CYCLE_TOLERANCE)) &&
-							(actual_bit < protocol_data[rf_protocol].bit_count)) ||
+						if (((current_duty_cycle > (PROTOCOLS[rf_protocol].bit_high_duty - DUTY_CYCLE_TOLERANCE)) &&
+							(current_duty_cycle < (PROTOCOLS[rf_protocol].bit_high_duty + DUTY_CYCLE_TOLERANCE)) &&
+							(actual_bit < PROTOCOLS[rf_protocol].bit_count)) ||
 							// the duty cycle can not be used for the last bit because of the missing rising edge on the end
-							((capture_period_pos > low_pulse_time) && (actual_bit == protocol_data[rf_protocol].bit_count)))
+							((capture_period_pos > low_pulse_time) && (actual_bit == PROTOCOLS[rf_protocol].bit_count)))
 						{
 							// backup last bit high time
 							bit_high = capture_period_pos;
@@ -177,7 +177,7 @@ void PCA0_channel1EventCb()
 						}
 
 						// check if all bits for this protocol got received
-						if (actual_bit == protocol_data[rf_protocol].bit_count)
+						if (actual_bit == PROTOCOLS[rf_protocol].bit_count)
 						{
 							LED = LED_OFF;
 							rf_state = RF_FINISHED;
@@ -224,12 +224,12 @@ static uint8_t IdentifyRFProtocol(uint8_t identifier, uint16_t period_pos, uint1
 			// check all protocols
 			for (used_protocol = 0; used_protocol < PROTOCOLCOUNT; used_protocol++)
 			{
-				if ((period_neg > (protocol_data[used_protocol].sync_low - SYNC_TOLERANCE)) &&
-					(period_neg < (protocol_data[used_protocol].sync_low + SYNC_TOLERANCE)))
+				if ((period_neg > (PROTOCOLS[used_protocol].sync_low - SYNC_TOLERANCE)) &&
+					(period_neg < (PROTOCOLS[used_protocol].sync_low + SYNC_TOLERANCE)))
 				{
-					if ((protocol_data[used_protocol].sync_high == 0) ||
-					   ((period_pos > (protocol_data[used_protocol].sync_high - SYNC_TOLERANCE)) &&
-						(period_pos < (protocol_data[used_protocol].sync_high + SYNC_TOLERANCE))))
+					if ((PROTOCOLS[used_protocol].sync_high == 0) ||
+					   ((period_pos > (PROTOCOLS[used_protocol].sync_high - SYNC_TOLERANCE)) &&
+						(period_pos < (PROTOCOLS[used_protocol].sync_high + SYNC_TOLERANCE))))
 					{
 						protocol_found = used_protocol;
 						break;
@@ -247,12 +247,12 @@ static uint8_t IdentifyRFProtocol(uint8_t identifier, uint16_t period_pos, uint1
 				break;
 			}
 
-			if ((period_neg > (protocol_data[used_protocol].sync_low - SYNC_TOLERANCE_0xA1)) &&
-				(period_neg < (protocol_data[used_protocol].sync_low + SYNC_TOLERANCE_0xA1)))
+			if ((period_neg > (PROTOCOLS[used_protocol].sync_low - SYNC_TOLERANCE_0xA1)) &&
+				(period_neg < (PROTOCOLS[used_protocol].sync_low + SYNC_TOLERANCE_0xA1)))
 			{
-				if ((protocol_data[used_protocol].sync_high == 0) ||
-				   ((period_pos > (protocol_data[used_protocol].sync_high - SYNC_TOLERANCE_0xA1)) &&
-					(period_pos < (protocol_data[used_protocol].sync_high + SYNC_TOLERANCE_0xA1))))
+				if ((PROTOCOLS[used_protocol].sync_high == 0) ||
+				   ((period_pos > (PROTOCOLS[used_protocol].sync_high - SYNC_TOLERANCE_0xA1)) &&
+					(period_pos < (PROTOCOLS[used_protocol].sync_high + SYNC_TOLERANCE_0xA1))))
 				{
 					protocol_found = used_protocol;
 					break;
@@ -304,7 +304,7 @@ uint8_t GetProtocolIndex(uint8_t identifier)
 		// find protocol index by identifier
 		for (i = 0; i < PROTOCOLCOUNT; i++)
 		{
-			if (protocol_data[i].identifier == identifier)
+			if (PROTOCOLS[i].identifier == identifier)
 			{
 				protocol_index = i;
 				break;

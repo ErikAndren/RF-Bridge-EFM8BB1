@@ -315,9 +315,9 @@ int main (void)
 
 				PCA0_StopRFListen();
 				PCA0_InitRFTransmit(sync_high, sync_low,
-						bit_high_t, protocol_data[PT2260_INDEX].bit_high_duty,
-						bit_low_t, protocol_data[PT2260_INDEX].bit_low_duty,
-						protocol_data[PT2260_INDEX].bit_count);
+						bit_high_t, PROTOCOLS[PT2260_INDEX].bit_high_duty,
+						bit_low_t, PROTOCOLS[PT2260_INDEX].bit_low_duty,
+						PROTOCOLS[PT2260_INDEX].bit_count);
 				PCA0_StartRFTransmit(SONOFF_DATA_POS);
 				break;
 			}
@@ -390,10 +390,10 @@ int main (void)
 					if (protocol_index != NO_PROTOCOL_FOUND)
 					{
 						PCA0_InitRFTransmit(
-								protocol_data[protocol_index].sync_high, protocol_data[protocol_index].sync_low,
-								protocol_data[protocol_index].bit_high_data, protocol_data[protocol_index].bit_high_duty,
-								protocol_data[protocol_index].bit_low_time, protocol_data[protocol_index].bit_low_duty,
-								protocol_data[protocol_index].bit_count);
+								PROTOCOLS[protocol_index].sync_high, PROTOCOLS[protocol_index].sync_low,
+								PROTOCOLS[protocol_index].bit_high_data, PROTOCOLS[protocol_index].bit_high_duty,
+								PROTOCOLS[protocol_index].bit_low_time, PROTOCOLS[protocol_index].bit_low_duty,
+								PROTOCOLS[protocol_index].bit_count);
 						PCA0_StartRFTransmit(RF_PROTOCOL_START_POS);
 					}
 				}
