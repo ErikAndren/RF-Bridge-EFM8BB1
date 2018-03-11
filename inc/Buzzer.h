@@ -10,6 +10,6 @@
 
 #include <stdint.h>
 
-void SoundBuzzer_ms(uint16_t interval);
+void SoundBuzzer_ms(uint16_t len);
 
 #endif
