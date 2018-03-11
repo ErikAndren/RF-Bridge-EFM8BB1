@@ -138,7 +138,7 @@ void PCA0_channel1EventCb()
 
 					// one matching sync got received
 					case RF_IN_SYNC:
-						// at first skip SYNC bits
+						// Skip SYNC bits, if any
 						if (actual_sync_bit < protocol_data[rf_protocol].sync_bit_count)
 						{
 							actual_sync_bit++;
@@ -156,15 +156,14 @@ void PCA0_channel1EventCb()
 							(current_duty_cycle < (protocol_data[rf_protocol].bit_high_duty + DUTY_CYCLE_TOLERANCE)) &&
 							(actual_bit < protocol_data[rf_protocol].bit_count)) ||
 							// the duty cycle can not be used for the last bit because of the missing rising edge on the end
-							((capture_period_pos > low_pulse_time) && (actual_bit == protocol_data[rf_protocol].bit_count))
-							)
+							((capture_period_pos > low_pulse_time) && (actual_bit == protocol_data[rf_protocol].bit_count)))
 						{
 							// backup last bit high time
 							bit_high = capture_period_pos;
 							LED = LED_ON;
 							rf_data[(actual_bit - 1) / 8] |= (1 << actual_bit_of_byte);
 						} else {
-							// backup last bit high time
+							// backup last bit low time
 							bit_low = capture_period_pos;
 							LED = LED_OFF;
 							// backup low bit pulse time to be able to determine the last bit
