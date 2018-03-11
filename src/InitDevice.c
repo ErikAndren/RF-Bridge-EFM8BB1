@@ -267,17 +267,9 @@ extern void TIMER16_3_enter_DefaultMode_from_RESET(void) {
 	// [TMR3CN0 - Timer 3 Control]$
 
 	// $[TMR3H - Timer 3 High Byte]
-	/***********************************************************************
-	 - Timer 3 High Byte = 0xFF
-	 ***********************************************************************/
-	TMR3H = (0xFF << TMR3H_TMR3H__SHIFT);
 	// [TMR3H - Timer 3 High Byte]$
 
 	// $[TMR3L - Timer 3 Low Byte]
-	/***********************************************************************
-	 - Timer 3 Low Byte = 0xFF
-	 ***********************************************************************/
-	TMR3L = (0xFF << TMR3L_TMR3L__SHIFT);
 	// [TMR3L - Timer 3 Low Byte]$
 
 	// $[TMR3RLH - Timer 3 Reload High Byte]
