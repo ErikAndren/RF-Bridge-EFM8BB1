@@ -47,7 +47,6 @@ typedef struct
 
 #define NO_PROTOCOL_FOUND 0x80
 
-
 /*
  * PT2260, EV1527,... original RF bridge protocol
  * http://www.princeton.com.tw/Portals/0/Product/PT2260_4.pdf
