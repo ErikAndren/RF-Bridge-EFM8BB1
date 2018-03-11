@@ -285,11 +285,10 @@ static void SendRF_Sync(void)
 	WaitTimerFinished(TIMER3);
 
 	T_DATA = 1;
-	//FIXME: Why 5 interval?
-	InitTimer_us(TIMER3, 5, sync_high);
+	InitTimer_us(TIMER3, 10, sync_high);
 	WaitTimerFinished(TIMER3);
 	T_DATA = 0;
-	InitTimer_us(TIMER3, 5, sync_low);
+	InitTimer_us(TIMER3, 10, sync_low);
 	WaitTimerFinished(TIMER3);
 
 	// disable P0.0 for I/O control, enter PCA mode
@@ -471,7 +470,7 @@ void SendRFBuckets(const uint16_t bkts[], const uint8_t rfdata[], uint8_t bucket
 	WaitTimerFinished(TIMER3);				// wait until timer has finished
 
 	T_DATA = 0;							// switch to low
-	InitTimer_us(TIMER3, 10, 100);				// start timer (1ms)
+	InitTimer_us(TIMER3, 10, 1000);				// start timer (1ms)
 	WaitTimerFinished(TIMER3);				// wait until timer has finished
 
 	do
