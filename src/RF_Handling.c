@@ -48,47 +48,8 @@ void PCA0_overflowCb()
 {
 }
 
-// Half of symbol transmitted, check if to change output
-void PCA0_intermediateOverflowCb()
-{
-	if (((rf_data[actual_byte] >> actual_bit_of_byte) & 0x01) == 0x01)
-	{
-		// bit 1
-		SetTimer0Overflow(t0_high);
-	}
-	else
-	{
-		// bit 0
-		SetTimer0Overflow(t0_low);
-	}
-}
-
-// Called when transmitting of a symbol is done
-void PCA0_channel0EventCb()
-{
-	// Move on to next byte
-	if (actual_bit_of_byte == 0)
-	{
-		actual_byte++;
-		actual_bit_of_byte = 8;
-	}
-
-	// stop transfer if all bits are transmitted
-	if (actual_bit == bit_count)
-	{
-		PCA0_StopRFTransmit();
-	}
-	else
-	{
-		actual_bit++;
-		actual_bit_of_byte--;
-
-		// set duty cycle for the next bit
-		SetPCA0DutyCycle();
-	}
-}
-
 // Called when receiving
+// FIXME: This is a lot of work done in interrupt context. It might be wise to move this the the main thread
 void PCA0_channel1EventCb()
 {
 	// Store most recent capture value
@@ -214,6 +175,14 @@ void PCA0_channel2EventCb()
 {
 }
 
+void SetTimer0Overflow(uint8_t T0_Overflow)
+{
+	/***********************************************************************
+	 - Timer 0 High Byte = T0_Overflow
+	 ***********************************************************************/
+	TH0 = (T0_Overflow << TH0_TH0__SHIFT);
+}
+
 static uint8_t IdentifyRFProtocol(uint8_t identifier, uint16_t period_pos, uint16_t period_neg)
 {
 	uint8_t protocol_found = NO_PROTOCOL_FOUND;
@@ -266,36 +235,6 @@ static uint8_t IdentifyRFProtocol(uint8_t identifier, uint16_t period_pos, uint1
 	return protocol_found;
 }
 
-//-----------------------------------------------------------------------------
-// Send RF SYNC HIGH/LOW Routine
-//-----------------------------------------------------------------------------
-static void SendRF_Sync(void)
-{
-	// enable P0.0 for I/O control
-	XBR1 &= ~XBR1_PCA0ME__CEX0_CEX1;
-
-	// Send ASK/On-off keying to SYN115 chip
-	T_DATA = 1;
-
-	// What is happening here? Activation?
-	// FIXME: Should not be needed
-	InitTimer_ms(TIMER3, 1, 7);
-	WaitTimerFinished(TIMER3);
-	T_DATA = 0;
-	InitTimer_us(TIMER3, 10, 100);
-	WaitTimerFinished(TIMER3);
-
-	T_DATA = 1;
-	InitTimer_us(TIMER3, 10, sync_high);
-	WaitTimerFinished(TIMER3);
-	T_DATA = 0;
-	InitTimer_us(TIMER3, 10, sync_low);
-	WaitTimerFinished(TIMER3);
-
-	// disable P0.0 for I/O control, enter PCA mode
-	XBR1 |= XBR1_PCA0ME__CEX0_CEX1;
-}
-
 uint8_t GetProtocolIndex(uint8_t identifier)
 {
 	uint8_t i;
@@ -317,6 +256,8 @@ uint8_t GetProtocolIndex(uint8_t identifier)
 
 	return protocol_index;
 }
+
+// Transmission path
 
 void PCA0_InitRFTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
 					   uint16_t bit_high_time, uint8_t bit_high_duty,
@@ -350,7 +291,24 @@ void PCA0_InitRFTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
 	PCA0L = (0xFF << PCA0L_PCA0L__SHIFT);
 }
 
-static void SetPCA0DutyCycle(void)
+void PCA0_StartRFTransmit(uint8_t payload_pos)
+{
+	actual_bit_of_byte = 7;
+	actual_bit = 1;
+	actual_byte = payload_pos;
+	rf_state = RF_TRANSMITTING;
+
+	// set first bit to be in sync when PCA0 is starting
+	PCA0_SetDutyCycle();
+
+	// make RF sync pulse
+	// FIXME: According to PT2260 docs, sync pulse comes after payload
+	SendRF_Sync();
+
+	PCA0_run();
+}
+
+static void PCA0_SetDutyCycle(void)
 {
 	if (((rf_data[actual_byte] >> actual_bit_of_byte) & 0x01) == 0x01)
 	{
@@ -362,29 +320,73 @@ static void SetPCA0DutyCycle(void)
 	}
 }
 
-void SetTimer0Overflow(uint8_t T0_Overflow)
+static void SendRF_Sync(void)
 {
-	/***********************************************************************
-	 - Timer 0 High Byte = T0_Overflow
-	 ***********************************************************************/
-	TH0 = (T0_Overflow << TH0_TH0__SHIFT);
+	// enable P0.0 for I/O control
+	XBR1 &= ~XBR1_PCA0ME__CEX0_CEX1;
+
+	// Send ASK/On-off keying to SYN115 chip
+	T_DATA = 1;
+
+	// What is happening here? Activation?
+	// FIXME: Should not be needed
+	InitTimer_ms(TIMER3, 1, 7);
+	WaitTimerFinished(TIMER3);
+	T_DATA = 0;
+	InitTimer_us(TIMER3, 10, 100);
+	WaitTimerFinished(TIMER3);
+
+
+	// FIXME: Add sync repeats
+	T_DATA = 1;
+	InitTimer_us(TIMER3, 10, sync_high);
+	WaitTimerFinished(TIMER3);
+	T_DATA = 0;
+	InitTimer_us(TIMER3, 10, sync_low);
+	WaitTimerFinished(TIMER3);
+
+	// disable P0.0 for I/O control, enter PCA mode
+	XBR1 |= XBR1_PCA0ME__CEX0_CEX1;
 }
 
-void PCA0_StartRFTransmit(uint8_t payload_pos)
+// Half of symbol transmitted, check if to change output
+void PCA0_intermediateOverflowCb()
 {
-	actual_bit_of_byte = 7;
-	actual_bit = 1;
-	actual_byte = payload_pos;
-	rf_state = RF_TRANSMITTING;
+	if (((rf_data[actual_byte] >> actual_bit_of_byte) & 0x01) == 0x01)
+	{
+		// bit 1
+		SetTimer0Overflow(t0_high);
+	}
+	else
+	{
+		// bit 0
+		SetTimer0Overflow(t0_low);
+	}
+}
 
-	// set first bit to be in sync when PCA0 is starting
-	SetPCA0DutyCycle();
+// Called when transmission of a symbol is done
+void PCA0_channel0EventCb()
+{
+	// Move on to next byte
+	if (actual_bit_of_byte == 0)
+	{
+		actual_byte++;
+		actual_bit_of_byte = 8;
+	}
 
-	// make RF sync pulse
-	// FIXME: According to PT2260 docs, sync pulse comes after payload
-	SendRF_Sync();
+	// stop transfer if all bits are transmitted
+	if (actual_bit == bit_count)
+	{
+		PCA0_StopRFTransmit();
+	}
+	else
+	{
+		actual_bit++;
+		actual_bit_of_byte--;
 
-	PCA0_run();
+		// set duty cycle for the next bit
+		PCA0_SetDutyCycle();
+	}
 }
 
 void PCA0_StopRFTransmit(void)
@@ -450,6 +452,7 @@ void PCA0_StopRFListen(void)
 	rf_state = RF_IDLE;
 }
 
+//FIXME: Split out to separate file
 //-----------------------------------------------------------------------------
 // Send generic signal based on n time bucket pairs (high/low timing)
 //-----------------------------------------------------------------------------
