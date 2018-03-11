@@ -139,8 +139,7 @@ void PCA0_channel1EventCb()
 					// one matching sync got received
 					case RF_IN_SYNC:
 						// at first skip SYNC bits
-						if ((protocol_data[rf_protocol].sync_bit_count > 0) &&
-							(actual_sync_bit < protocol_data[rf_protocol].sync_bit_count))
+						if (actual_sync_bit < protocol_data[rf_protocol].sync_bit_count)
 						{
 							actual_sync_bit++;
 							break;
