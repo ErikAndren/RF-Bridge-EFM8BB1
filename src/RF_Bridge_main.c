@@ -400,6 +400,7 @@ int main (void)
 				break;
 
 			case RF_TRANSMITTING:
+				// Rest in this state during transmission. I/O is done via interrupt callbacks
 				break;
 
 			// wait until data got transfered
@@ -442,7 +443,7 @@ int main (void)
 		case RF_BUCKET_OUT:
 		{
 			// FIXME: Why * 2?
-			const uint8_t bkts = rf_data[BUCKET_NO_POS] * 2;
+			const uint8_t bkts = rf_data[BUCKET_NO_POS] * BUCKET_PAIRS;
 			PCA0_StopRFListen();
 
 			// byte 2*(1..bkts):		bucket time high
