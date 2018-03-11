@@ -10,19 +10,20 @@
 
 #define NO_TIMERS 2
 
-SI_SEGMENT_VARIABLE(Timer_Timeout[NO_TIMERS], uint16_t, SI_SEG_XDATA) = 0x0000;
-SI_SEGMENT_VARIABLE(Timer_Interval[NO_TIMERS], uint16_t, SI_SEG_XDATA) = 0x0000;
+SI_SEGMENT_VARIABLE(Timer_Timeout[NO_TIMERS], uint16_t, SI_SEG_XDATA) = 0;
+SI_SEGMENT_VARIABLE(Timer_Interval[NO_TIMERS], uint16_t, SI_SEG_XDATA) = 0;
 
 static void StartTimer(uint8_t timer, uint16_t interval, uint16_t timeout) {
 	if (timer == TIMER2) {
-		TMR2CN0 |= TMR2CN0_TR2__RUN;
 		Timer_Timeout[0] = timeout;
 		Timer_Interval[0] = interval;
+		TMR2CN0 |= TMR2CN0_TR2__RUN;
 
 	} else if (timer == TIMER3) {
-		TMR3CN0 |= TMR3CN0_TR3__RUN;
 		Timer_Timeout[1] = timeout;
 		Timer_Interval[1] = interval;
+		TMR3CN0 |= TMR3CN0_TR3__RUN;
+
 	}
 }
 
@@ -37,6 +38,7 @@ void SetTimerReload(uint8_t timer, uint16_t reload)
 	 	 - Timer 2 Reload Low Byte
 		 ***********************************************************************/
 		TMR2RLL = ((reload & 0xFF) << TMR2RLL_TMR2RLL__SHIFT);
+
 	} else if (timer == TIMER3) {
 		/***********************************************************************
 	 	 - Timer 3 Reload High Byte
@@ -46,6 +48,7 @@ void SetTimerReload(uint8_t timer, uint16_t reload)
 	 	 - Timer 3 Reload Low Byte
 		 ***********************************************************************/
 		TMR3RLL = ((reload & 0xFF) << TMR3RLL_TMR3RLL__SHIFT);
+
 	}
 }
 
@@ -54,7 +57,10 @@ void SetTimerReload(uint8_t timer, uint16_t reload)
  */
 void InitTimer_us(uint8_t timer, uint16_t interval, uint16_t timeout)
 {
-	SetTimerReload(timer, (uint16_t)(0x10000 - ((uint32_t) SYSCLK / (1000000 / (uint32_t) interval))));
+	// See 18.3.3.1 in EFM8BB1 Reference Manual
+	uint16_t reload_value = (uint16_t) (0x10000 - ((uint32_t) SYSCLK / (1000000 / (uint32_t) interval)));
+
+	SetTimerReload(timer, reload_value);
 	StartTimer(timer, interval, timeout);
 }
 
@@ -63,7 +69,9 @@ void InitTimer_us(uint8_t timer, uint16_t interval, uint16_t timeout)
  */
 void InitTimer_ms(uint8_t timer, uint16_t interval, uint16_t timeout)
 {
-	SetTimerReload(timer, (uint16_t)(0x10000 - ((uint32_t) SYSCLK / (1000 / (uint32_t) interval))));
+	// See 18.3.3.1 in EFM8BB1 Reference Manual
+	uint16_t reload_value = (uint16_t) (0x10000 - ((uint32_t) SYSCLK / (1000 / (uint32_t) interval)));
+	SetTimerReload(timer, reload_value);
 	StartTimer(timer, interval, timeout);
 }
 
