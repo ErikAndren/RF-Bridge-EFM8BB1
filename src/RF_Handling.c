@@ -38,7 +38,7 @@ SI_SEGMENT_VARIABLE(actual_byte, uint8_t, SI_SEG_XDATA) = 0;
 
 // up to 8 timing buckets for MODE_BUCKET
 SI_SEGMENT_VARIABLE(bucket_sync, uint16_t, SI_SEG_XDATA);
-SI_SEGMENT_VARIABLE(buckets[15], uint16_t, SI_SEG_XDATA);	// -1 because of the bucket_sync
+SI_SEGMENT_VARIABLE(buckets[BUCKET_MAX], uint16_t, SI_SEG_XDATA);	// -1 because of the bucket_sync
 SI_SEGMENT_VARIABLE(bucket_count, uint8_t, SI_SEG_XDATA) = 0;
 
 //-----------------------------------------------------------------------------
@@ -335,7 +335,6 @@ static void SendRF_Sync(void)
 	T_DATA = 0;
 	InitTimer_us(TIMER3, 10, 100);
 	WaitTimerFinished(TIMER3);
-
 
 	// FIXME: Add sync repeats
 	T_DATA = 1;
