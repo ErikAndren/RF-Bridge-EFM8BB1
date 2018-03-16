@@ -54,7 +54,15 @@ void SetTimerReload(uint8_t timer, uint16_t reload)
 void InitTimer_us(uint8_t timer, uint16_t interval, uint16_t timeout)
 {
 	// See 18.3.3.1 in EFM8BB1 Reference Manual
-	uint16_t reload_value = (uint16_t) (0x10000 - ((uint32_t) SYSCLK / (1000000 / (uint32_t) interval)));
+	uint16_t reload_value;
+
+	if (timer == TIMER2) {
+		reload_value = (uint16_t) (0x10000 - ((uint32_t) (SYSCLK / TIMER2_PRESCALER) / (1000000 / (uint32_t) interval)));
+	} else if (timer == TIMER3) {
+		reload_value = (uint16_t) (0x10000 - ((uint32_t) (SYSCLK / TIMER3_PRESCALER) / (1000000 / (uint32_t) interval)));
+	} else {
+		return;
+	}
 
 	SetTimerReload(timer, reload_value);
 	StartTimer(timer, interval, timeout);
@@ -66,7 +74,16 @@ void InitTimer_us(uint8_t timer, uint16_t interval, uint16_t timeout)
 void InitTimer_ms(uint8_t timer, uint16_t interval, uint16_t timeout)
 {
 	// See 18.3.3.1 in EFM8BB1 Reference Manual
-	uint16_t reload_value = (uint16_t) (0x10000 - ((uint32_t) SYSCLK / (1000 / (uint32_t) interval)));
+	uint16_t reload_value;
+
+	if (timer == TIMER2) {
+		reload_value = (uint16_t) (0x10000 - ((uint32_t) (SYSCLK / TIMER2_PRESCALER) / (1000 / (uint32_t) interval)));
+	} else if (timer == TIMER3) {
+		reload_value = (uint16_t) (0x10000 - ((uint32_t) (SYSCLK / TIMER3_PRESCALER) / (1000 / (uint32_t) interval)));
+	} else {
+		return;
+	}
+
 	SetTimerReload(timer, reload_value);
 	StartTimer(timer, interval, timeout);
 }
