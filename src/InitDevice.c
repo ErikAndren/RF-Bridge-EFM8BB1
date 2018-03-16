@@ -273,17 +273,9 @@ extern void TIMER16_3_enter_DefaultMode_from_RESET(void) {
 	// [TMR3L - Timer 3 Low Byte]$
 
 	// $[TMR3RLH - Timer 3 Reload High Byte]
-	/***********************************************************************
-	 - Timer 3 Reload High Byte = 0xFF
-	 ***********************************************************************/
-	TMR3RLH = (0xFF << TMR3RLH_TMR3RLH__SHIFT);
 	// [TMR3RLH - Timer 3 Reload High Byte]$
 
 	// $[TMR3RLL - Timer 3 Reload Low Byte]
-	/***********************************************************************
-	 - Timer 3 Reload Low Byte = 0x86
-	 ***********************************************************************/
-	TMR3RLL = (0x86 << TMR3RLL_TMR3RLL__SHIFT);
 	// [TMR3RLL - Timer 3 Reload Low Byte]$
 
 	// $[TMR3CN0]
@@ -315,17 +307,9 @@ extern void TIMER16_2_enter_DefaultMode_from_RESET(void) {
 	// [TMR2L - Timer 2 Low Byte]$
 
 	// $[TMR2RLH - Timer 2 Reload High Byte]
-	/***********************************************************************
-	 - Timer 2 Reload High Byte = 0xFF
-	 ***********************************************************************/
-	TMR2RLH = (0xFF << TMR2RLH_TMR2RLH__SHIFT);
 	// [TMR2RLH - Timer 2 Reload High Byte]$
 
 	// $[TMR2RLL - Timer 2 Reload Low Byte]
-	/***********************************************************************
-	 - Timer 2 Reload Low Byte = 0x86
-	 ***********************************************************************/
-	TMR2RLL = (0x86 << TMR2RLL_TMR2RLL__SHIFT);
 	// [TMR2RLL - Timer 2 Reload Low Byte]$
 
 	// $[TMR2CN0]
