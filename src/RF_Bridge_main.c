@@ -68,7 +68,7 @@ int main (void)
 	LED = LED_OFF;
 	BUZZER = BUZZER_OFF;
 	T_DATA = 1;
-	uart_rx_state = IDLE;
+	uart_rx_state = RECEIVE_IDLE;
 	waiting_for_uart_ack = false;
 
 	UART0_init(UART0_RX_ENABLE, UART0_WIDTH_8, UART0_MULTIPROC_DISABLE);
@@ -309,7 +309,7 @@ int main (void)
 		 ------------------------------------------*/
 		uart_rx_data = uart_getc();
 
-		if (uart_rx_state != IDLE) {
+		if (uart_rx_state != RECEIVE_IDLE) {
 			if (IsTimerFinished(TIMER2) == true) {
 				// Three beeps for timeout
 				SoundBuzzer_ms(50);
@@ -318,7 +318,7 @@ int main (void)
 				delay_ms(200);
 				SoundBuzzer_ms(50);
 
-				uart_rx_state = IDLE;
+				uart_rx_state = RECEIVE_IDLE;
 			}
 		}
 
@@ -330,7 +330,7 @@ int main (void)
 			delay_ms(200);
 			SoundBuzzer_ms(50);
 
-			uart_rx_state = IDLE;
+			uart_rx_state = RECEIVE_IDLE;
 			continue;
 		}
 
@@ -338,7 +338,7 @@ int main (void)
 		switch(uart_rx_state)
 		{
 		// check if UART_SYNC_INIT got received
-		case IDLE:
+		case RECEIVE_IDLE:
 			if (uart_rx_data == RF_CODE_START) {
 				uart_rx_state = RECEIVE_COMMAND;
 
@@ -391,7 +391,7 @@ int main (void)
 		case RECEIVE_END:
 			if (uart_rx_data == RF_CODE_STOP)
 			{
-				uart_rx_state = IDLE;
+				uart_rx_state = RECEIVE_IDLE;
 
 				if (next_uart_command == RF_CODE_ACK) {
 					waiting_for_uart_ack = false;
@@ -464,7 +464,7 @@ int main (void)
 				} // switch(uart_command)
 			} else {
 				// Received something else then RF_CODE_STOP
-				uart_rx_state = IDLE;
+				uart_rx_state = RECEIVE_IDLE;
 			}
 			break;
 		} // switch uart_state

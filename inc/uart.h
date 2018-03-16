@@ -71,7 +71,7 @@
 //-----------------------------------------------------------------------------
 typedef enum
 {
-	IDLE,
+	RECEIVE_IDLE,
 	RECEIVE_COMMAND,
 	RECEIVE_END,
 	RECEIVE_PAYLOAD_LEN,
