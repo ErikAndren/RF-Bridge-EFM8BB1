@@ -259,7 +259,6 @@ uint8_t GetProtocolIndex(uint8_t identifier)
 }
 
 // Transmission path
-
 void PCA0_InitRFTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
 					   uint16_t bit_high_time, uint8_t bit_high_duty,
 		               uint16_t bit_low_time, uint8_t bit_low_duty, uint8_t bitcount)
@@ -273,6 +272,7 @@ void PCA0_InitRFTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
 	// calculate T0_Overflow
 	bit_time = (100 * (uint32_t) bit_high_time) / bit_high_duty;
 	t0_high = (uint8_t)(0x100 - ((uint32_t) SYSCLK / (0xFF * (1000000 / (uint32_t) bit_time))));
+
 	bit_time = (100 * (uint32_t) bit_low_time) / bit_low_duty;
 	t0_low = (uint8_t)(0x100 - ((uint32_t) SYSCLK / (0xFF * (1000000 / (uint32_t) bit_time))));
 
