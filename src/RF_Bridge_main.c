@@ -389,82 +389,65 @@ int main (void)
 			break;
 
 		case RECEIVE_END:
+			uart_rx_state = RECEIVE_IDLE;
 			if (uart_rx_data == RF_CODE_STOP)
 			{
-				uart_rx_state = RECEIVE_IDLE;
-
-				if (next_uart_command == RF_CODE_ACK) {
+				/* Act upon received command */
+				switch(next_uart_command) {
+				case RF_CODE_ACK:
 					waiting_for_uart_ack = false;
 					PCA0_StartRFListen();
-				} else {
-					uart_command = next_uart_command;
-				}
+					break;
 
-				/* Act upon received command */
-				switch(uart_command) {
 				case RF_CODE_LEARN:
-					uart_put_command(RF_CODE_ACK);
-
 					SoundBuzzer_ms(LEARN_CMD_START_MS);
-
 					desired_rf_protocol = PT2260_IDENTIFIER;
 					rf_listen_mode = MODE_DUTY_CYCLE;
-					PCA0_StartRFListen();
 					last_uart_command = uart_command;
-
-					// start learn timeout timer
+					uart_command = next_uart_command;
+					PCA0_StartRFListen();
+					uart_put_command(RF_CODE_ACK);
 					InitTimer_ms(TIMER3, 1, LEARN_CMD_TIMEOUT_MS);
 					break;
 
 				case RF_PROTOCOL_SNIFFING_ON:
-					uart_put_command(RF_CODE_ACK);
-
 					desired_rf_protocol = UNKNOWN_IDENTIFIER;
 					rf_listen_mode = MODE_DUTY_CYCLE;
-
-					PCA0_StartRFListen();
 					last_uart_command = RF_PROTOCOL_SNIFFING_ON;
+					uart_command = next_uart_command;
+					PCA0_StartRFListen();
+					uart_put_command(RF_CODE_ACK);
 					break;
 
 				case RF_PROTOCOL_SNIFFING_OFF:
-					uart_put_command(RF_CODE_ACK);
-
 					desired_rf_protocol = PT2260_IDENTIFIER;
 					rf_listen_mode = MODE_DUTY_CYCLE;
-					PCA0_StartRFListen();
 					last_uart_command = RF_CODE_IN;
+					uart_command = next_uart_command;
+					PCA0_StartRFListen();
+					uart_put_command(RF_CODE_ACK);
 					break;
 
 				case RF_BUCKET_SNIFFING_ON:
-					uart_put_command(RF_CODE_ACK);
-
 					rf_listen_mode = MODE_BUCKET;
-					PCA0_StartRFListen();
 					last_uart_command = RF_BUCKET_SNIFFING_ON;
+					uart_command = next_uart_command;
+					PCA0_StartRFListen();
+					uart_put_command(RF_CODE_ACK);
 					break;
 
 				case RF_PROTOCOL_LEARN:
-					uart_put_command(RF_CODE_ACK);
-
 					SoundBuzzer_ms(LEARN_CMD_START_MS);
-
-					// enable sniffing for all known protocols
 					last_desired_rf_protocol = desired_rf_protocol;
 					desired_rf_protocol = UNKNOWN_IDENTIFIER;
 					rf_listen_mode = MODE_DUTY_CYCLE;
 					PCA0_StartRFListen();
 					last_uart_command = RF_PROTOCOL_LEARN;
-
-					// start timeout timer
+					uart_command = next_uart_command;
+					uart_put_command(RF_CODE_ACK);
 					InitTimer_ms(TIMER3, 1, LEARN_CMD_TIMEOUT_MS);
 					break;
-
-				default:
-					break;
 				} // switch(uart_command)
-			} else {
-				// Received something else then RF_CODE_STOP
-				uart_rx_state = RECEIVE_IDLE;
 			}
 			break;
 		} // switch uart_state
