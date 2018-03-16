@@ -107,6 +107,7 @@ extern uint8_t uart_getlen(void);
 extern bool uart_transfer_finished(void);
 extern unsigned int uart_getc(void);
 extern void uart_putc(uint8_t txdata);
+extern void uart_puts(uint16_t txdata);
 extern void uart_put_command(uint8_t command);
 extern void uart_put_uint16_t(uint8_t command, uint16_t value);
 extern void uart_put_RF_Data(uint8_t Command, uint8_t used_protocol);

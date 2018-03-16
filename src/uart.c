@@ -128,6 +128,12 @@ void uart_putc(uint8_t txdata)
 	UART_Buffer_Write_Len++;
 }
 
+void uart_puts(uint16_t txdata)
+{
+	uart_putc(txdata >> 8);
+	uart_putc(txdata & 0xFF);
+}
+
 void uart_put_command(uint8_t command)
 {
 	uart_putc(RF_CODE_START);
