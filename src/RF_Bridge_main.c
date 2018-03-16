@@ -88,170 +88,7 @@ int main (void)
 	// Main loop
 	while (true)
 	{
-		/*------------------------------------------
-		 * check if something got received by UART
-		 ------------------------------------------*/
-		uart_rx_data = uart_getc();
-
-		if (uart_rx_state != IDLE) {
-			if (IsTimerFinished(TIMER2) == true) {
-				// Three beeps for timeout
-				SoundBuzzer_ms(50);
-				delay_ms(200);
-				SoundBuzzer_ms(50);
-				delay_ms(200);
-				SoundBuzzer_ms(50);
-
-				uart_rx_state = IDLE;
-			}
-		}
-
-		if (uart_rx_data > UART_NO_DATA) {
-			// Two beeps for uart rx error
-			SoundBuzzer_ms(50);
-			delay_ms(200);
-			SoundBuzzer_ms(50);
-
-			uart_rx_state = IDLE;
-		}
-
-		// state machine for UART rx
-		switch(uart_rx_state)
-		{
-		// check if UART_SYNC_INIT got received
-		case IDLE:
-			if (uart_rx_data == RF_CODE_START) {
-				uart_rx_state = RECEIVE_COMMAND;
-				InitTimer_ms(TIMER2, 1, CMD_TIMEOUT_MS);
-			}
-			break;
-
-		// sync byte got received, read command
-		case RECEIVE_COMMAND:
-			next_uart_command = uart_rx_data;
-
-			switch(next_uart_command)
-			{
-			case RF_CODE_OUT:
-				uart_rx_state = RECEIVE_PAYLOAD;
-				uart_payload_pos = 0;
-				uart_payload_len = SONOFF_INSTR_SZ;
-				break;
-
-			case RF_PROTOCOL_OUT:
-			case RF_BUCKET_OUT:
-				uart_rx_state = RECEIVE_PAYLOAD_LEN;
-				break;
-
-			default:
-				uart_rx_state = RECEIVE_END;
-			}
-			break; // End SYNC_INIT
-
-		case RECEIVE_PAYLOAD_LEN:
-			uart_payload_pos = 0;
-			uart_payload_len = uart_rx_data;
-
-			if (uart_payload_len > 0) {
-				uart_rx_state = RECEIVE_PAYLOAD;
-			} else {
-				uart_rx_state = RECEIVE_END;
-			}
-			break;
-
-		case RECEIVE_PAYLOAD:
-			rf_data[uart_payload_pos] = uart_rx_data;
-			uart_payload_pos++;
-
-			if ((uart_payload_pos == uart_payload_len) || (uart_payload_pos >= RF_DATA_BUFFERSIZE)) {
-				uart_rx_state = RECEIVE_END;
-			}
-			break;
-
-		case RECEIVE_END:
-			if (uart_rx_data == RF_CODE_STOP)
-			{
-				uart_rx_state = IDLE;
-
-				if (next_uart_command == RF_CODE_ACK) {
-					waiting_for_uart_ack = false;
-					PCA0_StartRFListen();
-				} else {
-					uart_command = next_uart_command;
-				}
-
-				/* Act upon received command */
-				switch(uart_command) {
-				case RF_CODE_LEARN:
-					uart_put_command(RF_CODE_ACK);
-
-					SoundBuzzer_ms(LEARN_CMD_START_MS);
-
-					desired_rf_protocol = PT2260_IDENTIFIER;
-					rf_listen_mode = MODE_DUTY_CYCLE;
-					PCA0_StartRFListen();
-					last_uart_command = uart_command;
-
-					// start learn timeout timer
-					InitTimer_ms(TIMER3, 1, LEARN_CMD_TIMEOUT_MS);
-					break;
-
-				case RF_PROTOCOL_SNIFFING_ON:
-					uart_put_command(RF_CODE_ACK);
-
-					desired_rf_protocol = UNKNOWN_IDENTIFIER;
-					rf_listen_mode = MODE_DUTY_CYCLE;
-
-					PCA0_StartRFListen();
-					last_uart_command = RF_PROTOCOL_SNIFFING_ON;
-					break;
-
-				case RF_PROTOCOL_SNIFFING_OFF:
-					uart_put_command(RF_CODE_ACK);
-
-					desired_rf_protocol = PT2260_IDENTIFIER;
-					rf_listen_mode = MODE_DUTY_CYCLE;
-					PCA0_StartRFListen();
-					last_uart_command = RF_CODE_IN;
-					break;
-
-				case RF_BUCKET_SNIFFING_ON:
-					uart_put_command(RF_CODE_ACK);
-
-					rf_listen_mode = MODE_BUCKET;
-					PCA0_StartRFListen();
-					last_uart_command = RF_BUCKET_SNIFFING_ON;
-					break;
-
-				case RF_PROTOCOL_LEARN:
-					uart_put_command(RF_CODE_ACK);
-
-					SoundBuzzer_ms(LEARN_CMD_START_MS);
-
-					// enable sniffing for all known protocols
-					last_desired_rf_protocol = desired_rf_protocol;
-					desired_rf_protocol = UNKNOWN_IDENTIFIER;
-					rf_listen_mode = MODE_DUTY_CYCLE;
-					PCA0_StartRFListen();
-					last_uart_command = RF_PROTOCOL_LEARN;
-
-					// start timeout timer
-					InitTimer_ms(TIMER3, 1, LEARN_CMD_TIMEOUT_MS);
-					break;
-
-				default:
-					break;
-				} // switch(uart_command)
-			} else {
-				// Received something else then RF_CODE_STOP
-				uart_rx_state = IDLE;
-			}
-			break;
-		} // switch uart_state
-
-		/*------------------------------------------
-		 * check command byte
-		 ------------------------------------------*/
+		// Act upon currently executing command
 		switch(uart_command)
 		{
 		// do original learning
@@ -466,5 +303,172 @@ int main (void)
 			}
 			break;
 		}
+
+		/*------------------------------------------
+		 * check if something got received by UART
+		 ------------------------------------------*/
+		uart_rx_data = uart_getc();
+
+		if (uart_rx_state != IDLE) {
+			if (IsTimerFinished(TIMER2) == true) {
+				// Three beeps for timeout
+				SoundBuzzer_ms(50);
+				delay_ms(200);
+				SoundBuzzer_ms(50);
+				delay_ms(200);
+				SoundBuzzer_ms(50);
+
+				uart_rx_state = IDLE;
+			}
+		}
+
+		if (uart_rx_data == UART_NO_DATA) {
+			continue;
+		} else if (uart_rx_data > UART_NO_DATA) {
+			// Two beeps for uart rx error
+			SoundBuzzer_ms(50);
+			delay_ms(200);
+			SoundBuzzer_ms(50);
+
+			uart_rx_state = IDLE;
+			continue;
+		}
+
+		// state machine for UART rx
+		switch(uart_rx_state)
+		{
+		// check if UART_SYNC_INIT got received
+		case IDLE:
+			if (uart_rx_data == RF_CODE_START) {
+				uart_rx_state = RECEIVE_COMMAND;
+
+				InitTimer_ms(TIMER2, 100, CMD_TIMEOUT_MS);
+			}
+			break;
+
+		// sync byte got received, read command
+		case RECEIVE_COMMAND:
+			next_uart_command = uart_rx_data;
+
+			switch(next_uart_command)
+			{
+			case RF_CODE_OUT:
+				uart_rx_state = RECEIVE_PAYLOAD;
+				uart_payload_pos = 0;
+				uart_payload_len = SONOFF_INSTR_SZ;
+				break;
+
+			case RF_PROTOCOL_OUT:
+			case RF_BUCKET_OUT:
+				uart_rx_state = RECEIVE_PAYLOAD_LEN;
+				break;
+
+			default:
+				uart_rx_state = RECEIVE_END;
+			}
+			break; // End SYNC_INIT
+
+		case RECEIVE_PAYLOAD_LEN:
+			uart_payload_pos = 0;
+			uart_payload_len = uart_rx_data;
+
+			if (uart_payload_len > 0) {
+				uart_rx_state = RECEIVE_PAYLOAD;
+			} else {
+				uart_rx_state = RECEIVE_END;
+			}
+			break;
+
+		case RECEIVE_PAYLOAD:
+			rf_data[uart_payload_pos] = uart_rx_data;
+			uart_payload_pos++;
+
+			if ((uart_payload_pos == uart_payload_len) || (uart_payload_pos >= RF_DATA_BUFFERSIZE)) {
+				uart_rx_state = RECEIVE_END;
+			}
+			break;
+
+		case RECEIVE_END:
+			if (uart_rx_data == RF_CODE_STOP)
+			{
+				uart_rx_state = IDLE;
+
+				if (next_uart_command == RF_CODE_ACK) {
+					waiting_for_uart_ack = false;
+					PCA0_StartRFListen();
+				} else {
+					uart_command = next_uart_command;
+				}
+
+				/* Act upon received command */
+				switch(uart_command) {
+				case RF_CODE_LEARN:
+					uart_put_command(RF_CODE_ACK);
+
+					SoundBuzzer_ms(LEARN_CMD_START_MS);
+
+					desired_rf_protocol = PT2260_IDENTIFIER;
+					rf_listen_mode = MODE_DUTY_CYCLE;
+					PCA0_StartRFListen();
+					last_uart_command = uart_command;
+
+					// start learn timeout timer
+					InitTimer_ms(TIMER3, 1, LEARN_CMD_TIMEOUT_MS);
+					break;
+
+				case RF_PROTOCOL_SNIFFING_ON:
+					uart_put_command(RF_CODE_ACK);
+
+					desired_rf_protocol = UNKNOWN_IDENTIFIER;
+					rf_listen_mode = MODE_DUTY_CYCLE;
+
+					PCA0_StartRFListen();
+					last_uart_command = RF_PROTOCOL_SNIFFING_ON;
+					break;
+
+				case RF_PROTOCOL_SNIFFING_OFF:
+					uart_put_command(RF_CODE_ACK);
+
+					desired_rf_protocol = PT2260_IDENTIFIER;
+					rf_listen_mode = MODE_DUTY_CYCLE;
+					PCA0_StartRFListen();
+					last_uart_command = RF_CODE_IN;
+					break;
+
+				case RF_BUCKET_SNIFFING_ON:
+					uart_put_command(RF_CODE_ACK);
+
+					rf_listen_mode = MODE_BUCKET;
+					PCA0_StartRFListen();
+					last_uart_command = RF_BUCKET_SNIFFING_ON;
+					break;
+
+				case RF_PROTOCOL_LEARN:
+					uart_put_command(RF_CODE_ACK);
+
+					SoundBuzzer_ms(LEARN_CMD_START_MS);
+
+					// enable sniffing for all known protocols
+					last_desired_rf_protocol = desired_rf_protocol;
+					desired_rf_protocol = UNKNOWN_IDENTIFIER;
+					rf_listen_mode = MODE_DUTY_CYCLE;
+					PCA0_StartRFListen();
+					last_uart_command = RF_PROTOCOL_LEARN;
+
+					// start timeout timer
+					InitTimer_ms(TIMER3, 1, LEARN_CMD_TIMEOUT_MS);
+					break;
+
+				default:
+					break;
+				} // switch(uart_command)
+			} else {
+				// Received something else then RF_CODE_STOP
+				uart_rx_state = IDLE;
+			}
+			break;
+		} // switch uart_state
+
+
 	}
 }
