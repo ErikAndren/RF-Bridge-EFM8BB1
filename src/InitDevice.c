@@ -331,13 +331,13 @@ extern void TIMER_SETUP_0_enter_DefaultMode_from_RESET(void) {
 	 - System clock divided by 12
 	 - Counter/Timer 0 uses the system clock
 	 - Timer 2 high byte uses the clock defined by T2XCLK in TMR2CN0
-	 - Timer 2 low byte uses the system clock
+	 - Timer 2 low byte uses the clock defined by T2XCLK in TMR2CN0
 	 - Timer 3 high byte uses the clock defined by T3XCLK in TMR3CN0
 	 - Timer 3 low byte uses the system clock
 	 - Timer 1 uses the clock defined by the prescale field, SCA
 	 ***********************************************************************/
 	CKCON0 = CKCON0_SCA__SYSCLK_DIV_12 | CKCON0_T0M__SYSCLK
-			| CKCON0_T2MH__EXTERNAL_CLOCK | CKCON0_T2ML__SYSCLK
+			| CKCON0_T2MH__EXTERNAL_CLOCK | CKCON0_T2ML__EXTERNAL_CLOCK
 			| CKCON0_T3MH__EXTERNAL_CLOCK | CKCON0_T3ML__SYSCLK
 			| CKCON0_T1M__PRESCALE;
 	// [CKCON0 - Clock Control 0]$
