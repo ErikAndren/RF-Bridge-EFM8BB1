@@ -18,12 +18,10 @@ static void StartTimer(uint8_t timer, uint16_t interval, uint16_t timeout) {
 		Timer_Timeout[0] = timeout;
 		Timer_Interval[0] = interval;
 		TMR2CN0 |= TMR2CN0_TR2__RUN;
-
 	} else if (timer == TIMER3) {
 		Timer_Timeout[1] = timeout;
 		Timer_Interval[1] = interval;
 		TMR3CN0 |= TMR3CN0_TR3__RUN;
-
 	}
 }
 
@@ -38,7 +36,6 @@ void SetTimerReload(uint8_t timer, uint16_t reload)
 	 	 - Timer 2 Reload Low Byte
 		 ***********************************************************************/
 		TMR2RLL = ((reload & 0xFF) << TMR2RLL_TMR2RLL__SHIFT);
-
 	} else if (timer == TIMER3) {
 		/***********************************************************************
 	 	 - Timer 3 Reload High Byte
@@ -48,7 +45,6 @@ void SetTimerReload(uint8_t timer, uint16_t reload)
 	 	 - Timer 3 Reload Low Byte
 		 ***********************************************************************/
 		TMR3RLL = ((reload & 0xFF) << TMR3RLL_TMR3RLL__SHIFT);
-
 	}
 }
 
