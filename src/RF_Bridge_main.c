@@ -98,18 +98,14 @@ int main (void)
 			{
 				SoundBuzzer_ms(LEARN_CMD_SUCCESS_MS);
 
-				PCA0_StartRFListen();
 				uart_command = last_uart_command;
-
 				uart_put_RF_CODE_Data(RF_CODE_LEARN_SUCCESS);
 
 			// check for learning timeout
 			} else if (IsTimerFinished(TIMER3) == true) {
 				SoundBuzzer_ms(LEARN_CMD_FAILURE_MS);
 
-				PCA0_StartRFListen();
 				uart_command = last_uart_command;
-
 				uart_put_command(RF_CODE_LEARN_TIMEOUT);
 			}
 			break; // case RF_CODE_LEARN
