@@ -144,7 +144,6 @@ void PCA0_channel1EventCb()
 						{
 							LED = LED_OFF;
 							rf_state = RF_FINISHED;
-							LED = LED_OFF;
 						}
 						break;
 				}
