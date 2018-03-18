@@ -437,7 +437,6 @@ void PCA0_StartRFListen(void)
 
 void PCA0_StopRFListen(void)
 {
-	// stop PCA
 	PCA0_halt();
 
 	// clear all interrupt flags of PCA0
@@ -448,6 +447,4 @@ void PCA0_StopRFListen(void)
 
 	// disable interrupt for RF receiving
 	PCA0CPM1 &= ~PCA0CPM1_ECCF__ENABLED;
-
-	rf_state = RF_IDLE;
 }
