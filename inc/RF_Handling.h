@@ -18,9 +18,6 @@ extern void PCA0_StartRFTransmit(uint8_t payload_ptr);
 extern void PCA0_StopRFTransmit(void);
 extern void PCA0_StartRFListen(void);
 extern void PCA0_StopRFListen(void);
-extern void SendRFBuckets(uint16_t *buckets, uint8_t *rfdata, uint8_t n, uint8_t repeats);
-extern void Bucket_Received(uint16_t duration);
-extern void SendRF_Sync(void);
 
 // 112 byte == 896 bits, so a RF signal with maximum of 896 bits is possible
 // for bucket transmission, this depends on the number of buckets.
