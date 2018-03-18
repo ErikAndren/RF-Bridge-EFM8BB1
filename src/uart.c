@@ -142,7 +142,7 @@ void uart_put_command(uint8_t command)
 	UART0_initTxPolling();
 }
 
-void uart_put_RF_Data(uint8_t command, uint8_t used_protocol)
+void uart_put_RF_Data(uint8_t command)
 {
 	uint8_t i = 0;
 	uint8_t bytes = 0;
@@ -151,13 +151,13 @@ void uart_put_RF_Data(uint8_t command, uint8_t used_protocol)
 	uart_putc(command);
 
 	//FIXME: Think this through? Why not just divide by 8
-	while (i < PROTOCOLS[used_protocol].bit_count)
+	while (i < PROTOCOLS[rf_protocol].bit_count)
 	{
 		i += 8;
 		bytes++;
 	}
 	uart_putc(bytes + 1);
-	uart_putc(PROTOCOLS[used_protocol].identifier);
+	uart_putc(PROTOCOLS[rf_protocol].identifier);
 
 	//FIXME: <=?
 	for (i = 0; i < bytes; i++) {
