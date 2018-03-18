@@ -5,8 +5,6 @@
  *      Author: erik
  */
 
-#include <SI_EFM8BB1_Register_Enums.h>
-#include <string.h>
 #include "Globals.h"
 #include "RF_Handling.h"
 #include "RF_Protocols.h"
