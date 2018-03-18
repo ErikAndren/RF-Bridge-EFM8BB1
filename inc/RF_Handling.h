@@ -13,7 +13,6 @@ extern uint8_t GetProtocolIndex(uint8_t identifier);
 extern void PCA0_InitRFTransmit(uint16_t sync_high_in, uint16_t sync_low_in, uint16_t bit_high_time, uint8_t bit_high_duty,
 		uint16_t bit_low_time, uint8_t bit_low_duty, uint8_t bitcount);
 extern void PCA0_SetDutyCycle(void);
-extern void SetTimer0Overflow(uint8_t T0_Overflow);
 extern void PCA0_StartRFTransmit(uint8_t payload_ptr);
 extern void PCA0_StopRFTransmit(void);
 extern void PCA0_StartRFListen(void);

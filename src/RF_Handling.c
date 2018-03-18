@@ -176,7 +176,7 @@ void PCA0_channel2EventCb()
 {
 }
 
-void SetTimer0Overflow(uint8_t T0_Overflow)
+static void SetTimer0Overflow(uint8_t T0_Overflow)
 {
 	/***********************************************************************
 	 - Timer 0 High Byte = T0_Overflow
@@ -430,7 +430,6 @@ void PCA0_StartRFListen(void)
 	PCA0PWM &= ~PCA0PWM_ECOV__COVF_MASK_ENABLED;
 
 	rf_state = RF_IDLE;
-	rf_protocol = 0;
 
 	PCA0_run();
 }
