@@ -54,14 +54,13 @@ void PCA0_overflowCb()
 void PCA0_channel1EventCb()
 {
 	// Store most recent capture value
-	// FIXME: Why do we multiply this by 10?
+	// FIXME: Why do we multiply this by 10? Fixed-point arithmetic?
 	uint16_t current_capture_value = PCA0CP1 * 10;
-	uint16_t previous_capture_value_pos;
 	uint16_t capture_period_neg;
 	uint8_t current_duty_cycle;
 
 	static uint16_t capture_period_pos;
-	static uint16_t previous_capture_value_neg;
+	static uint16_t previous_capture_value_neg, previous_capture_value_pos;
 	static uint16_t low_pulse_time;
 
 	// positive edge
@@ -71,7 +70,7 @@ void PCA0_channel1EventCb()
 		previous_capture_value_pos = current_capture_value;
 
 		// Calculate capture period from last two values.
-		capture_period_neg = current_capture_value - previous_capture_value_neg;
+		capture_period_neg = previous_capture_value_pos - previous_capture_value_neg;
 
 		// do sniffing by mode
 		switch (rf_listen_mode)
@@ -163,7 +162,7 @@ void PCA0_channel1EventCb()
 		previous_capture_value_neg = current_capture_value;
 
 		// Calculate capture period from last two values.
-		capture_period_pos = current_capture_value - previous_capture_value_pos;
+		capture_period_pos = previous_capture_value_neg - previous_capture_value_pos;
 
 		// do sniffing by mode
 		if (rf_listen_mode == MODE_BUCKET) {
