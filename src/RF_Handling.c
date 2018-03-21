@@ -49,12 +49,19 @@ void PCA0_overflowCb()
 {
 }
 
+void PCA0_channel2EventCb()
+{
+}
+
+
 // Called when receiving
-// FIXME: This is a lot of work done in interrupt context. It might be wise to move this the the main thread
+// FIXME: This is a lot of work done in interrupt context. It might be wise to move this to the main thread
+// Triggered when either a rising or falling edge has been detected on the input pin.
+// Timer 0 is the PCA counter input and is configured to increment once every 50 us
 void PCA0_channel1EventCb()
 {
 	// Store most recent capture value
-	// FIXME: Why do we multiply this by 10? Fixed-point arithmetic?
+	// FIXME: Why do we multiply this by 10? Is it to harmonize the calculated period with the protocol definition
 	uint16_t current_capture_value = PCA0CP1 * 10;
 	uint16_t capture_period_neg;
 	uint8_t current_duty_cycle;
@@ -79,7 +86,7 @@ void PCA0_channel1EventCb()
 			case MODE_DUTY_CYCLE:
 				switch (rf_state)
 				{
-					// check if we receive a sync from a known protocol
+					// Search for a sync from a known protocol
 					case RF_IDLE:
 						rf_protocol = IdentifyRFProtocol(desired_rf_protocol, capture_period_pos, capture_period_neg);
 
@@ -171,10 +178,6 @@ void PCA0_channel1EventCb()
 	}
 }
 
-void PCA0_channel2EventCb()
-{
-}
-
 // Receive path
 void PCA0_StartRFListen(void)
 {
@@ -182,12 +185,8 @@ void PCA0_StartRFListen(void)
 	// 245 ccs * 40.8 ns = 50 us = 100000 Hz
 	TH0 = 256 - TIMER0_CC_S_TO_COUNT;
 
-	// enable interrupt for RF receiving
+	// enable interrupt for RF reception
 	PCA0CPM1 |= PCA0CPM1_ECCF__ENABLED;
-
-	// disable interrupt for RF transmission
-	PCA0CPM0 &= ~PCA0CPM0_ECCF__ENABLED;
-	PCA0PWM &= ~PCA0PWM_ECOV__COVF_MASK_ENABLED;
 
 	rf_state = RF_IDLE;
 
@@ -203,16 +202,6 @@ void PCA0_StopRFListen(void)
 
 	// disable interrupt for RF receiving
 	PCA0CPM1 &= ~PCA0CPM1_ECCF__ENABLED;
-}
-
-static void SetTimer0Overflow(uint8_t T0_Overflow)
-{
-	/***********************************************************************
-	 - Timer 0 High Byte = T0_Overflow
-	 ***********************************************************************/
-	// This is the reload value used to reload TL0 when it is in mode 2. See 18.3.2.1 in reference manual
-
-	TH0 = (T0_Overflow << TH0_TH0__SHIFT);
 }
 
 static uint8_t IdentifyRFProtocol(uint8_t identifier, uint16_t period_pos, uint16_t period_neg)
@@ -266,6 +255,17 @@ static uint8_t IdentifyRFProtocol(uint8_t identifier, uint16_t period_pos, uint1
 
 	return protocol_found;
 }
+
+static void SetTimer0Overflow(uint8_t T0_Overflow)
+{
+	/***********************************************************************
+	 - Timer 0 High Byte = T0_Overflow
+	 ***********************************************************************/
+	// This is the reload value used to reload TL0 when it is in mode 2. See 18.3.2.1 in reference manual
+
+	TH0 = (T0_Overflow << TH0_TH0__SHIFT);
+}
+
 
 uint8_t GetProtocolIndex(uint8_t identifier)
 {
@@ -335,6 +335,7 @@ void PCA0_StartRFTransmit(uint8_t payload_pos)
 
 	// make RF sync pulse
 	// FIXME: According to PT2260 docs, sync pulse comes after payload
+	// Yes, but not in the EV-protocol. Doesn't matter if multiple transmits are sent
 	SendRF_Sync();
 
 	PCA0_run();
@@ -387,9 +388,7 @@ void PCA0_intermediateOverflowCb()
 	{
 		// bit 1
 		SetTimer0Overflow(t0_high);
-	}
-	else
-	{
+	} else {
 		// bit 0
 		SetTimer0Overflow(t0_low);
 	}
@@ -409,13 +408,11 @@ void PCA0_channel0EventCb()
 	if (actual_bit == bit_count)
 	{
 		PCA0_StopRFTransmit();
-	}
-	else
-	{
+	} else {
 		actual_bit++;
 		actual_bit_of_byte--;
 
-		// set duty cycle for the next bit
+		// Start transmission of next ibt
 		PCA0_SetDutyCycle();
 	}
 }
@@ -432,15 +429,13 @@ void PCA0_StopRFTransmit(void)
 	PCA0_halt();
 
 	// clear all interrupt flags of PCA0
-	PCA0CN0 &= ~(PCA0CN0_CF__BMASK
-	  		   | PCA0CN0_CCF0__BMASK
-	  		   | PCA0CN0_CCF1__BMASK
-	  		   | PCA0CN0_CCF2__BMASK);
+	PCA0CN0 &= ~(PCA0CN0_CF__BMASK | PCA0CN0_CCF0__BMASK | PCA0CN0_CCF1__BMASK | PCA0CN0_CCF2__BMASK);
 
 	// enable P0.0 for I/O control
 	XBR1 &= ~XBR1_PCA0ME__CEX0_CEX1;
 	// switch to low
 	T_DATA = 0;
+
 	// disable P0.0 for I/O control, enter PCA mode
 	XBR1 |= XBR1_PCA0ME__CEX0_CEX1;
 
