@@ -18,6 +18,8 @@ extern void PCA0_StopRFTransmit(void);
 extern void PCA0_StartRFListen(void);
 extern void PCA0_StopRFListen(void);
 
+#define TIMER0_CC_S_TO_COUNT 245
+
 // 112 byte == 896 bits, so a RF signal with maximum of 896 bits is possible
 // for bucket transmission, this depends on the number of buckets.
 // E.g. 4 buckets have a total overhead of 11, allowing 101 bits (high/low pairs)
