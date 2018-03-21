@@ -175,11 +175,43 @@ void PCA0_channel2EventCb()
 {
 }
 
+// Receive path
+void PCA0_StartRFListen(void)
+{
+	// restore timer to 100000 Hz, 10 s interval
+	// 245 ccs * 40.8 ns = 50 us = 100000 Hz
+	TH0 = 256 - TIMER0_CC_S_TO_COUNT;
+
+	// enable interrupt for RF receiving
+	PCA0CPM1 |= PCA0CPM1_ECCF__ENABLED;
+
+	// disable interrupt for RF transmission
+	PCA0CPM0 &= ~PCA0CPM0_ECCF__ENABLED;
+	PCA0PWM &= ~PCA0PWM_ECOV__COVF_MASK_ENABLED;
+
+	rf_state = RF_IDLE;
+
+	PCA0_run();
+}
+
+void PCA0_StopRFListen(void)
+{
+	PCA0_halt();
+
+	// clear all interrupt flags of PCA0
+	PCA0CN0 &= ~(PCA0CN0_CF__BMASK | PCA0CN0_CCF0__BMASK | PCA0CN0_CCF1__BMASK | PCA0CN0_CCF2__BMASK);
+
+	// disable interrupt for RF receiving
+	PCA0CPM1 &= ~PCA0CPM1_ECCF__ENABLED;
+}
+
 static void SetTimer0Overflow(uint8_t T0_Overflow)
 {
 	/***********************************************************************
 	 - Timer 0 High Byte = T0_Overflow
 	 ***********************************************************************/
+	// This is the reload value used to reload TL0 when it is in mode 2. See 18.3.2.1 in reference manual
+
 	TH0 = (T0_Overflow << TH0_TH0__SHIFT);
 }
 
@@ -413,36 +445,4 @@ void PCA0_StopRFTransmit(void)
 	XBR1 |= XBR1_PCA0ME__CEX0_CEX1;
 
 	rf_state = RF_FINISHED;
-}
-
-void PCA0_StartRFListen(void)
-{
-	// restore timer to 100000 Hz, 10 s interval
-	// FIXME: I don't understand this
-	SetTimer0Overflow(0x0B);
-
-	// enable interrupt for RF receiving
-	PCA0CPM1 |= PCA0CPM1_ECCF__ENABLED;
-
-	// disable interrupt for RF transmission
-	PCA0CPM0 &= ~PCA0CPM0_ECCF__ENABLED;
-	PCA0PWM &= ~PCA0PWM_ECOV__COVF_MASK_ENABLED;
-
-	rf_state = RF_IDLE;
-
-	PCA0_run();
-}
-
-void PCA0_StopRFListen(void)
-{
-	PCA0_halt();
-
-	// clear all interrupt flags of PCA0
-	PCA0CN0 &= ~(PCA0CN0_CF__BMASK
-	  		                       | PCA0CN0_CCF0__BMASK
-	  		                       | PCA0CN0_CCF1__BMASK
-	  		                       | PCA0CN0_CCF2__BMASK);
-
-	// disable interrupt for RF receiving
-	PCA0CPM1 &= ~PCA0CPM1_ECCF__ENABLED;
 }
