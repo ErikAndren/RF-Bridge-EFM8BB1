@@ -32,6 +32,7 @@ SI_SEGMENT_VARIABLE(bit_high, uint16_t, SI_SEG_XDATA) = 0x00;
 SI_SEGMENT_VARIABLE(bit_low, uint16_t, SI_SEG_XDATA) = 0x00;
 SI_SEGMENT_VARIABLE(bit_count, uint8_t, SI_SEG_XDATA) = 0x00;
 
+//FIXME: This variable could be eliminated and only actual_bit be used
 SI_SEGMENT_VARIABLE(actual_bit_of_byte, uint8_t, SI_SEG_XDATA) = 0;
 SI_SEGMENT_VARIABLE(actual_bit, uint8_t, SI_SEG_XDATA) = 0;
 SI_SEGMENT_VARIABLE(actual_sync_bit, uint8_t, SI_SEG_XDATA) = 0;
@@ -53,7 +54,6 @@ void PCA0_channel2EventCb()
 {
 }
 
-
 // Called when receiving
 // FIXME: This is a lot of work done in interrupt context. It might be wise to move this to the main thread
 // Triggered when either a rising or falling edge has been detected on the input pin.
@@ -61,23 +61,17 @@ void PCA0_channel2EventCb()
 void PCA0_channel1EventCb()
 {
 	// Store most recent capture value
-	// FIXME: Why do we multiply this by 10? Is it to harmonize the calculated period with the protocol definition
-	uint16_t current_capture_value = PCA0CP1 * 10;
-	uint16_t capture_period_neg;
+	// FIXME: Why do we multiply this by 10? Is it to harmonize the calculated period with the protocol definition?
+	// FIXME: Value of the capture register is from the rising or falling edge
 	uint8_t current_duty_cycle;
 
-	static uint16_t capture_period_pos;
-	static uint16_t previous_capture_value_neg, previous_capture_value_pos;
+	static uint16_t pos_pulse_len, neg_pulse_len;
 	static uint16_t low_pulse_time;
 
-	// positive edge
-	if (R_DATA)
+	// Rising edge detected. This is the end of a negative pulse and the start of a positive pulse
+	if (R_DATA == 1)
 	{
-		// Update previous capture value with most recent info.
-		previous_capture_value_pos = current_capture_value;
-
-		// Calculate capture period from last two values.
-		capture_period_neg = previous_capture_value_pos - previous_capture_value_neg;
+		neg_pulse_len = PCA0CP1 * 10;
 
 		// do sniffing by mode
 		switch (rf_listen_mode)
@@ -88,13 +82,11 @@ void PCA0_channel1EventCb()
 				{
 					// Search for a sync from a known protocol
 					case RF_IDLE:
-						rf_protocol = IdentifyRFProtocol(desired_rf_protocol, capture_period_pos, capture_period_neg);
-
-						// check if a matching protocol got found
+						rf_protocol = IdentifyRFProtocol(desired_rf_protocol, pos_pulse_len, neg_pulse_len);
 						if (rf_protocol != NO_PROTOCOL_FOUND)
 						{
-							sync_high = capture_period_pos;
-							sync_low = capture_period_neg;
+							sync_high = pos_pulse_len;
+							sync_low = neg_pulse_len;
 							actual_bit_of_byte = 8;
 							actual_byte = 0;
 							actual_bit = 0;
@@ -108,6 +100,8 @@ void PCA0_channel1EventCb()
 
 					// one matching sync got received
 					case RF_IN_SYNC:
+						LED = !LED;
+
 						// Skip SYNC bits, if any
 						if (actual_sync_bit < PROTOCOLS[rf_protocol].sync_bit_count)
 						{
@@ -118,31 +112,35 @@ void PCA0_channel1EventCb()
 						// check the rest of the bits
 						actual_bit_of_byte--;
 						actual_bit++;
-						LED = !LED;
 
 						// calculate current duty cycle
-						current_duty_cycle = (100 * (uint32_t) capture_period_pos) / ((uint32_t) capture_period_pos + (uint32_t) capture_period_neg);
+						current_duty_cycle = (100 * (uint32_t) pos_pulse_len) / ((uint32_t) pos_pulse_len + (uint32_t) neg_pulse_len);
 
+						// Only set the bit if it passes the bit high duty filter
 						if (((current_duty_cycle > (PROTOCOLS[rf_protocol].bit_high_duty - DUTY_CYCLE_TOLERANCE)) &&
 							(current_duty_cycle < (PROTOCOLS[rf_protocol].bit_high_duty + DUTY_CYCLE_TOLERANCE)) &&
 							(actual_bit < PROTOCOLS[rf_protocol].bit_count)) ||
 							// the duty cycle can not be used for the last bit because of the missing rising edge on the end
-							((capture_period_pos > low_pulse_time) && (actual_bit == PROTOCOLS[rf_protocol].bit_count)))
+							// Problem is that we don't know in time when this is. Maybe this is not a problem as the RF input
+							// seems to jump all over the place. Another way to solve this is by setting a timer on the last positive pulse
+							// This is probably good enough. But we are not checking against duty cycle limitations.
+							// Instead just pulse that is the longest
+							((pos_pulse_len > low_pulse_time) && (actual_bit == PROTOCOLS[rf_protocol].bit_count)))
 						{
-							// backup last bit high time
-							bit_high = capture_period_pos;
+							bit_high = pos_pulse_len;
 							rf_data[(actual_bit - 1) / 8] |= (1 << actual_bit_of_byte);
 						} else {
-							// backup last bit low time
-							bit_low = capture_period_pos;
+							bit_low = pos_pulse_len;
+
 							// backup low bit pulse time to be able to determine the last bit
-							if (capture_period_pos > low_pulse_time) {
-								low_pulse_time = capture_period_pos;
+							if (pos_pulse_len > low_pulse_time) {
+								low_pulse_time = pos_pulse_len;
 							}
 						}
 
 						if (actual_bit_of_byte == 0) {
 							actual_bit_of_byte = 8;
+							// Clear next byte
 							rf_data[actual_bit / 8] = 0;
 						}
 
@@ -158,24 +156,20 @@ void PCA0_channel1EventCb()
 
 				// do sniffing by bucket mode
 				case MODE_BUCKET:
-					Bucket_Received(capture_period_neg);
+					Bucket_Received(neg_pulse_len);
 					break;
 		}
-	}
-	// negative edge
-	else
-	{
-		// Update previous capture value with most recent info.
-		previous_capture_value_neg = current_capture_value;
-
+	// Falling edge detected. This is the end of a positive pulse and the start of a negative pulse.
+	} else {
 		// Calculate capture period from last two values.
-		capture_period_pos = previous_capture_value_neg - previous_capture_value_pos;
+		pos_pulse_len = PCA0CP1 * 10;
 
-		// do sniffing by mode
 		if (rf_listen_mode == MODE_BUCKET) {
-			Bucket_Received(capture_period_pos);
+			Bucket_Received(pos_pulse_len);
 		}
 	}
+
+	PCA0_writeCounter(0);
 }
 
 // Receive path
@@ -412,7 +406,7 @@ void PCA0_channel0EventCb()
 		actual_bit++;
 		actual_bit_of_byte--;
 
-		// Start transmission of next ibt
+		// Start transmission of next bit
 		PCA0_SetDutyCycle();
 	}
 }
