@@ -21,21 +21,22 @@ typedef struct
 {
 	// Protocol specific identifier
 	uint8_t identifier;
-	// normal high signal time on sync pulse
+	// normal high signal time on sync pulse (us)
 	uint16_t sync_high;
-	// normal low signal time on sync pulse
+	// normal low signal time on sync pulse (us)
 	uint16_t sync_low;
-	// high time of a logic bit 1
+	// high time of a logic bit 1 (us)
 	uint16_t bit_high_data;
-	// high time of a logic bit 0
+	// high time of a logic bit 0 (us)
 	uint16_t bit_low_time;
-	// duty cycle for logic bit 1
+	// duty cycle for logic bit 1 %
 	uint8_t bit_high_duty;
-	// duty cycle for logic bit 0
+	// duty cycle for logic bit 0 %
 	uint8_t bit_low_duty;
 	// bit count for this protocol
 	uint8_t bit_count;
 	// bit count of SYNC bits
+	// FIXME: Logic is a bit strange as of now as 0 means one sync bit, 1 means two etc...
 	uint8_t sync_bit_count;
 } protocol_data_t;
 
@@ -48,8 +49,9 @@ typedef struct
 #define NO_PROTOCOL_FOUND 0x80
 
 /*
- * PT2260, EV1527,... original RF bridge protocol
- * http://www.princeton.com.tw/Portals/0/Product/PT2260_4.pdf
+ * Original RF bridge protocol
+ * PT2260, http://www.princeton.com.tw/Portals/0/Product/PT2260_4.pdf
+ * EV1527, https://www.sunrom.com/get/206000
  * The built-in oscillator circuitry of PT2260 allows a frequency in a range about 100-500kHz.
  * Only 100 - 300 kHz according to the datasheet
  *
