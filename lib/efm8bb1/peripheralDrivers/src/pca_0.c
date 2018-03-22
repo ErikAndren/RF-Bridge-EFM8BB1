@@ -26,23 +26,23 @@ void PCA0_enableInt(uint8_t flag, bool enable)
 {
   uint8_t en = (uint8_t) enable;
 
-  if(flag & PCA0_CHAN0_IF){
+  if (flag & PCA0_CHAN0_IF) {
     PCA0CPM0 &= ~PCA0CPM0_ECCF__BMASK;
     PCA0CPM0 |= en << PCA0CPM0_ECCF__SHIFT;
   }
-  if(flag & PCA0_CHAN1_IF){
+  if (flag & PCA0_CHAN1_IF) {
     PCA0CPM1 &= ~PCA0CPM1_ECCF__BMASK;
     PCA0CPM1 |= en << PCA0CPM1_ECCF__SHIFT;
   }
-  if(flag & PCA0_CHAN2_IF){
+  if (flag & PCA0_CHAN2_IF) {
     PCA0CPM2 &= ~PCA0CPM2_ECCF__BMASK;
     PCA0CPM2 |= en << PCA0CPM2_ECCF__SHIFT;
   }
-  if(flag & PCA0_OVERFLOW_IF){
+  if (flag & PCA0_OVERFLOW_IF) {
     PCA0MD &= ~PCA0MD_ECF__BMASK;
     PCA0MD |= en << PCA0MD_ECF__SHIFT;
   }
-  if(flag & PCA0_IOVERFLOW_IF){
+  if (flag & PCA0_IOVERFLOW_IF) {
     PCA0PWM &= ~PCA0PWM_ECOV__BMASK;
     PCA0PWM |= en << PCA0PWM_ECOV__SHIFT;
   }
@@ -84,8 +84,8 @@ void PCA0_writeChannel(PCA0_Channel_t channel, uint16_t value)
 
 uint16_t PCA0_readCounter()
 {
-  //PCA0L must be read first for accurate results. If PCA0
-  //  is returned then PCA0H will be read first (compiler specific).
+  // PCA0L must be read first for accurate results. If PCA0
+  // is returned then PCA0H will be read first (compiler specific).
   return PCA0L + (PCA0H << 8);
 }
 
@@ -191,7 +191,7 @@ void PCA0_reset()
     PCA0_resetChannel(i);
   }
 
-  //Reset PCA regs
+  //Reset PCA areas
   PCA0MD  = 0x0;
   PCA0CN0 = 0x0;
   PCA0    = 0x0;
@@ -248,6 +248,8 @@ SI_INTERRUPT(PCA0_ISR, PCA0_IRQn)
   {
     PCA0_channel0EventCb();
   }
+
+  // PCA Module 1 Capture / Compare flag
   if ((flags & PCA0CN0_CCF1__BMASK) && (PCA0CPM1 & PCA0CPM1_ECCF__BMASK))
   {
     PCA0_channel1EventCb();
