@@ -62,7 +62,8 @@ void PCA0_channel1EventCb()
 {
 	// Store most recent capture value
 	// FIXME: Why do we multiply this by 10? Is it to harmonize the calculated period with the protocol definition?
-	// FIXME: Value of the capture register is from the rising or falling edge
+	// Timer 0 is overflowing every 50 us, generating one increment in the PCA
+	// Multiplying this with 10 yields an "increment" every 5 us (1000 kHz)
 	uint8_t current_duty_cycle;
 
 	static uint16_t pos_pulse_len, neg_pulse_len;
@@ -184,6 +185,7 @@ void PCA0_StartRFListen(void)
 
 	rf_state = RF_IDLE;
 
+	PCA0_writeCounter(0);
 	PCA0_run();
 }
 
@@ -259,7 +261,6 @@ static void SetTimer0Overflow(uint8_t T0_Overflow)
 
 	TH0 = (T0_Overflow << TH0_TH0__SHIFT);
 }
-
 
 uint8_t GetProtocolIndex(uint8_t identifier)
 {
