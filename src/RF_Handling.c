@@ -171,6 +171,7 @@ void PCA0_channel1EventCb()
 	}
 
 	PCA0_writeCounter(0);
+	TL0 = 0;
 }
 
 // Receive path
@@ -179,12 +180,14 @@ void PCA0_StartRFListen(void)
 	// restore timer to 100000 Hz, 10 s interval
 	// 245 ccs * 40.8 ns = 50 us = 100000 Hz
 	TH0 = 256 - TIMER0_CC_S_TO_COUNT;
+	TL0 = 0;
 
 	// enable interrupt for RF reception
 	PCA0CPM1 |= PCA0CPM1_ECCF__ENABLED;
 
 	rf_state = RF_IDLE;
 
+	//FIXME: Not really necessary to start and stop the PCA counter. Disabling the interrupt is probably enough
 	PCA0_writeCounter(0);
 	PCA0_run();
 }
