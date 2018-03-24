@@ -171,16 +171,16 @@ void PCA0_channel1EventCb()
 	}
 
 	PCA0_writeCounter(0);
-	TL0 = 0;
+	TL0 = TH0;
 }
 
 // Receive path
 void PCA0_StartRFListen(void)
 {
 	// restore timer to 100000 Hz, 10 s interval
-	// 245 ccs * 40.8 ns = 50 us = 100000 Hz
+	// 245 cc's * 40.8 ns = 50 us = 100000 Hz = 100 kHz
 	TH0 = 256 - TIMER0_CC_S_TO_COUNT;
-	TL0 = 0;
+	TL0 = TH0;
 
 	// enable interrupt for RF reception
 	PCA0CPM1 |= PCA0CPM1_ECCF__ENABLED;
@@ -379,7 +379,7 @@ static void SendRF_Sync(void)
 	XBR1 |= XBR1_PCA0ME__CEX0_CEX1;
 }
 
-// Half of symbol transmitted, check if to change output
+// Half of symbol transmitted, check if to change duty cycle length
 void PCA0_intermediateOverflowCb()
 {
 	if (((rf_data[actual_byte] >> actual_bit_of_byte) & 0x01) == 0x01)
