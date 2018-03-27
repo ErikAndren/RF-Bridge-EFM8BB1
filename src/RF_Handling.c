@@ -57,13 +57,13 @@ void PCA0_channel2EventCb()
 // Called when receiving
 // FIXME: This is a lot of work done in interrupt context. It might be wise to move this to the main thread
 // Triggered when either a rising or falling edge has been detected on the input pin.
-// Timer 0 is the PCA counter input and is configured to increment once every 50 us
+// Timer 0 is the PCA counter input and is configured to overflow every 245 cc, increment once every 10 us
 void PCA0_channel1EventCb()
 {
 	// Store most recent capture value
 	// FIXME: Why do we multiply this by 10? Is it to harmonize the calculated period with the protocol definition?
-	// Timer 0 is overflowing every 50 us, generating one increment in the PCA
-	// Multiplying this with 10 yields an "increment" every 5 us (1000 kHz)
+	// Timer 0 is overflowing every 10 us, generating one increment in the PCA
+	// Multiplying this with 10 yields an "increment" every 1 us (1000 kHz)
 	uint8_t current_duty_cycle;
 
 	static uint16_t pos_pulse_len, neg_pulse_len;
@@ -72,6 +72,11 @@ void PCA0_channel1EventCb()
 	// Rising edge detected. This is the end of a negative pulse and the start of a positive pulse
 	if (R_DATA == 1)
 	{
+		// FIXME: Multiplication to reach us resolution, this is a hack to prevent having to flip flop between 24 and 25
+		// Flip flopping would be very expensive (too many interrupts). If we let the counter be to fast and count to 24 we could
+		// compensate this by dividing by 48 and add this to the result, this would still yield an truncation (think 47 / 48)
+		// What about dithering?
+		// Let's talk about the error today, it could be 244 ccs or an error of almost 9 us. Is this a problem? Most likely not
 		neg_pulse_len = PCA0CP1 * 10;
 
 		// do sniffing by mode
