@@ -92,7 +92,6 @@ int main (void)
 		// Act upon currently executing command
 		switch(uart_command)
 		{
-		// do original learning
 		case RF_CODE_LEARN:
 			// check if a RF signal got decoded
 			if (rf_state == RF_FINISHED)
