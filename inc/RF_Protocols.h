@@ -55,6 +55,7 @@ typedef struct
  * The built-in oscillator circuitry of PT2260 allows a frequency in a range about 100-500kHz.
  * Only 100 - 300 kHz according to the datasheet
  *
+ * PT2260:
  * Alpha is oscillating clock period
  * Period is 4096 Alpha
  * Sync high width is 128 Alpha
@@ -82,8 +83,6 @@ typedef struct
  * Sync High: 128 * Alpha = 256 us
  * Sync Low: 3968 * Alpha = 7936 us
  *
- * Where does this value come from?
- * Setting the range from 10000, 9000 - 11000
  */
 
 #define PT2260_IDENTIFIER				0x01
@@ -93,7 +92,7 @@ typedef struct
 #define PT2260_SYNC_LOW (PT2260_SYNC_PERIOD - PT2260_SYNC_HIGH)
 #define PT2260_BIT_PERIOD 1024
 
-#define PT2260				{PT2260_IDENTIFIER, 0, 10000, 1080, 360, 75, 25, 24, 0}
+#define PT2260				{PT2260_IDENTIFIER, 400, 12400, 1080, 400, 75, 25, 24, 0}
 #define PT2260_INDEX 0
 /*
  * Rohrmotor24
