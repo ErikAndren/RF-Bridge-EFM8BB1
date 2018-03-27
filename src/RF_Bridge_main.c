@@ -54,8 +54,7 @@ int main (void)
 {
 	uart_state_t uart_rx_state;
 	uint8_t last_desired_rf_protocol;
-	uart_command_t next_uart_command;
-	uart_command_t uart_command, last_uart_command;
+	uart_command_t next_uart_command, uart_command, last_uart_command;
 	uint16_t uart_rx_data;
 	uint8_t uart_payload_len;
 	uint8_t uart_payload_pos;
@@ -77,7 +76,6 @@ int main (void)
 	last_desired_rf_protocol = PT2260_IDENTIFIER;
 	desired_rf_protocol = PT2260_IDENTIFIER;
 	rf_listen_mode = MODE_DUTY_CYCLE;
-	PCA0_StartRFListen();
 	last_uart_command = RF_CODE_IN;
 	uart_command = RF_CODE_IN;
 
@@ -86,6 +84,8 @@ int main (void)
 
 	// Boot buzz
 	SoundBuzzer_ms(BOOT_BUZZ_LENGTH_MS);
+
+	PCA0_StartRFListen();
 
 	// Main loop
 	while (true)
