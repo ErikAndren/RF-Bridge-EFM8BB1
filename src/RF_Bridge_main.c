@@ -415,6 +415,8 @@ int main (void)
 					uart_put_command(RF_CODE_ACK);
 					break;
 
+				case RF_CODE_IN:
+				//This state is unnecessary. Just set A4 state instead, keep for compatibility
 				case RF_PROTOCOL_SNIFFING_OFF:
 					desired_rf_protocol = PT2260_IDENTIFIER;
 					rf_listen_mode = MODE_DUTY_CYCLE;
