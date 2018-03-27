@@ -409,6 +409,7 @@ int main (void)
 				case RF_CODE_ACK:
 					waiting_for_uart_ack = false;
 
+					// Reset back to listen state
 					PCA0_StartRFListen();
 					break;
 
@@ -421,6 +422,11 @@ int main (void)
 					PCA0_StartRFListen();
 					uart_put_command(RF_CODE_ACK);
 					InitTimer_ms(TIMER3, 1, LEARN_CMD_TIMEOUT_MS);
+					break;
+
+				case RF_CODE_OUT:
+				case RF_PROTOCOL_OUT:
+					uart_command = next_uart_command;
 					break;
 
 				case RF_PROTOCOL_SNIFFING_ON:
