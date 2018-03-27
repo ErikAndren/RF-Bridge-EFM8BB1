@@ -438,7 +438,7 @@ int main (void)
 					desired_rf_protocol = UNKNOWN_IDENTIFIER;
 					rf_listen_mode = MODE_DUTY_CYCLE;
 					PCA0_StartRFListen();
-					last_uart_command = RF_PROTOCOL_LEARN;
+					last_uart_command = uart_command;
 					uart_command = next_uart_command;
 					uart_put_command(RF_CODE_ACK);
 					InitTimer_ms(TIMER3, 1, LEARN_CMD_TIMEOUT_MS);
