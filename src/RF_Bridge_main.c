@@ -416,7 +416,7 @@ int main (void)
 					break;
 
 				case RF_CODE_IN:
-				//This state is unnecessary. Just set A4 state instead, keep for compatibility
+				// This state is unnecessary. Just set RF_CODE_IN (0xA4) state instead, keep for compatibility
 				case RF_PROTOCOL_SNIFFING_OFF:
 					desired_rf_protocol = PT2260_IDENTIFIER;
 					rf_listen_mode = MODE_DUTY_CYCLE;
