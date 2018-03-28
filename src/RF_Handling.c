@@ -341,7 +341,7 @@ void PCA0_StartRFTransmit(uint8_t payload_pos)
 
 static void PCA0_SetDutyCycle(void)
 {
-	if (((rf_data[actual_byte] >> actual_bit_of_byte) & 0x01) == 0x01)
+	if (((rf_data[actual_byte] << ((actual_bit - 1) % 8)) & 0x80) == 0x80)
 	{
 		// bit 1
 		PCA0_writeChannel(PCA0_CHAN0, duty_cycle_high << 8);
@@ -371,7 +371,7 @@ static void SendRF_Sync(void)
 // Half of symbol transmitted, check if to change duty cycle length
 void PCA0_intermediateOverflowCb()
 {
-	if (((rf_data[actual_byte] >> actual_bit_of_byte) & 0x01) == 0x01)
+	if (((rf_data[actual_byte] << ((actual_bit - 1) % 8)) & 0x80) == 0x80)
 	{
 		// bit 1
 		SetTimer0Overflow(t0_high);
