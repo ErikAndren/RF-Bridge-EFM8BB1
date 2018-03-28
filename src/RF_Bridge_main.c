@@ -152,7 +152,6 @@ int main (void)
 				uint16_t sync_high = (sync_low / PT2260_SYNC_LOW) * PT2260_SYNC_HIGH;
 				uint16_t bit_high_t = *(uint16_t *) &rf_data[SONOFF_THIGH_POS];
 				uint16_t bit_low_t = *(uint16_t *) &rf_data[SONOFF_TLOW_POS];
-				uint8_t repeats;
 
 				PCA0_StopRFListen();
 				PCA0_InitRFTransmit(sync_high, sync_low,
