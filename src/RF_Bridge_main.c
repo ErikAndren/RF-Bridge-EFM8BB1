@@ -60,6 +60,7 @@ int main (void)
 	uint8_t uart_payload_pos;
 	bool waiting_for_uart_ack;
 	uint8_t uart_cmd_retry_cnt;
+	uint8_t tr_repeats;
 
 	// Call hardware initialization routine
 	enter_DefaultMode_from_RESET();
@@ -147,10 +148,11 @@ int main (void)
 			// init and start RF transmit
 			case RF_IDLE:
 			{
-				uint16_t sync_high = (uint16_t) ((((uint32_t) (*(uint16_t *) &rf_data[SONOFF_TSYN_POS])) * PT2260_SYNC_HIGH) / PT2260_SYNC_PERIOD);
-				uint16_t sync_low = (uint16_t) ((((uint32_t) (*(uint16_t *) &rf_data[SONOFF_TSYN_POS])) * PT2260_SYNC_LOW) / PT2260_SYNC_PERIOD);
+				uint16_t sync_low = (uint16_t) ((uint32_t) (*(uint16_t *) &rf_data[SONOFF_TSYN_POS]));
+				uint16_t sync_high = (sync_low / PT2260_SYNC_LOW) * PT2260_SYNC_HIGH;
 				uint16_t bit_high_t = *(uint16_t *) &rf_data[SONOFF_THIGH_POS];
 				uint16_t bit_low_t = *(uint16_t *) &rf_data[SONOFF_TLOW_POS];
+				uint8_t repeats;
 
 				PCA0_StopRFListen();
 				PCA0_InitRFTransmit(sync_high, sync_low,
@@ -166,11 +168,16 @@ int main (void)
 
 			// Will be called once transmit is done
 			case RF_FINISHED:
-				desired_rf_protocol = last_desired_rf_protocol;
-				uart_command = last_uart_command;
+				tr_repeats--;
+				if (tr_repeats > 0) {
+					rf_state = RF_IDLE;
+				} else {
+					desired_rf_protocol = last_desired_rf_protocol;
+					uart_command = last_uart_command;
 
-				PCA0_StartRFListen();
-				uart_put_command(RF_CODE_ACK);
+					PCA0_StartRFListen();
+					uart_put_command(RF_CODE_ACK);
+				}
 				break;
 			} // rf_state
 			break;
@@ -426,6 +433,7 @@ int main (void)
 
 				case RF_CODE_OUT:
 				case RF_PROTOCOL_OUT:
+					tr_repeats = 8;
 					uart_command = next_uart_command;
 					break;
 
