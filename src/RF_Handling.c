@@ -261,11 +261,8 @@ static uint8_t IdentifyRFProtocol(uint8_t identifier, uint16_t period_pos, uint1
 
 static void SetTimer0Overflow(uint8_t T0_Overflow)
 {
-	/***********************************************************************
-	 - Timer 0 High Byte = T0_Overflow
-	 ***********************************************************************/
+	// Timer 0 High Byte = T0_Overflow
 	// This is the reload value used to reload TL0 when it is in mode 2. See 18.3.2.1 in reference manual
-
 	TH0 = (T0_Overflow << TH0_TH0__SHIFT);
 }
 
@@ -336,8 +333,7 @@ void PCA0_StartRFTransmit(uint8_t payload_pos)
 	// set first bit to be in sync when PCA0 is starting
 	PCA0_SetDutyCycle();
 
-	// make RF sync pulse
-	// FIXME: According to PT2260 docs, sync pulse comes after payload
+	// According to PT2260 docs, sync pulse comes after payload
 	// Yes, but not in the EV-protocol. Doesn't matter if multiple transmits are sent
 	SendRF_Sync();
 	PCA0_run();
@@ -357,15 +353,11 @@ static void PCA0_SetDutyCycle(void)
 
 static void SendRF_Sync(void)
 {
-	LED = LED_ON;
-
 	// enable P0.0 for I/O control
 	XBR1 &= ~XBR1_PCA0ME__CEX0_CEX1;
 
 	// Send ASK/On-off keying to SYN115 chip
-	// FIXME: Add sync repeats
 	T_DATA = 1;
-	//FIXME: Change 10 to 1 to increase responsiveness
 	InitTimer_us(TIMER3, 10, sync_high);
 	WaitTimerFinished(TIMER3);
 	T_DATA = 0;
@@ -428,7 +420,7 @@ void PCA0_StopRFTransmit(void)
 
 	// enable P0.0 for I/O control
 	XBR1 &= ~XBR1_PCA0ME__CEX0_CEX1;
-	// switch to low
+
 	T_DATA = 0;
 
 	// disable P0.0 for I/O control, enter PCA mode
