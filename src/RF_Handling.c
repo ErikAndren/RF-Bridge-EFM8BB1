@@ -167,7 +167,6 @@ void PCA0_channel1EventCb()
 		}
 	// Falling edge detected. This is the end of a positive pulse and the start of a negative pulse.
 	} else {
-		// Calculate capture period from last two values.
 		pos_pulse_len = PCA0CP1 * 10;
 
 		if (rf_listen_mode == MODE_BUCKET) {
@@ -243,12 +242,12 @@ static uint8_t IdentifyRFProtocol(uint8_t identifier, uint16_t period_pos, uint1
 				break;
 			}
 
-			if ((period_neg > (PROTOCOLS[used_protocol].sync_low - SYNC_TOLERANCE_0xA1)) &&
-				(period_neg < (PROTOCOLS[used_protocol].sync_low + SYNC_TOLERANCE_0xA1)))
+			if ((period_neg > (PROTOCOLS[used_protocol].sync_low - SYNC_TOLERANCE)) &&
+				(period_neg < (PROTOCOLS[used_protocol].sync_low + SYNC_TOLERANCE)))
 			{
 				if ((PROTOCOLS[used_protocol].sync_high == 0) ||
-				   ((period_pos > (PROTOCOLS[used_protocol].sync_high - SYNC_TOLERANCE_0xA1)) &&
-					(period_pos < (PROTOCOLS[used_protocol].sync_high + SYNC_TOLERANCE_0xA1))))
+				   ((period_pos > (PROTOCOLS[used_protocol].sync_high - SYNC_TOLERANCE)) &&
+					(period_pos < (PROTOCOLS[used_protocol].sync_high + SYNC_TOLERANCE))))
 				{
 					protocol_found = used_protocol;
 					break;

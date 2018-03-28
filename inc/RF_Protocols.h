@@ -40,8 +40,7 @@ typedef struct
 	uint8_t sync_bit_count;
 } protocol_data_t;
 
-#define SYNC_TOLERANCE 			200
-#define SYNC_TOLERANCE_0xA1		1000
+#define SYNC_TOLERANCE 			2000
 #define DUTY_CYCLE_TOLERANCE 	8
 
 #define UNKNOWN_IDENTIFIER		0x00
@@ -92,7 +91,7 @@ typedef struct
 #define PT2260_SYNC_LOW (PT2260_SYNC_PERIOD - PT2260_SYNC_HIGH)
 #define PT2260_BIT_PERIOD 1024
 
-#define PT2260				{PT2260_IDENTIFIER, 400, 12400, 1080, 400, 75, 25, 24, 0}
+#define PT2260				{PT2260_IDENTIFIER, 0, 12400, 1080, 400, 75, 25, 24, 0}
 #define PT2260_INDEX 0
 /*
  * Rohrmotor24
