@@ -325,7 +325,6 @@ void PCA0_InitRFTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
 
 void PCA0_StartRFTransmit(uint8_t payload_pos)
 {
-	actual_bit_of_byte = 7;
 	actual_bit = 1;
 	actual_byte = payload_pos;
 	rf_state = RF_TRANSMITTING;
@@ -385,10 +384,9 @@ void PCA0_intermediateOverflowCb()
 void PCA0_channel0EventCb()
 {
 	// Move on to next byte
-	if (actual_bit_of_byte == 0)
+	if (actual_bit % 8 == 0)
 	{
 		actual_byte++;
-		actual_bit_of_byte = 8;
 	}
 
 	// stop transfer if all bits are transmitted
@@ -397,7 +395,6 @@ void PCA0_channel0EventCb()
 		PCA0_StopRFTransmit();
 	} else {
 		actual_bit++;
-		actual_bit_of_byte--;
 
 		// Start transmission of next bit
 		PCA0_SetDutyCycle();
