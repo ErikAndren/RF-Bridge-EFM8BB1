@@ -292,6 +292,7 @@ uint8_t GetProtocolIndex(uint8_t identifier)
 }
 
 // Transmission path
+//FIXME: Merge this function with PCA0_StartRFTransmit
 void PCA0_InitRFTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
 					   uint16_t bit_high_time, uint8_t bit_high_duty,
 		               uint16_t bit_low_time, uint8_t bit_low_duty, uint8_t bitcount)
@@ -339,7 +340,6 @@ void PCA0_StartRFTransmit(uint8_t payload_pos)
 	// FIXME: According to PT2260 docs, sync pulse comes after payload
 	// Yes, but not in the EV-protocol. Doesn't matter if multiple transmits are sent
 	SendRF_Sync();
-
 	PCA0_run();
 }
 
@@ -357,22 +357,15 @@ static void PCA0_SetDutyCycle(void)
 
 static void SendRF_Sync(void)
 {
+	LED = LED_ON;
+
 	// enable P0.0 for I/O control
 	XBR1 &= ~XBR1_PCA0ME__CEX0_CEX1;
 
 	// Send ASK/On-off keying to SYN115 chip
-	T_DATA = 1;
-
-	// What is happening here? Activation?
-	// FIXME: Should not be needed
-	InitTimer_ms(TIMER3, 1, 7);
-	WaitTimerFinished(TIMER3);
-	T_DATA = 0;
-	InitTimer_us(TIMER3, 10, 100);
-	WaitTimerFinished(TIMER3);
-
 	// FIXME: Add sync repeats
 	T_DATA = 1;
+	//FIXME: Change 10 to 1 to increase responsiveness
 	InitTimer_us(TIMER3, 10, sync_high);
 	WaitTimerFinished(TIMER3);
 	T_DATA = 0;
