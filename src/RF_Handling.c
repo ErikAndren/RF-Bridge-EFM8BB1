@@ -57,7 +57,6 @@ void PCA0_channel2EventCb()
 }
 
 // Called when receiving
-// FIXME: This is a lot of work done in interrupt context. It might be wise to move this to the main thread
 // Triggered when either a rising or falling edge has been detected on the input pin.
 // Timer 0 is the PCA counter input and is configured to overflow every 245 cc, increment once every 10 us
 void PCA0_channel1EventCb()
@@ -66,7 +65,6 @@ void PCA0_channel1EventCb()
 	// FIXME: Why do we multiply this by 10? Is it to harmonize the calculated period with the protocol definition?
 	// Timer 0 is overflowing every 10 us, generating one increment in the PCA
 	// Multiplying this with 10 yields an "increment" every 1 us (1000 kHz)
-	uint8_t current_duty_cycle;
 
 	// Rising edge detected. This is the end of a negative pulse and the start of a positive pulse
 	if (R_DATA == 1)
@@ -79,96 +77,21 @@ void PCA0_channel1EventCb()
 		neg_pulse_len = PCA0CP1 * 10;
 
 		// do sniffing by mode
-		switch (rf_listen_mode)
-		{
-			// do sniffing by duty cycle mode
-			case MODE_DUTY_CYCLE:
-				switch (rf_state)
-				{
-					// Search for a sync from a known protocol
-					case RF_IDLE:
-						rf_protocol = IdentifyRFProtocol(desired_rf_protocol, pos_pulse_len, neg_pulse_len);
-						if (rf_protocol != NO_PROTOCOL_FOUND)
-						{
-							sync_high = pos_pulse_len;
-							sync_low = neg_pulse_len;
-							actual_byte = 0;
-							actual_bit = 0;
-							actual_sync_bit = 0;
-							low_pulse_time = 0;
-							rf_state = RF_IN_SYNC;
-							rf_data[0] = 0;
-							LED = LED_ON;
-						}
-						break; // switch rf_state
-
-					// one matching sync got received
-					case RF_IN_SYNC:
-						LED = !LED;
-
-						// Skip SYNC bits, if any
-						if (actual_sync_bit < PROTOCOLS[rf_protocol].sync_bit_count)
-						{
-							actual_sync_bit++;
-							break;
-						}
-
-						// check the rest of the bits
-						actual_bit++;
-
-						// calculate current duty cycle
-						current_duty_cycle = (100 * (uint32_t) pos_pulse_len) / ((uint32_t) pos_pulse_len + (uint32_t) neg_pulse_len);
-
-						// Only set the bit if it passes the bit high duty filter
-						if (((current_duty_cycle > (PROTOCOLS[rf_protocol].bit_high_duty - DUTY_CYCLE_TOLERANCE)) &&
-							(current_duty_cycle < (PROTOCOLS[rf_protocol].bit_high_duty + DUTY_CYCLE_TOLERANCE)) &&
-							(actual_bit < PROTOCOLS[rf_protocol].bit_count)) ||
-							// the duty cycle can not be used for the last bit because of the missing rising edge on the end
-							// Problem is that we don't know in time when this is. Maybe this is not a problem as the RF input
-							// seems to jump all over the place. Another way to solve this is by setting a timer on the last positive pulse
-							// This is probably good enough. But we are not checking against duty cycle limitations.
-							// Instead just pulse that is the longest
-							((pos_pulse_len > low_pulse_time) && (actual_bit == PROTOCOLS[rf_protocol].bit_count)))
-						{
-							bit_high = pos_pulse_len;
-							rf_data[(actual_bit - 1) / 8] |= (1 >> (actual_bit - 1));
-
-						} else {
-							bit_low = pos_pulse_len;
-
-							// backup low bit pulse time to be able to determine the last bit
-							if (pos_pulse_len > low_pulse_time) {
-								low_pulse_time = pos_pulse_len;
-							}
-						}
-
-						if ((actual_bit % 8) == 0) {
-							// Clear next byte
-							rf_data[actual_bit / 8] = 0;
-						}
-
-						// check if all bits for this protocol got received
-						if (actual_bit == PROTOCOLS[rf_protocol].bit_count)
-						{
-							LED = LED_OFF;
-							rf_state = RF_FINISHED;
-						}
-						break;
-				}
-				break; // switch(rf_listen_mode)
-
-				// do sniffing by bucket mode
-				case MODE_BUCKET:
-					Bucket_Received(neg_pulse_len);
-					break;
-		}
+// FIXME: Move this to the future bucket handling routine
+//		switch (rf_listen_mode)
+//		{
+//				// do sniffing by bucket mode
+//				case MODE_BUCKET:
+//					Bucket_Received(neg_pulse_len);
+//					break;
+//		}
 	// Falling edge detected. This is the end of a positive pulse and the start of a negative pulse.
 	} else {
 		pos_pulse_len = PCA0CP1 * 10;
 
-		if (rf_listen_mode == MODE_BUCKET) {
-			Bucket_Received(pos_pulse_len);
-		}
+//		if (rf_listen_mode == MODE_BUCKET) {
+//			Bucket_Received(pos_pulse_len);
+//		}
 	}
 
 	PCA0_writeCounter(0);
@@ -204,7 +127,7 @@ void PCA0_StopRFListen(void)
 	PCA0CPM1 &= ~PCA0CPM1_ECCF__ENABLED;
 }
 
-static uint8_t IdentifyRFProtocol(uint8_t identifier, uint16_t period_pos, uint16_t period_neg)
+uint8_t IdentifyRFProtocol(uint8_t identifier, uint16_t period_pos, uint16_t period_neg)
 {
 	uint8_t protocol_found = NO_PROTOCOL_FOUND;
 	uint8_t used_protocol;
