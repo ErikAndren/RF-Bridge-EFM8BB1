@@ -36,6 +36,10 @@ SI_SEGMENT_VARIABLE(actual_bit, uint8_t, SI_SEG_XDATA) = 0;
 SI_SEGMENT_VARIABLE(actual_sync_bit, uint8_t, SI_SEG_XDATA) = 0;
 SI_SEGMENT_VARIABLE(actual_byte, uint8_t, SI_SEG_XDATA) = 0;
 
+SI_SEGMENT_VARIABLE(pos_pulse_len, uint16_t, SI_SEG_DATA) = 0;
+SI_SEGMENT_VARIABLE(neg_pulse_len, uint16_t, SI_SEG_DATA) = 0;
+SI_SEGMENT_VARIABLE(low_pulse_time, uint16_t, SI_SEG_DATA) = 0;
+
 // up to 8 timing buckets for MODE_BUCKET
 SI_SEGMENT_VARIABLE(bucket_sync, uint16_t, SI_SEG_XDATA);
 SI_SEGMENT_VARIABLE(buckets[BUCKET_MAX], uint16_t, SI_SEG_XDATA);	// -1 because of the bucket_sync
@@ -63,9 +67,6 @@ void PCA0_channel1EventCb()
 	// Timer 0 is overflowing every 10 us, generating one increment in the PCA
 	// Multiplying this with 10 yields an "increment" every 1 us (1000 kHz)
 	uint8_t current_duty_cycle;
-
-	static uint16_t pos_pulse_len, neg_pulse_len;
-	static uint16_t low_pulse_time;
 
 	// Rising edge detected. This is the end of a negative pulse and the start of a positive pulse
 	if (R_DATA == 1)
