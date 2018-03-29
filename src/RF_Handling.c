@@ -32,8 +32,6 @@ SI_SEGMENT_VARIABLE(bit_high, uint16_t, SI_SEG_XDATA) = 0x00;
 SI_SEGMENT_VARIABLE(bit_low, uint16_t, SI_SEG_XDATA) = 0x00;
 SI_SEGMENT_VARIABLE(bit_count, uint8_t, SI_SEG_XDATA) = 0x00;
 
-//FIXME: This variable could be eliminated and only actual_bit be used
-SI_SEGMENT_VARIABLE(actual_bit_of_byte, uint8_t, SI_SEG_XDATA) = 0;
 SI_SEGMENT_VARIABLE(actual_bit, uint8_t, SI_SEG_XDATA) = 0;
 SI_SEGMENT_VARIABLE(actual_sync_bit, uint8_t, SI_SEG_XDATA) = 0;
 SI_SEGMENT_VARIABLE(actual_byte, uint8_t, SI_SEG_XDATA) = 0;
@@ -93,7 +91,6 @@ void PCA0_channel1EventCb()
 						{
 							sync_high = pos_pulse_len;
 							sync_low = neg_pulse_len;
-							actual_bit_of_byte = 8;
 							actual_byte = 0;
 							actual_bit = 0;
 							actual_sync_bit = 0;
@@ -116,7 +113,6 @@ void PCA0_channel1EventCb()
 						}
 
 						// check the rest of the bits
-						actual_bit_of_byte--;
 						actual_bit++;
 
 						// calculate current duty cycle
@@ -134,7 +130,8 @@ void PCA0_channel1EventCb()
 							((pos_pulse_len > low_pulse_time) && (actual_bit == PROTOCOLS[rf_protocol].bit_count)))
 						{
 							bit_high = pos_pulse_len;
-							rf_data[(actual_bit - 1) / 8] |= (1 << actual_bit_of_byte);
+							rf_data[(actual_bit - 1) / 8] |= (1 >> (actual_bit - 1));
+
 						} else {
 							bit_low = pos_pulse_len;
 
@@ -144,8 +141,7 @@ void PCA0_channel1EventCb()
 							}
 						}
 
-						if (actual_bit_of_byte == 0) {
-							actual_bit_of_byte = 8;
+						if ((actual_bit % 8) == 0) {
 							// Clear next byte
 							rf_data[actual_bit / 8] = 0;
 						}
