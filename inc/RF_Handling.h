@@ -73,4 +73,8 @@ extern SI_SEGMENT_VARIABLE(bucket_sync, uint16_t, SI_SEG_XDATA);
 extern SI_SEGMENT_VARIABLE(buckets[15], uint16_t, SI_SEG_XDATA);
 extern SI_SEGMENT_VARIABLE(bucket_count, uint8_t, SI_SEG_XDATA);
 
+extern SI_SEGMENT_VARIABLE(pos_pulse_len, uint16_t, SI_SEG_DATA);
+extern SI_SEGMENT_VARIABLE(neg_pulse_len, uint16_t, SI_SEG_DATA);
+extern SI_SEGMENT_VARIABLE(low_pulse_time, uint16_t, SI_SEG_DATA);
+
 #endif /* INC_RF_HANDLING_H_ */
