@@ -54,80 +54,85 @@ bool waiting_for_uart_ack;
 uint8_t uart_cmd_retry_cnt;
 
 void handle_rf_pulse() {
-	switch (rf_state) {
-	case RF_IDLE:
-		rf_protocol = IdentifyRFProtocol(desired_rf_protocol, pos_pulse_len, neg_pulse_len);
-		if (rf_protocol != NO_PROTOCOL_FOUND) {
-			sync_high = pos_pulse_len;
-			sync_low = neg_pulse_len;
-			actual_byte = 0;
-			actual_bit = 0;
-			actual_sync_bit = 0;
-			low_pulse_time = 0;
-			rf_state = RF_IN_SYNC;
-			rf_data[0] = 0;
+	if (neg_pulse_len > 0) {
+		switch (rf_state) {
+		case RF_IDLE:
+			rf_protocol = IdentifyRFProtocol(desired_rf_protocol, pos_pulse_len, neg_pulse_len);
+			if (rf_protocol != NO_PROTOCOL_FOUND) {
+				sync_high = pos_pulse_len;
+				sync_low = neg_pulse_len;
+				actual_byte = 0;
+				actual_bit = 0;
+				actual_sync_bit = 0;
+				low_pulse_time = 0;
+				rf_state = RF_IN_SYNC;
+				rf_data[0] = 0;
+				LED = LED_ON;
+			}
+			break;
+
+		case RF_IN_SYNC: {
+			uint8_t current_duty_cycle;
+			//LED = !LED;
 			LED = LED_ON;
-		}
-		break;
 
-	case RF_IN_SYNC: {
-		uint8_t current_duty_cycle;
-		//LED = !LED;
-		LED = LED_ON;
+			// Skip SYNC bits, if any
+			if (actual_sync_bit < PROTOCOLS[rf_protocol].sync_bit_count) {
+				actual_sync_bit++;
+				break;
+			}
 
-		// Skip SYNC bits, if any
-		if (actual_sync_bit < PROTOCOLS[rf_protocol].sync_bit_count) {
-			actual_sync_bit++;
+			actual_bit++;
+
+			current_duty_cycle = (100 * (uint32_t) pos_pulse_len) / ((uint32_t) pos_pulse_len + (uint32_t) neg_pulse_len);
+
+			// Only set the bit if it passes the bit high duty filter
+			if (((current_duty_cycle > (PROTOCOLS[rf_protocol].bit_high_duty - DUTY_CYCLE_TOLERANCE)) &&
+					(current_duty_cycle < (PROTOCOLS[rf_protocol].bit_high_duty + DUTY_CYCLE_TOLERANCE)) &&
+					(actual_bit < PROTOCOLS[rf_protocol].bit_count)) ||
+					// the duty cycle can not be used for the last bit because of the missing rising edge on the end
+					// Problem is that we don't know in time when this is. Maybe this is not a problem as the RF input
+					// seems to jump all over the place. Another way to solve this is by setting a timer on the last positive pulse
+					// This is probably good enough. But we are not checking against duty cycle limitations.
+					// Instead just pulse that is the longest
+					((pos_pulse_len > low_pulse_time) && (actual_bit == PROTOCOLS[rf_protocol].bit_count))) {
+				bit_high = pos_pulse_len;
+				rf_data[(actual_bit - 1) / 8] |= (1 >> (actual_bit - 1));
+			} else {
+				bit_low = pos_pulse_len;
+
+				// backup low bit pulse time to be able to determine the last bit
+				if (pos_pulse_len > low_pulse_time) {
+					low_pulse_time = pos_pulse_len;
+				}
+			}
+
+			if ((actual_bit % 8) == 0) {
+				// Clear next byte
+				rf_data[actual_bit / 8] = 0;
+			}
+
+			// check if all bits for this protocol got received
+			if (actual_bit == PROTOCOLS[rf_protocol].bit_count) {
+				LED = LED_OFF;
+				rf_state = RF_FINISHED;
+			}
 			break;
 		}
 
-		actual_bit++;
-
-		current_duty_cycle = (100 * (uint32_t) pos_pulse_len) / ((uint32_t) pos_pulse_len + (uint32_t) neg_pulse_len);
-
-		// Only set the bit if it passes the bit high duty filter
-		if (((current_duty_cycle > (PROTOCOLS[rf_protocol].bit_high_duty - DUTY_CYCLE_TOLERANCE)) &&
-				(current_duty_cycle < (PROTOCOLS[rf_protocol].bit_high_duty + DUTY_CYCLE_TOLERANCE)) &&
-				(actual_bit < PROTOCOLS[rf_protocol].bit_count)) ||
-				// the duty cycle can not be used for the last bit because of the missing rising edge on the end
-				// Problem is that we don't know in time when this is. Maybe this is not a problem as the RF input
-				// seems to jump all over the place. Another way to solve this is by setting a timer on the last positive pulse
-				// This is probably good enough. But we are not checking against duty cycle limitations.
-				// Instead just pulse that is the longest
-				((pos_pulse_len > low_pulse_time) && (actual_bit == PROTOCOLS[rf_protocol].bit_count))) {
-			bit_high = pos_pulse_len;
-			rf_data[(actual_bit - 1) / 8] |= (1 >> (actual_bit - 1));
-		} else {
-			bit_low = pos_pulse_len;
-
-			// backup low bit pulse time to be able to determine the last bit
-			if (pos_pulse_len > low_pulse_time) {
-				low_pulse_time = pos_pulse_len;
-			}
+		case RF_FINISHED:
+			// Received RF code, transmit to ESP8266 and wait for ack
+			InitTimer_ms(TIMER3, 1, RFIN_CMD_TIMEOUT_MS);
+			waiting_for_uart_ack = true;
+			uart_cmd_retry_cnt = 0;
+			uart_put_RF_CODE_Data(RF_CODE_IN);
+			break;
 		}
 
-		if ((actual_bit % 8) == 0) {
-			// Clear next byte
-			rf_data[actual_bit / 8] = 0;
-		}
-
-		// check if all bits for this protocol got received
-		if (actual_bit == PROTOCOLS[rf_protocol].bit_count) {
-			LED = LED_OFF;
-			rf_state = RF_FINISHED;
-		}
-		break;
+		pos_pulse_len = 0;
+		neg_pulse_len = 0;
+		low_pulse_time = 0;
 	}
-
-	case RF_FINISHED:
-		// Received RF code, transmit to ESP8266 and wait for ack
-		InitTimer_ms(TIMER3, 1, RFIN_CMD_TIMEOUT_MS);
-		waiting_for_uart_ack = true;
-		uart_cmd_retry_cnt = 0;
-		uart_put_RF_CODE_Data(RF_CODE_IN);
-		break;
-	}
-
 }
 
 int main (void)
@@ -171,6 +176,7 @@ int main (void)
 		// Act upon currently executing command
 		switch(uart_command) {
 		case RF_CODE_LEARN:
+			handle_rf_pulse();
 
 			// check if a RF signal got decoded
 			if (rf_state == RF_FINISHED) {
@@ -209,12 +215,8 @@ int main (void)
 					uart_cmd_retry_cnt++;
 				}
 			// Wait for a receive negative pulse which implies a previous positive pulse edge (all set in interrupt)
-			} else if (neg_pulse_len > 0) {
+			} else {
 				handle_rf_pulse();
-
-				pos_pulse_len = 0;
-				neg_pulse_len = 0;
-				low_pulse_time = 0;
 			}
 			break;
 
@@ -278,11 +280,15 @@ int main (void)
 				}
 
 			// Received RF code, send code to ESP8266 and wait for ack
-			} else if (rf_state == RF_FINISHED) {
-				uart_cmd_retry_cnt = 0;
-				waiting_for_uart_ack = true;
-				InitTimer_ms(TIMER3, 1, RFIN_CMD_TIMEOUT_MS);
-				uart_put_RF_Data(RF_PROTOCOL_SNIFFING_ON);
+			} else {
+				handle_rf_pulse();
+
+				if (rf_state == RF_FINISHED) {
+					uart_cmd_retry_cnt = 0;
+					waiting_for_uart_ack = true;
+					InitTimer_ms(TIMER3, 1, RFIN_CMD_TIMEOUT_MS);
+					uart_put_RF_Data(RF_PROTOCOL_SNIFFING_ON);
+				}
 			}
 			break;
 
