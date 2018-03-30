@@ -89,15 +89,12 @@ int main (void)
 	PCA0_StartRFListen();
 
 	// Main loop
-	while (true)
-	{
+	while (true) {
 		// Act upon currently executing command
-		switch(uart_command)
-		{
+		switch(uart_command) {
 		case RF_CODE_LEARN:
 			// check if a RF signal got decoded
-			if (rf_state == RF_FINISHED)
-			{
+			if (rf_state == RF_FINISHED) {
 				SoundBuzzer_ms(LEARN_CMD_SUCCESS_MS);
 
 				desired_rf_protocol = last_desired_rf_protocol;
@@ -146,7 +143,7 @@ int main (void)
 						low_pulse_time = 0;
 						rf_state = RF_IN_SYNC;
 						rf_data[0] = 0;
-						//LED = LED_ON;
+						LED = LED_ON;
 					}
 					break;
 
@@ -553,7 +550,5 @@ int main (void)
 			}
 			break;
 		} // switch uart_state
-
-
 	}
 }
