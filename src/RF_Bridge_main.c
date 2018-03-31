@@ -53,7 +53,7 @@ void SiLabs_Startup (void)
 bool waiting_for_uart_ack;
 uint8_t uart_cmd_retry_cnt;
 
-void handle_rf_pulse() {
+void handle_rf_pulse(void) {
 	if (neg_pulse_len > 0) {
 		switch (rf_state) {
 		case RF_IDLE:
@@ -83,7 +83,6 @@ void handle_rf_pulse() {
 			}
 
 			actual_bit++;
-
 			current_duty_cycle = (100 * (uint32_t) pos_pulse_len) / ((uint32_t) pos_pulse_len + (uint32_t) neg_pulse_len);
 
 			// Only set the bit if it passes the bit high duty filter
@@ -133,6 +132,27 @@ void handle_rf_pulse() {
 		neg_pulse_len = 0;
 		low_pulse_time = 0;
 	}
+}
+
+bool is_uart_ack_missing(uart_command_t cmd) {
+	if (waiting_for_uart_ack == true) {
+		if (IsTimerFinished(TIMER3) == true) {
+			if (uart_cmd_retry_cnt == RFIN_CMD_RETRIES) {
+				// Give up
+				waiting_for_uart_ack = false;
+
+				// Reset listen state
+				PCA0_StartRFListen();
+			} else {
+				// Did not receive reply within the expected timeout, retry
+				InitTimer_ms(TIMER3, 1, RFIN_CMD_TIMEOUT_MS);
+				uart_put_RF_CODE_Data(RF_CODE_IN);
+				uart_cmd_retry_cnt++;
+			}
+		}
+		return true;
+	}
+	return false;
 }
 
 int main (void)
@@ -198,24 +218,7 @@ int main (void)
 
 		case RF_CODE_IN:
 			// check if a RF signal got decoded
-			if (waiting_for_uart_ack == true) {
-				if (IsTimerFinished(TIMER3) == true) {
-					if (uart_cmd_retry_cnt == RFIN_CMD_RETRIES) {
-						// Give up
-						waiting_for_uart_ack = false;
-
-						// Reset listen state
-						PCA0_StartRFListen();
-						break;
-					}
-
-					// Did not receive reply within the expected timeout, retry
-					InitTimer_ms(TIMER3, 1, RFIN_CMD_TIMEOUT_MS);
-					uart_put_RF_CODE_Data(RF_CODE_IN);
-					uart_cmd_retry_cnt++;
-				}
-			// Wait for a receive negative pulse which implies a previous positive pulse edge (all set in interrupt)
-			} else {
+			if (is_uart_ack_missing(uart_command) == false) {
 				handle_rf_pulse();
 			}
 			break;
