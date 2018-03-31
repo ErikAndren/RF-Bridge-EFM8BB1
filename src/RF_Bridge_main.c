@@ -337,6 +337,8 @@ int main (void)
 			break;
 
 		case RF_PROTOCOL_LEARN:
+			handle_rf_pulse(uart_command);
+
 			// check if a RF signal got decoded
 			if (rf_state == RF_FINISHED)
 			{
@@ -347,18 +349,14 @@ int main (void)
 				uart_put_RF_Data(RF_PROTOCOL_LEARN_SUCCESS);
 				PCA0_StartRFListen();
 
-			}
 			// check for learning timeout
-			else if (IsTimerFinished(TIMER3))
-			{
+			} else if (IsTimerFinished(TIMER3)) {
 				SoundBuzzer_ms(LEARN_CMD_FAILURE_MS);
 
 				desired_rf_protocol = last_desired_rf_protocol;
 				uart_command = last_uart_command;
-
 				PCA0_StartRFListen();
 
-				// send not-acknowledge
 				uart_put_command(RF_PROTOCOL_LEARN_TIMEOUT);
 			}
 			break;
