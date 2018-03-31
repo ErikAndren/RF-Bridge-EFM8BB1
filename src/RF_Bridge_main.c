@@ -62,16 +62,48 @@ static void handle_rf_transmission(uart_command_t cmd, uint8_t repeats) {
 	// init and start RF transmit
 	case RF_IDLE:
 	{
-		uint16_t sync_low = (uint16_t) ((uint32_t) (*(uint16_t *) &rf_data[SONOFF_TSYN_POS]));
-		uint16_t sync_high = (sync_low / PT2260_SYNC_LOW) * PT2260_SYNC_HIGH;
-		uint16_t bit_high_t = *(uint16_t *) &rf_data[SONOFF_THIGH_POS];
-		uint16_t bit_low_t = *(uint16_t *) &rf_data[SONOFF_TLOW_POS];
+		if (cmd == RF_CODE_OUT) {
+			uint16_t sync_low = (uint16_t) ((uint32_t) (*(uint16_t *) &rf_data[SONOFF_TSYN_POS]));
+			uint16_t sync_high = (sync_low / PT2260_SYNC_LOW) * PT2260_SYNC_HIGH;
+			uint16_t bit_high_t = *(uint16_t *) &rf_data[SONOFF_THIGH_POS];
+			uint16_t bit_low_t = *(uint16_t *) &rf_data[SONOFF_TLOW_POS];
 
-		PCA0_StopRFListen();
-		PCA0_StartRFTransmit(sync_high, sync_low,
-				bit_high_t, PROTOCOLS[PT2260_INDEX].bit_high_duty,
-				bit_low_t, PROTOCOLS[PT2260_INDEX].bit_low_duty,
-				PROTOCOLS[PT2260_INDEX].bit_count, SONOFF_DATA_POS);
+			PCA0_StopRFListen();
+			PCA0_StartRFTransmit(sync_high, sync_low,
+					bit_high_t, PROTOCOLS[PT2260_INDEX].bit_high_duty,
+					bit_low_t, PROTOCOLS[PT2260_INDEX].bit_low_duty,
+					PROTOCOLS[PT2260_INDEX].bit_count, SONOFF_DATA_POS);
+		} else if (cmd == RF_PROTOCOL_OUT) {
+			if (rf_data[RF_PROTOCOL_IDENT_POS] == CUSTOM_PROTOCOL_IDENT) {
+				uint16_t sync_high = *(uint16_t *) &rf_data[CUSTOM_PROTOCOL_SYNC_HIGH_POS];
+				uint16_t sync_low = *(uint16_t *) &rf_data[CUSTOM_PROTOCOL_SYNC_LOW_POS];
+				uint16_t bit_high_t = *(uint16_t *) &rf_data[CUSTOM_PROTOCOL_BIT_HIGH_TIME_POS];
+				uint8_t bit_high_duty = rf_data[CUSTOM_PROTOCOL_BIT_HIGH_DUTY_POS];
+				uint16_t bit_low_t = *(uint16_t *) &rf_data[CUSTOM_PROTOCOL_BIT_LOW_TIME_POS];
+				uint8_t bit_low_duty = rf_data[CUSTOM_PROTOCOL_BIT_LOW_DUTY_POS];
+				uint8_t bit_count = rf_data[CUSTOM_PROTOCOL_BIT_COUNT_POS];
+
+				PCA0_StartRFTransmit(
+						sync_high,
+						sync_low,
+						bit_high_t,
+						bit_high_duty,
+						bit_low_t,
+						bit_low_duty,
+						bit_count,
+						CUSTOM_PROTOCOL_DATA_POS);
+			} else {
+				uint8_t protocol_index = GetProtocolIndex(rf_data[RF_PROTOCOL_IDENT_POS]);
+
+				if (protocol_index != NO_PROTOCOL_FOUND) {
+					PCA0_StartRFTransmit(
+							PROTOCOLS[protocol_index].sync_high, PROTOCOLS[protocol_index].sync_low,
+							PROTOCOLS[protocol_index].bit_high_data, PROTOCOLS[protocol_index].bit_high_duty,
+							PROTOCOLS[protocol_index].bit_low_time, PROTOCOLS[protocol_index].bit_low_duty,
+							PROTOCOLS[protocol_index].bit_count, RF_PROTOCOL_START_POS);
+				}
+			}
+		}
 		break;
 	}
 
@@ -283,58 +315,7 @@ int main (void)
 		// transmit data on RF
 		case RF_PROTOCOL_OUT:
 			// do transmit of the data
-			switch(rf_state)
-			{
-			// init and start RF transmit
-			case RF_IDLE:
-				PCA0_StopRFListen();
-
-				if (rf_data[RF_PROTOCOL_IDENT_POS] == CUSTOM_PROTOCOL_IDENT)
-				{
-					uint16_t sync_high = *(uint16_t *) &rf_data[CUSTOM_PROTOCOL_SYNC_HIGH_POS];
-					uint16_t sync_low = *(uint16_t *) &rf_data[CUSTOM_PROTOCOL_SYNC_LOW_POS];
-					uint16_t bit_high_t = *(uint16_t *) &rf_data[CUSTOM_PROTOCOL_BIT_HIGH_TIME_POS];
-					uint8_t bit_high_duty = rf_data[CUSTOM_PROTOCOL_BIT_HIGH_DUTY_POS];
-					uint16_t bit_low_t = *(uint16_t *) &rf_data[CUSTOM_PROTOCOL_BIT_LOW_TIME_POS];
-					uint8_t bit_low_duty = rf_data[CUSTOM_PROTOCOL_BIT_LOW_DUTY_POS];
-					uint8_t bit_count = rf_data[CUSTOM_PROTOCOL_BIT_COUNT_POS];
-
-					PCA0_StartRFTransmit(
-							sync_high,
-							sync_low,
-							bit_high_t,
-							bit_high_duty,
-							bit_low_t,
-							bit_low_duty,
-							bit_count,
-							CUSTOM_PROTOCOL_DATA_POS);
-				} else {
-					uint8_t protocol_index = GetProtocolIndex(rf_data[RF_PROTOCOL_IDENT_POS]);
-
-					if (protocol_index != NO_PROTOCOL_FOUND)
-					{
-						PCA0_StartRFTransmit(
-								PROTOCOLS[protocol_index].sync_high, PROTOCOLS[protocol_index].sync_low,
-								PROTOCOLS[protocol_index].bit_high_data, PROTOCOLS[protocol_index].bit_high_duty,
-								PROTOCOLS[protocol_index].bit_low_time, PROTOCOLS[protocol_index].bit_low_duty,
-								PROTOCOLS[protocol_index].bit_count, RF_PROTOCOL_START_POS);
-					}
-				}
-				break;
-
-			case RF_TRANSMITTING:
-				// Rest in this state during transmission. I/O is done via interrupt callbacks
-				break;
-
-			// RF transmission is done
-			case RF_FINISHED:
-				desired_rf_protocol = last_desired_rf_protocol;
-				uart_command = last_uart_command;
-				uart_put_command(RF_CODE_ACK);
-
-				PCA0_StartRFListen();
-				break;
-			} // switch rf_state
+			handle_rf_transmission(uart_command, tr_repeats);
 			break;
 
 		case RF_PROTOCOL_LEARN:
