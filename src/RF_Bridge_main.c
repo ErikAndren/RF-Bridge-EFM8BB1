@@ -474,7 +474,7 @@ int main (void)
 
 				case RF_CODE_OUT:
 				case RF_PROTOCOL_OUT:
-					tr_repeats = 8;
+					tr_repeats = RF_TX_REPEATS;
 					uart_command = next_uart_command;
 					break;
 

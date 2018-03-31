@@ -17,6 +17,8 @@
 #define MIN_PULSE_LENGTH	100
 #define MAX_BUCKETS			8
 
+#define RF_TX_REPEATS 8
+
 typedef struct
 {
 	// Protocol specific identifier
