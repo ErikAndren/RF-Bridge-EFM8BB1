@@ -61,7 +61,6 @@ void PCA0_channel2EventCb(void)
 void PCA0_channel1EventCb(void)
 {
 	// Store most recent capture value
-	// FIXME: Why do we multiply this by 10? Is it to harmonize the calculated period with the protocol definition?
 	// Timer 0 is overflowing every 10 us, generating one increment in the PCA
 	// Multiplying this with 10 yields an "increment" every 1 us (1000 kHz)
 
@@ -79,6 +78,7 @@ void PCA0_channel1EventCb(void)
 		pos_pulse_len = PCA0CP1 * 10;
 	}
 
+	/* Reset to 0 to avoid needing to handle counter wraps */
 	PCA0_writeCounter(0);
 	TL0 = TH0;
 }
@@ -158,13 +158,6 @@ uint8_t IdentifyRFProtocol(uint8_t identifier, uint16_t period_pos, uint16_t per
 	return protocol_found;
 }
 
-static void SetTimer0Overflow(uint8_t T0_Overflow)
-{
-	// Timer 0 High Byte = T0_Overflow
-	// This is the reload value used to reload TL0 when it is in mode 2. See 18.3.2.1 in reference manual
-	TH0 = (T0_Overflow << TH0_TH0__SHIFT);
-}
-
 uint8_t GetProtocolIndex(uint8_t identifier)
 {
 	uint8_t i;
@@ -214,6 +207,7 @@ void StartRFTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
 	sync_low = sync_low_in;
 
 	// calculate T0_Overflow
+	// This is the reload value used to reload TL0 when it is in mode 2. See 18.3.2.1 in reference manual
 	bit_time = (100 * (uint32_t) bit_high_time) / bit_high_duty;
 	t0_high = (uint8_t) (256 - ((uint32_t) SYSCLK / (0xFF * (1000000 / (uint32_t) bit_time))));
 
@@ -265,10 +259,10 @@ void PCA0_intermediateOverflowCb(void)
 {
 	if (((rf_data[actual_byte] << (actual_bit % 8)) & 0x80) == 0x80) {
 		// bit 1
-		SetTimer0Overflow(t0_high);
+		TH0 = t0_high;
 	} else {
 		// bit 0
-		SetTimer0Overflow(t0_low);
+		TH0 = t0_low;
 	}
 }
 
