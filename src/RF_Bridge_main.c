@@ -145,30 +145,30 @@ static void handle_rf_pulse(uart_command_t cmd) {
 			break;
 
 		case RF_IN_SYNC: {
-			uint8_t current_duty_cycle;
+			uint8_t duty_cycle;
 			LED = !LED;
 
-			// Skip SYNC bits, if any
+			// Skip additional SYNC bits, if any
 			if (actual_sync_bit < PROTOCOLS[rf_protocol].sync_bit_count) {
 				actual_sync_bit++;
 				break;
 			}
 
 			actual_bit++;
-			current_duty_cycle = (100 * (uint32_t) pos_pulse_len) / ((uint32_t) pos_pulse_len + (uint32_t) neg_pulse_len);
+			duty_cycle = (100 * (uint32_t) pos_pulse_len) / ((uint32_t) pos_pulse_len + (uint32_t) neg_pulse_len);
 
 			// Only set the bit if it passes the bit high duty filter
-			if (((current_duty_cycle > (PROTOCOLS[rf_protocol].bit_high_duty - DUTY_CYCLE_TOLERANCE)) &&
-					(current_duty_cycle < (PROTOCOLS[rf_protocol].bit_high_duty + DUTY_CYCLE_TOLERANCE)) &&
-					(actual_bit < PROTOCOLS[rf_protocol].bit_count)) ||
-					// the duty cycle can not be used for the last bit because of the missing rising edge on the end
-					// Problem is that we don't know in time when this is. Maybe this is not a problem as the RF input
-					// seems to jump all over the place. Another way to solve this is by setting a timer on the last positive pulse
+			if (((duty_cycle > (PROTOCOLS[rf_protocol].bit_high_duty - DUTY_CYCLE_TOLERANCE)) &&
+				(duty_cycle < (PROTOCOLS[rf_protocol].bit_high_duty + DUTY_CYCLE_TOLERANCE)) &&
+				(actual_bit < PROTOCOLS[rf_protocol].bit_count)) ||
+					// The duty cycle can not be used for the last bit because of the missing rising edge on the end
+					// A new rising edge will eventually come as the input pin jitters but we don't know in time when this is.
+					// Another way to solve this is by setting a timer on the last positive pulse
 					// This is probably good enough. But we are not checking against duty cycle limitations.
 					// Instead just pulse that is the longest
 					((pos_pulse_len > low_pulse_time) && (actual_bit == PROTOCOLS[rf_protocol].bit_count))) {
 				bit_high = pos_pulse_len;
-				rf_data[(actual_bit - 1) / 8] |= (1 >> (actual_bit - 1));
+				rf_data[actual_byte] |= (1 >> ((actual_bit - 1) % 8));
 			} else {
 				bit_low = pos_pulse_len;
 
@@ -180,7 +180,8 @@ static void handle_rf_pulse(uart_command_t cmd) {
 
 			if ((actual_bit % 8) == 0) {
 				// Clear next byte
-				rf_data[actual_bit / 8] = 0;
+				actual_byte++;
+				rf_data[actual_byte] = 0;
 			}
 
 			// check if all bits for this protocol got received
