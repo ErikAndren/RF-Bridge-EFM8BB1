@@ -363,7 +363,6 @@ int main (void)
 
 		case RF_BUCKET_OUT:
 		{
-			// FIXME: Why * 2?
 			const uint8_t bkts = rf_data[BUCKET_NO_POS] * BUCKET_PAIRS;
 			PCA0_StopRFListen();
 
@@ -372,15 +371,16 @@ int main (void)
 			// byte 2*k+2..N:		RF buckets to send
 			SendRFBuckets((uint16_t *)(rf_data + 2), rf_data + bkts + 2, uart_payload_len - bkts - 2, rf_data[BUCKET_REP_POS]);
 
-			uart_put_command(RF_CODE_ACK);
-
-			PCA0_StartRFListen();
 			desired_rf_protocol = last_desired_rf_protocol;
 			uart_command = last_uart_command;
+			PCA0_StartRFListen();
+			uart_put_command(RF_CODE_ACK);
 			break;
 		}
 
 		case RF_BUCKET_SNIFFING_ON:
+			handle_rf_pulse(uart_command);
+
 			// check if a RF signal got decoded
 			if (rf_state == RF_FINISHED)
 			{
