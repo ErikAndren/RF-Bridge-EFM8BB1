@@ -187,7 +187,6 @@ int main (void)
 
 	last_desired_rf_protocol = PT2260_IDENTIFIER;
 	desired_rf_protocol = PT2260_IDENTIFIER;
-	rf_listen_mode = MODE_DUTY_CYCLE;
 	last_uart_command = RF_CODE_IN;
 	uart_command = RF_CODE_IN;
 
@@ -496,7 +495,6 @@ int main (void)
 				case RF_CODE_LEARN:
 					SoundBuzzer_ms(LEARN_CMD_START_MS);
 					desired_rf_protocol = PT2260_IDENTIFIER;
-					rf_listen_mode = MODE_DUTY_CYCLE;
 					last_uart_command = uart_command;
 					uart_command = RF_CODE_LEARN;
 					PCA0_StartRFListen();
@@ -513,7 +511,6 @@ int main (void)
 				case RF_PROTOCOL_SNIFFING_ON:
 					last_desired_rf_protocol = desired_rf_protocol;
 					desired_rf_protocol = UNKNOWN_IDENTIFIER;
-					rf_listen_mode = MODE_DUTY_CYCLE;
 					last_uart_command = uart_command;
 					uart_command = RF_PROTOCOL_SNIFFING_ON;
 					PCA0_StartRFListen();
@@ -524,7 +521,6 @@ int main (void)
 				// This state is unnecessary. Just set RF_CODE_IN (0xA4) state instead, keep for compatibility
 				case RF_PROTOCOL_SNIFFING_OFF:
 					desired_rf_protocol = PT2260_IDENTIFIER;
-					rf_listen_mode = MODE_DUTY_CYCLE;
 					last_uart_command = uart_command;
 					uart_command = RF_CODE_IN;
 					PCA0_StartRFListen();
@@ -532,7 +528,6 @@ int main (void)
 					break;
 
 				case RF_BUCKET_SNIFFING_ON:
-					rf_listen_mode = MODE_BUCKET;
 					last_uart_command = uart_command;
 					uart_command = RF_BUCKET_SNIFFING_ON;
 					PCA0_StartRFListen();
@@ -543,7 +538,6 @@ int main (void)
 					SoundBuzzer_ms(LEARN_CMD_START_MS);
 					last_desired_rf_protocol = desired_rf_protocol;
 					desired_rf_protocol = UNKNOWN_IDENTIFIER;
-					rf_listen_mode = MODE_DUTY_CYCLE;
 					last_uart_command = uart_command;
 					uart_command = RF_PROTOCOL_LEARN;
 					uart_put_command(RF_CODE_ACK);
