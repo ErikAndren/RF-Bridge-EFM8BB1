@@ -379,12 +379,19 @@ int main (void)
 		}
 
 		case RF_BUCKET_SNIFFING_ON:
-			handle_rf_pulse(uart_command);
+			if (pos_pulse_len > 0) {
+				Bucket_Received(pos_pulse_len);
+			}
+
+			if (neg_pulse_len > 0) {
+				Bucket_Received(neg_pulse_len);
+			}
 
 			// check if a RF signal got decoded
 			if (rf_state == RF_FINISHED)
 			{
 				uart_put_RF_buckets(RF_BUCKET_SNIFFING_ON);
+				//FIXME: No ACK check heres
 			}
 			break;
 		}

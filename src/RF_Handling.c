@@ -76,22 +76,9 @@ void PCA0_channel1EventCb()
 		// Let's talk about the error today, it could be 244 ccs or an error of almost 9 us. Is this a problem? Most likely not
 		neg_pulse_len = PCA0CP1 * 10;
 
-		// do sniffing by mode
-// FIXME: Move this to the future bucket handling routine
-//		switch (rf_listen_mode)
-//		{
-//				// do sniffing by bucket mode
-//				case MODE_BUCKET:
-//					Bucket_Received(neg_pulse_len);
-//					break;
-//		}
 	// Falling edge detected. This is the end of a positive pulse and the start of a negative pulse.
 	} else {
 		pos_pulse_len = PCA0CP1 * 10;
-
-//		if (rf_listen_mode == MODE_BUCKET) {
-//			Bucket_Received(pos_pulse_len);
-//		}
 	}
 
 	PCA0_writeCounter(0);
