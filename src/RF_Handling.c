@@ -67,7 +67,7 @@ void PCA0_channel1EventCb(void)
 	// Rising edge detected. This is the end of a negative pulse and the start of a positive pulse
 	if (R_DATA == 1) {
 		// FIXME: Multiplication to reach us resolution, this is a hack to prevent having to flip flop between counting 24 and 25
-		// Flip flopping would be very expensive (too many interrupts). If we let the counter be too slow and count to 25 we could
+		// Flip flopping would be very expensive (too many interrupts) i. e. changing the TH0 reload value every 24 cc. If we let the counter be too slow and count to 25 we could
 		// compensate this by dividing by 48 and add this to the result, this would still yield an truncation (think 47 / 48)
 		// What about dithering?
 		// Let's talk about the error today, it could be 244 ccs or an error of almost 9 us. Is this a problem? Most likely not
@@ -196,9 +196,9 @@ static void SendRFSync(void)
 }
 
 void StartRFTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
-					     uint16_t bit_high_time, uint8_t bit_high_duty,
-		                 uint16_t bit_low_time, uint8_t bit_low_duty,
-						 uint8_t bitcount, uint8_t payload_pos)
+					 uint16_t bit_high_time, uint8_t bit_high_duty,
+		             uint16_t bit_low_time, uint8_t bit_low_duty,
+				     uint8_t bitcount, uint8_t payload_pos)
 {
 	uint16_t bit_time;
 
@@ -208,7 +208,15 @@ void StartRFTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
 
 	// calculate T0_Overflow
 	// This is the reload value used to reload TL0 when it is in mode 2. See 18.3.2.1 in reference manual
+	// FIXME: This logic needs to be explained.
+	// Multiply the bit high time in us with 100 and divide with the bit high duty cycle
+	// (100 * us) / %
+	// PWM counter is 8 bits i.e 256 values
+
 	bit_time = (100 * (uint32_t) bit_high_time) / bit_high_duty;
+	// will give us the bit high us per high percent
+	// 256 - (sysclk / (255 * (1000000 / (100 * us) / %)))
+	// Is 0xFF connected to the 8 bit PCA counting?
 	t0_high = (uint8_t) (256 - ((uint32_t) SYSCLK / (0xFF * (1000000 / (uint32_t) bit_time))));
 
 	bit_time = (100 * (uint32_t) bit_low_time) / bit_low_duty;
@@ -224,9 +232,7 @@ void StartRFTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
 	PCA0CPM0 |= PCA0CPM0_ECCF__ENABLED;
 	PCA0PWM |= PCA0PWM_ECOV__COVF_MASK_ENABLED;
 
-	/***********************************************************************
-	 - PCA Counter/Timer Low Byte = 0xFF, why?
-	 ***********************************************************************/
+	// Prepare for an overflow trigger right away
 	PCA0L = (0xFF << PCA0L_PCA0L__SHIFT);
 
 	actual_bit = 0;
@@ -242,6 +248,8 @@ void StartRFTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
 	PCA0_run();
 }
 
+// This defines the falling edge of the pulse, in PCA0 cycles
+// Of the 256 counts, where shall the falling edge occur?
 static void SetDutyCycle(void)
 {
 	if (((rf_data[actual_byte] << (actual_bit % 8)) & 0x80) == 0x80)
@@ -255,18 +263,26 @@ static void SetDutyCycle(void)
 }
 
 // Half of symbol transmitted, check if to change duty cycle length
+// Called when rising edge (falling non. inv) is generated (overflow)
+// This defines the length (frequency)
+// Starts the high part of the pulse
 void PCA0_intermediateOverflowCb(void)
 {
+	// This will effectively toggle how fast the counter will wrap around
+	// Both timer 0 and PCA counter works in 8 bit mode
 	if (((rf_data[actual_byte] << (actual_bit % 8)) & 0x80) == 0x80) {
 		// bit 1
 		TH0 = t0_high;
+		TL0 = t0_high;
 	} else {
 		// bit 0
 		TH0 = t0_low;
+		TL0 = t0_low;
 	}
 }
 
-// Called when transmission of a symbol is done
+// Called upon falling edge (rising non. inv)
+// Starts the low part of the pulse
 void PCA0_channel0EventCb(void)
 {
 	actual_bit++;
@@ -288,6 +304,7 @@ void PCA0_channel0EventCb(void)
 void StopRFTransmit(void)
 {
 	// set duty cycle to zero
+	// FIXME: Is this really necessary?
 	PCA0_writeChannel(PCA0_CHAN0, 0);
 
 	// disable interrupt for RF transmitting
