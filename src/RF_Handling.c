@@ -85,7 +85,7 @@ void PCA0_channel1EventCb(void)
 }
 
 // Receive path
-void PCA0_StartRFListen(void)
+void StartRFListen(void)
 {
 	// restore timer to 100000 Hz, 10 s interval
 	// 245 cc's * 40.8 ns = 50 us = 100000 Hz = 100 kHz
@@ -102,7 +102,7 @@ void PCA0_StartRFListen(void)
 	PCA0_run();
 }
 
-void PCA0_StopRFListen(void)
+void StopRFListen(void)
 {
 	PCA0_halt();
 
@@ -195,8 +195,24 @@ uint8_t GetProtocolIndex(uint8_t identifier)
 }
 
 // Transmission path
-//FIXME: Merge this function with PCA0_StartRFTransmit
-void PCA0_StartRFTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
+static void SendRFSync(void)
+{
+	// enable P0.0 for I/O control
+	XBR1 &= ~XBR1_PCA0ME__CEX0_CEX1;
+
+	// Send ASK/On-off keying to SYN115 chip
+	T_DATA = 1;
+	InitTimer_us(TIMER3, 10, sync_high);
+	WaitTimerFinished(TIMER3);
+	T_DATA = 0;
+	InitTimer_us(TIMER3, 10, sync_low);
+	WaitTimerFinished(TIMER3);
+
+	// disable P0.0 for I/O control, enter PCA mode
+	XBR1 |= XBR1_PCA0ME__CEX0_CEX1;
+}
+
+void StartRFTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
 					     uint16_t bit_high_time, uint8_t bit_high_duty,
 		                 uint16_t bit_low_time, uint8_t bit_low_duty,
 						 uint8_t bitcount, uint8_t payload_pos)
@@ -234,15 +250,15 @@ void PCA0_StartRFTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
 	rf_state = RF_TRANSMITTING;
 
 	// set first bit to be in sync when PCA0 is starting
-	PCA0_SetDutyCycle();
+	SetDutyCycle();
 
 	// According to PT2260 docs, sync pulse comes after payload
 	// Yes, but not in the EV-protocol. Doesn't matter if multiple transmits are sent
-	SendRF_Sync();
+	SendRFSync();
 	PCA0_run();
 }
 
-static void PCA0_SetDutyCycle(void)
+static void SetDutyCycle(void)
 {
 	if (((rf_data[actual_byte] << (actual_bit % 8)) & 0x80) == 0x80)
 	{
@@ -252,23 +268,6 @@ static void PCA0_SetDutyCycle(void)
 		// bit 0
 		PCA0_writeChannel(PCA0_CHAN0, duty_cycle_low << 8);
 	}
-}
-
-static void SendRF_Sync(void)
-{
-	// enable P0.0 for I/O control
-	XBR1 &= ~XBR1_PCA0ME__CEX0_CEX1;
-
-	// Send ASK/On-off keying to SYN115 chip
-	T_DATA = 1;
-	InitTimer_us(TIMER3, 10, sync_high);
-	WaitTimerFinished(TIMER3);
-	T_DATA = 0;
-	InitTimer_us(TIMER3, 10, sync_low);
-	WaitTimerFinished(TIMER3);
-
-	// disable P0.0 for I/O control, enter PCA mode
-	XBR1 |= XBR1_PCA0ME__CEX0_CEX1;
 }
 
 // Half of symbol transmitted, check if to change duty cycle length
@@ -298,14 +297,14 @@ void PCA0_channel0EventCb(void)
 	// stop transfer if all bits are transmitted
 	if (actual_bit == bit_count)
 	{
-		PCA0_StopRFTransmit();
+		StopRFTransmit();
 	} else {
 		// Start transmission of next bit
-		PCA0_SetDutyCycle();
+		SetDutyCycle();
 	}
 }
 
-void PCA0_StopRFTransmit(void)
+void StopRFTransmit(void)
 {
 	// set duty cycle to zero
 	PCA0_writeChannel(PCA0_CHAN0, 0);

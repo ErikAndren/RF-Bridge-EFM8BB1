@@ -10,12 +10,12 @@
 
 extern uint8_t IdentifyRFProtocol(uint8_t identifier, uint16_t period_pos, uint16_t period_neg);
 extern uint8_t GetProtocolIndex(uint8_t identifier);
-extern void PCA0_StartRFTransmit(uint16_t sync_high_in, uint16_t sync_low_in, uint16_t bit_high_time, uint8_t bit_high_duty,
+extern void StartRFTransmit(uint16_t sync_high_in, uint16_t sync_low_in, uint16_t bit_high_time, uint8_t bit_high_duty,
 		uint16_t bit_low_time, uint8_t bit_low_duty, uint8_t bitcount, uint8_t payload_ptr);
-extern void PCA0_SetDutyCycle(void);
-extern void PCA0_StopRFTransmit(void);
-extern void PCA0_StartRFListen(void);
-extern void PCA0_StopRFListen(void);
+extern void SetDutyCycle(void);
+extern void StopRFTransmit(void);
+extern void StartRFListen(void);
+extern void StopRFListen(void);
 
 #define TIMER0_CC_S_TO_COUNT 245
 

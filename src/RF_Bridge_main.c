@@ -68,8 +68,8 @@ static void handle_rf_transmission(uart_command_t cmd, uint8_t repeats) {
 			uint16_t bit_high_t = *(uint16_t *) &rf_data[SONOFF_THIGH_POS];
 			uint16_t bit_low_t = *(uint16_t *) &rf_data[SONOFF_TLOW_POS];
 
-			PCA0_StopRFListen();
-			PCA0_StartRFTransmit(sync_high, sync_low,
+			StopRFListen();
+			StartRFTransmit(sync_high, sync_low,
 					bit_high_t, PROTOCOLS[PT2260_INDEX].bit_high_duty,
 					bit_low_t, PROTOCOLS[PT2260_INDEX].bit_low_duty,
 					PROTOCOLS[PT2260_INDEX].bit_count, SONOFF_DATA_POS);
@@ -83,7 +83,7 @@ static void handle_rf_transmission(uart_command_t cmd, uint8_t repeats) {
 				uint8_t bit_low_duty = rf_data[CUSTOM_PROTOCOL_BIT_LOW_DUTY_POS];
 				uint8_t bit_count = rf_data[CUSTOM_PROTOCOL_BIT_COUNT_POS];
 
-				PCA0_StartRFTransmit(
+				StartRFTransmit(
 						sync_high,
 						sync_low,
 						bit_high_t,
@@ -96,7 +96,7 @@ static void handle_rf_transmission(uart_command_t cmd, uint8_t repeats) {
 				uint8_t protocol_index = GetProtocolIndex(rf_data[RF_PROTOCOL_IDENT_POS]);
 
 				if (protocol_index != NO_PROTOCOL_FOUND) {
-					PCA0_StartRFTransmit(
+					StartRFTransmit(
 							PROTOCOLS[protocol_index].sync_high, PROTOCOLS[protocol_index].sync_low,
 							PROTOCOLS[protocol_index].bit_high_data, PROTOCOLS[protocol_index].bit_high_duty,
 							PROTOCOLS[protocol_index].bit_low_time, PROTOCOLS[protocol_index].bit_low_duty,
@@ -119,7 +119,7 @@ static void handle_rf_transmission(uart_command_t cmd, uint8_t repeats) {
 			desired_rf_protocol = last_desired_rf_protocol;
 			uart_command = last_uart_command;
 
-			PCA0_StartRFListen();
+			StartRFListen();
 			uart_put_command(RF_CODE_ACK);
 		}
 		break;
@@ -219,7 +219,7 @@ static bool is_uart_ack_missing(uart_command_t cmd) {
 				waiting_for_uart_ack = false;
 
 				// Reset listen state
-				PCA0_StartRFListen();
+				StartRFListen();
 			} else {
 				// Did not receive reply within the expected timeout, retry
 				InitTimer_ms(TIMER3, 1, RFIN_CMD_TIMEOUT_MS);
@@ -293,7 +293,7 @@ int main (void)
 	// Boot buzz
 	SoundBuzzer_ms(BOOT_BUZZ_LENGTH_MS);
 
-	PCA0_StartRFListen();
+	StartRFListen();
 
 	// Main loop
 	while (true) {
@@ -333,7 +333,7 @@ int main (void)
 		case RF_BUCKET_OUT:
 		{
 			const uint8_t bkts = rf_data[BUCKET_NO_POS] * BUCKET_PAIRS;
-			PCA0_StopRFListen();
+			StopRFListen();
 
 			// byte 2*(1..bkts):		bucket time high
 			// byte 2*(1..bkts)+1:		bucket time low
@@ -342,7 +342,7 @@ int main (void)
 
 			desired_rf_protocol = last_desired_rf_protocol;
 			uart_command = last_uart_command;
-			PCA0_StartRFListen();
+			StartRFListen();
 			uart_put_command(RF_CODE_ACK);
 			break;
 		}
@@ -459,7 +459,7 @@ int main (void)
 					waiting_for_uart_ack = false;
 
 					// Reset back to listen state
-					PCA0_StartRFListen();
+					StartRFListen();
 					break;
 
 				case RF_CODE_LEARN:
@@ -467,7 +467,7 @@ int main (void)
 					desired_rf_protocol = PT2260_IDENTIFIER;
 					last_uart_command = uart_command;
 					uart_command = RF_CODE_LEARN;
-					PCA0_StartRFListen();
+					StartRFListen();
 					uart_put_command(RF_CODE_ACK);
 					InitTimer_ms(TIMER3, 1, LEARN_CMD_TIMEOUT_MS);
 					break;
@@ -483,7 +483,7 @@ int main (void)
 					desired_rf_protocol = UNKNOWN_IDENTIFIER;
 					last_uart_command = uart_command;
 					uart_command = RF_PROTOCOL_SNIFFING_ON;
-					PCA0_StartRFListen();
+					StartRFListen();
 					uart_put_command(RF_CODE_ACK);
 					break;
 
@@ -493,14 +493,14 @@ int main (void)
 					desired_rf_protocol = PT2260_IDENTIFIER;
 					last_uart_command = uart_command;
 					uart_command = RF_CODE_IN;
-					PCA0_StartRFListen();
+					StartRFListen();
 					uart_put_command(RF_CODE_ACK);
 					break;
 
 				case RF_BUCKET_SNIFFING_ON:
 					last_uart_command = uart_command;
 					uart_command = RF_BUCKET_SNIFFING_ON;
-					PCA0_StartRFListen();
+					StartRFListen();
 					uart_put_command(RF_CODE_ACK);
 					break;
 
@@ -511,7 +511,7 @@ int main (void)
 					last_uart_command = uart_command;
 					uart_command = RF_PROTOCOL_LEARN;
 					uart_put_command(RF_CODE_ACK);
-					PCA0_StartRFListen();
+					StartRFListen();
 					InitTimer_ms(TIMER3, 1, LEARN_CMD_TIMEOUT_MS);
 					break;
 				} // switch(uart_command)
