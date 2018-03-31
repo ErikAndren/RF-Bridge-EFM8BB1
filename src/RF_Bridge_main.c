@@ -56,7 +56,7 @@ uint8_t uart_cmd_retry_cnt;
 uart_command_t next_uart_command, uart_command, last_uart_command;
 uint8_t last_desired_rf_protocol;
 
-static void handle_rf_transmission(uart_command_t cmd, uint8_t repeats) {
+static void handle_rf_transmission(uart_command_t cmd, uint8_t *repeats) {
 	switch(rf_state)
 	{
 	// init and start RF transmit
@@ -112,8 +112,8 @@ static void handle_rf_transmission(uart_command_t cmd, uint8_t repeats) {
 
 	// Will be called once transmit is done
 	case RF_FINISHED:
-		repeats--;
-		if (repeats > 0) {
+		(*repeats)--;
+		if (*repeats > 0) {
 			rf_state = RF_IDLE;
 		} else {
 			desired_rf_protocol = last_desired_rf_protocol;
@@ -311,7 +311,7 @@ int main (void)
 			break;
 
 		case RF_CODE_OUT:
-			handle_rf_transmission(uart_command, tr_repeats);
+			handle_rf_transmission(uart_command, &tr_repeats);
 			break;
 
 		case RF_PROTOCOL_SNIFFING_ON:
@@ -321,7 +321,7 @@ int main (void)
 			break;
 
 		case RF_PROTOCOL_OUT:
-			handle_rf_transmission(uart_command, tr_repeats);
+			handle_rf_transmission(uart_command, &tr_repeats);
 			break;
 
 		case RF_PROTOCOL_LEARN:
