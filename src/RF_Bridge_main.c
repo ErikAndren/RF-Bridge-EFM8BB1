@@ -209,7 +209,6 @@ static void handle_rf_pulse(uart_command_t cmd) {
 			break;
 		}
 
-		pos_pulse_len = 0;
 		neg_pulse_len = 0;
 	}
 }
