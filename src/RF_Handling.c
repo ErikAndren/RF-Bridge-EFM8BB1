@@ -66,8 +66,7 @@ void PCA0_channel1EventCb(void)
 	// Multiplying this with 10 yields an "increment" every 1 us (1000 kHz)
 
 	// Rising edge detected. This is the end of a negative pulse and the start of a positive pulse
-	if (R_DATA == 1)
-	{
+	if (R_DATA == 1) {
 		// FIXME: Multiplication to reach us resolution, this is a hack to prevent having to flip flop between counting 24 and 25
 		// Flip flopping would be very expensive (too many interrupts). If we let the counter be to fast and count to 24 we could
 		// compensate this by dividing by 48 and add this to the result, this would still yield an truncation (think 47 / 48)
@@ -118,20 +117,16 @@ uint8_t IdentifyRFProtocol(uint8_t identifier, uint16_t period_pos, uint16_t per
 	uint8_t protocol_found = NO_PROTOCOL_FOUND;
 	uint8_t used_protocol;
 
-	switch(identifier)
-	{
+	switch(identifier) {
 		// protocol is undefined, do loop through all protocols
 		case UNKNOWN_IDENTIFIER:
 			// check all protocols
-			for (used_protocol = 0; used_protocol < PROTOCOLCOUNT; used_protocol++)
-			{
+			for (used_protocol = 0; used_protocol < PROTOCOLCOUNT; used_protocol++) {
 				if ((period_neg > (PROTOCOLS[used_protocol].sync_low - SYNC_TOLERANCE)) &&
-					(period_neg < (PROTOCOLS[used_protocol].sync_low + SYNC_TOLERANCE)))
-				{
+					(period_neg < (PROTOCOLS[used_protocol].sync_low + SYNC_TOLERANCE))) {
 					if ((PROTOCOLS[used_protocol].sync_high == 0) ||
 					   ((period_pos > (PROTOCOLS[used_protocol].sync_high - SYNC_TOLERANCE)) &&
-						(period_pos < (PROTOCOLS[used_protocol].sync_high + SYNC_TOLERANCE))))
-					{
+						(period_pos < (PROTOCOLS[used_protocol].sync_high + SYNC_TOLERANCE)))) {
 						protocol_found = used_protocol;
 						break;
 					}
@@ -149,12 +144,10 @@ uint8_t IdentifyRFProtocol(uint8_t identifier, uint16_t period_pos, uint16_t per
 			}
 
 			if ((period_neg > (PROTOCOLS[used_protocol].sync_low - SYNC_TOLERANCE)) &&
-				(period_neg < (PROTOCOLS[used_protocol].sync_low + SYNC_TOLERANCE)))
-			{
+				(period_neg < (PROTOCOLS[used_protocol].sync_low + SYNC_TOLERANCE))) {
 				if ((PROTOCOLS[used_protocol].sync_high == 0) ||
 				   ((period_pos > (PROTOCOLS[used_protocol].sync_high - SYNC_TOLERANCE)) &&
-					(period_pos < (PROTOCOLS[used_protocol].sync_high + SYNC_TOLERANCE))))
-				{
+					(period_pos < (PROTOCOLS[used_protocol].sync_high + SYNC_TOLERANCE)))) {
 					protocol_found = used_protocol;
 					break;
 				}
@@ -178,13 +171,10 @@ uint8_t GetProtocolIndex(uint8_t identifier)
 	uint8_t protocol_index = NO_PROTOCOL_FOUND;
 
 	// check first for valid identifier
-	if ((identifier > UNKNOWN_IDENTIFIER) && (identifier < NO_PROTOCOL_FOUND))
-	{
+	if ((identifier > UNKNOWN_IDENTIFIER) && (identifier < NO_PROTOCOL_FOUND)) {
 		// find protocol index by identifier
-		for (i = 0; i < PROTOCOLCOUNT; i++)
-		{
-			if (PROTOCOLS[i].identifier == identifier)
-			{
+		for (i = 0; i < PROTOCOLCOUNT; i++) {
+			if (PROTOCOLS[i].identifier == identifier) {
 				protocol_index = i;
 				break;
 			}
@@ -273,8 +263,7 @@ static void SetDutyCycle(void)
 // Half of symbol transmitted, check if to change duty cycle length
 void PCA0_intermediateOverflowCb(void)
 {
-	if (((rf_data[actual_byte] << (actual_bit % 8)) & 0x80) == 0x80)
-	{
+	if (((rf_data[actual_byte] << (actual_bit % 8)) & 0x80) == 0x80) {
 		// bit 1
 		SetTimer0Overflow(t0_high);
 	} else {
@@ -289,14 +278,12 @@ void PCA0_channel0EventCb(void)
 	actual_bit++;
 
 	// Move on to next byte
-	if (actual_bit % 8 == 0)
-	{
+	if (actual_bit % 8 == 0) {
 		actual_byte++;
 	}
 
 	// stop transfer if all bits are transmitted
-	if (actual_bit == bit_count)
-	{
+	if (actual_bit == bit_count) {
 		StopRFTransmit();
 	} else {
 		// Start transmission of next bit
