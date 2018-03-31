@@ -236,13 +236,17 @@ static bool is_uart_ack_missing(uart_command_t cmd) {
 	return false;
 }
 
-static void is_learning_done(void) {
+static void is_learning_done(uart_command_t cmd) {
 	if (rf_state == RF_FINISHED) {
 		SoundBuzzer_ms(LEARN_CMD_SUCCESS_MS);
 
 		desired_rf_protocol = last_desired_rf_protocol;
 		uart_command = last_uart_command;
-		uart_put_RF_CODE_Data(RF_CODE_LEARN_SUCCESS);
+		if (cmd == RF_CODE_LEARN) {
+			uart_put_RF_CODE_Data(RF_CODE_LEARN_SUCCESS);
+		} else if (cmd == RF_PROTOCOL_LEARN) {
+			uart_put_RF_Data(RF_PROTOCOL_LEARN_SUCCESS);
+		}
 
 	// check for learning timeout
 	} else if (IsTimerFinished(TIMER3) == true) {
@@ -250,7 +254,11 @@ static void is_learning_done(void) {
 
 		desired_rf_protocol = last_desired_rf_protocol;
 		uart_command = last_uart_command;
-		uart_put_command(RF_CODE_LEARN_TIMEOUT);
+		if (cmd == RF_CODE_LEARN) {
+			uart_put_command(RF_CODE_LEARN_TIMEOUT);
+		} else if (cmd == RF_PROTOCOL_LEARN) {
+			uart_put_command(RF_PROTOCOL_LEARN_TIMEOUT);
+		}
 	}
 }
 
@@ -293,7 +301,7 @@ int main (void)
 		switch(uart_command) {
 		case RF_CODE_LEARN:
 			handle_rf_pulse(uart_command);
-			is_learning_done();
+			is_learning_done(uart_command);
 			break; // case RF_CODE_LEARN
 
 		case RF_CODE_IN:
@@ -307,42 +315,19 @@ int main (void)
 			handle_rf_transmission(uart_command, tr_repeats);
 			break;
 
-		// do new sniffing
 		case RF_PROTOCOL_SNIFFING_ON:
 			if (is_uart_ack_missing(uart_command) == false) {
 				handle_rf_pulse(uart_command);
 			}
 			break;
 
-		// transmit data on RF
 		case RF_PROTOCOL_OUT:
-			// do transmit of the data
 			handle_rf_transmission(uart_command, tr_repeats);
 			break;
 
 		case RF_PROTOCOL_LEARN:
 			handle_rf_pulse(uart_command);
-
-			// check if a RF signal got decoded
-			if (rf_state == RF_FINISHED)
-			{
-				SoundBuzzer_ms(LEARN_CMD_SUCCESS_MS);
-
-				desired_rf_protocol = last_desired_rf_protocol;
-				uart_command = last_uart_command;
-				uart_put_RF_Data(RF_PROTOCOL_LEARN_SUCCESS);
-				PCA0_StartRFListen();
-
-			// check for learning timeout
-			} else if (IsTimerFinished(TIMER3)) {
-				SoundBuzzer_ms(LEARN_CMD_FAILURE_MS);
-
-				desired_rf_protocol = last_desired_rf_protocol;
-				uart_command = last_uart_command;
-				PCA0_StartRFListen();
-
-				uart_put_command(RF_PROTOCOL_LEARN_TIMEOUT);
-			}
+			is_learning_done(uart_command);
 			break;
 
 		case RF_BUCKET_OUT:
@@ -503,7 +488,7 @@ int main (void)
 					break;
 
 				case RF_CODE_IN:
-				// This state is unnecessary. Just set RF_CODE_IN (0xA4) state instead, keep for compatibility
+				// This command is unnecessary. Just set RF_CODE_IN (0xA4) state instead, keep for compatibility
 				case RF_PROTOCOL_SNIFFING_OFF:
 					desired_rf_protocol = PT2260_IDENTIFIER;
 					last_uart_command = uart_command;
