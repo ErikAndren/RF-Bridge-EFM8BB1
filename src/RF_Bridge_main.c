@@ -53,6 +53,47 @@ void SiLabs_Startup (void)
 bool waiting_for_uart_ack;
 uint8_t uart_cmd_retry_cnt;
 
+uart_command_t next_uart_command, uart_command, last_uart_command;
+uint8_t last_desired_rf_protocol;
+
+static void handle_rf_transmission(uart_command_t cmd, uint8_t repeats) {
+	switch(rf_state)
+	{
+	// init and start RF transmit
+	case RF_IDLE:
+	{
+		uint16_t sync_low = (uint16_t) ((uint32_t) (*(uint16_t *) &rf_data[SONOFF_TSYN_POS]));
+		uint16_t sync_high = (sync_low / PT2260_SYNC_LOW) * PT2260_SYNC_HIGH;
+		uint16_t bit_high_t = *(uint16_t *) &rf_data[SONOFF_THIGH_POS];
+		uint16_t bit_low_t = *(uint16_t *) &rf_data[SONOFF_TLOW_POS];
+
+		PCA0_StopRFListen();
+		PCA0_StartRFTransmit(sync_high, sync_low,
+				bit_high_t, PROTOCOLS[PT2260_INDEX].bit_high_duty,
+				bit_low_t, PROTOCOLS[PT2260_INDEX].bit_low_duty,
+				PROTOCOLS[PT2260_INDEX].bit_count, SONOFF_DATA_POS);
+		break;
+	}
+
+	case RF_TRANSMITTING:
+		break;
+
+		// Will be called once transmit is done
+	case RF_FINISHED:
+		repeats--;
+		if (repeats > 0) {
+			rf_state = RF_IDLE;
+		} else {
+			desired_rf_protocol = last_desired_rf_protocol;
+			uart_command = last_uart_command;
+
+			PCA0_StartRFListen();
+			uart_put_command(RF_CODE_ACK);
+		}
+		break;
+	} // rf_state
+}
+
 static void handle_rf_pulse(uart_command_t cmd) {
 	if (neg_pulse_len > 0) {
 		switch (rf_state) {
@@ -166,8 +207,6 @@ static bool is_uart_ack_missing(uart_command_t cmd) {
 int main (void)
 {
 	uart_state_t uart_rx_state;
-	uint8_t last_desired_rf_protocol;
-	uart_command_t next_uart_command, uart_command, last_uart_command;
 	uint16_t uart_rx_data;
 	uint8_t uart_payload_len;
 	uint8_t uart_payload_pos;
@@ -231,42 +270,7 @@ int main (void)
 			break;
 
 		case RF_CODE_OUT:
-			// do transmit of the data
-			switch(rf_state)
-			{
-			// init and start RF transmit
-			case RF_IDLE:
-			{
-				uint16_t sync_low = (uint16_t) ((uint32_t) (*(uint16_t *) &rf_data[SONOFF_TSYN_POS]));
-				uint16_t sync_high = (sync_low / PT2260_SYNC_LOW) * PT2260_SYNC_HIGH;
-				uint16_t bit_high_t = *(uint16_t *) &rf_data[SONOFF_THIGH_POS];
-				uint16_t bit_low_t = *(uint16_t *) &rf_data[SONOFF_TLOW_POS];
-
-				PCA0_StopRFListen();
-				PCA0_StartRFTransmit(sync_high, sync_low,
-									 bit_high_t, PROTOCOLS[PT2260_INDEX].bit_high_duty,
-									 bit_low_t, PROTOCOLS[PT2260_INDEX].bit_low_duty,
-									 PROTOCOLS[PT2260_INDEX].bit_count, SONOFF_DATA_POS);
-				break;
-			}
-
-			case RF_TRANSMITTING:
-				break;
-
-			// Will be called once transmit is done
-			case RF_FINISHED:
-				tr_repeats--;
-				if (tr_repeats > 0) {
-					rf_state = RF_IDLE;
-				} else {
-					desired_rf_protocol = last_desired_rf_protocol;
-					uart_command = last_uart_command;
-
-					PCA0_StartRFListen();
-					uart_put_command(RF_CODE_ACK);
-				}
-				break;
-			} // rf_state
+			handle_rf_transmission(uart_command, tr_repeats);
 			break;
 
 		// do new sniffing
