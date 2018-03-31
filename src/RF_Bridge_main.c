@@ -236,6 +236,24 @@ static bool is_uart_ack_missing(uart_command_t cmd) {
 	return false;
 }
 
+static void is_learning_done(void) {
+	if (rf_state == RF_FINISHED) {
+		SoundBuzzer_ms(LEARN_CMD_SUCCESS_MS);
+
+		desired_rf_protocol = last_desired_rf_protocol;
+		uart_command = last_uart_command;
+		uart_put_RF_CODE_Data(RF_CODE_LEARN_SUCCESS);
+
+	// check for learning timeout
+	} else if (IsTimerFinished(TIMER3) == true) {
+		SoundBuzzer_ms(LEARN_CMD_FAILURE_MS);
+
+		desired_rf_protocol = last_desired_rf_protocol;
+		uart_command = last_uart_command;
+		uart_put_command(RF_CODE_LEARN_TIMEOUT);
+	}
+}
+
 int main (void)
 {
 	uart_state_t uart_rx_state;
@@ -275,23 +293,7 @@ int main (void)
 		switch(uart_command) {
 		case RF_CODE_LEARN:
 			handle_rf_pulse(uart_command);
-
-			// check if a RF signal got decoded
-			if (rf_state == RF_FINISHED) {
-				SoundBuzzer_ms(LEARN_CMD_SUCCESS_MS);
-
-				desired_rf_protocol = last_desired_rf_protocol;
-				uart_command = last_uart_command;
-				uart_put_RF_CODE_Data(RF_CODE_LEARN_SUCCESS);
-
-			// check for learning timeout
-			} else if (IsTimerFinished(TIMER3) == true) {
-				SoundBuzzer_ms(LEARN_CMD_FAILURE_MS);
-
-				desired_rf_protocol = last_desired_rf_protocol;
-				uart_command = last_uart_command;
-				uart_put_command(RF_CODE_LEARN_TIMEOUT);
-			}
+			is_learning_done();
 			break; // case RF_CODE_LEARN
 
 		case RF_CODE_IN:
