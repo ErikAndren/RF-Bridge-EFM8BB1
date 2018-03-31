@@ -47,18 +47,18 @@ SI_SEGMENT_VARIABLE(bucket_count, uint8_t, SI_SEG_XDATA) = 0;
 //-----------------------------------------------------------------------------
 // Callbacks
 //-----------------------------------------------------------------------------
-void PCA0_overflowCb()
+void PCA0_overflowCb(void)
 {
 }
 
-void PCA0_channel2EventCb()
+void PCA0_channel2EventCb(void)
 {
 }
 
 // Called when receiving
 // Triggered when either a rising or falling edge has been detected on the input pin.
 // Timer 0 is the PCA counter input and is configured to overflow every 245 cc, increment once every 10 us
-void PCA0_channel1EventCb()
+void PCA0_channel1EventCb(void)
 {
 	// Store most recent capture value
 	// FIXME: Why do we multiply this by 10? Is it to harmonize the calculated period with the protocol definition?
@@ -68,7 +68,7 @@ void PCA0_channel1EventCb()
 	// Rising edge detected. This is the end of a negative pulse and the start of a positive pulse
 	if (R_DATA == 1)
 	{
-		// FIXME: Multiplication to reach us resolution, this is a hack to prevent having to flip flop between 24 and 25
+		// FIXME: Multiplication to reach us resolution, this is a hack to prevent having to flip flop between counting 24 and 25
 		// Flip flopping would be very expensive (too many interrupts). If we let the counter be to fast and count to 24 we could
 		// compensate this by dividing by 48 and add this to the result, this would still yield an truncation (think 47 / 48)
 		// What about dithering?
@@ -274,7 +274,7 @@ static void SendRF_Sync(void)
 }
 
 // Half of symbol transmitted, check if to change duty cycle length
-void PCA0_intermediateOverflowCb()
+void PCA0_intermediateOverflowCb(void)
 {
 	if (((rf_data[actual_byte] << (actual_bit % 8)) & 0x80) == 0x80)
 	{
@@ -287,7 +287,7 @@ void PCA0_intermediateOverflowCb()
 }
 
 // Called when transmission of a symbol is done
-void PCA0_channel0EventCb()
+void PCA0_channel0EventCb(void)
 {
 	actual_bit++;
 
