@@ -53,7 +53,7 @@ void SiLabs_Startup (void)
 bool waiting_for_uart_ack;
 uint8_t uart_cmd_retry_cnt;
 
-static void handle_rf_pulse(void) {
+static void handle_rf_pulse(uart_command_t cmd) {
 	if (neg_pulse_len > 0) {
 		switch (rf_state) {
 		case RF_IDLE:
@@ -124,7 +124,11 @@ static void handle_rf_pulse(void) {
 			InitTimer_ms(TIMER3, 1, RFIN_CMD_TIMEOUT_MS);
 			waiting_for_uart_ack = true;
 			uart_cmd_retry_cnt = 0;
-			uart_put_RF_CODE_Data(RF_CODE_IN);
+			if (cmd == RF_CODE_IN) {
+				uart_put_RF_CODE_Data(RF_CODE_IN);
+			} else {
+				uart_put_RF_Data(rf_protocol);
+			}
 			break;
 		}
 
@@ -146,7 +150,11 @@ static bool is_uart_ack_missing(uart_command_t cmd) {
 			} else {
 				// Did not receive reply within the expected timeout, retry
 				InitTimer_ms(TIMER3, 1, RFIN_CMD_TIMEOUT_MS);
-				uart_put_RF_CODE_Data(RF_CODE_IN);
+				if (cmd == RF_CODE_IN) {
+					uart_put_RF_CODE_Data(RF_CODE_IN);
+				} else {
+					uart_put_RF_Data(rf_protocol);
+				}
 				uart_cmd_retry_cnt++;
 			}
 		}
@@ -196,7 +204,7 @@ int main (void)
 		// Act upon currently executing command
 		switch(uart_command) {
 		case RF_CODE_LEARN:
-			handle_rf_pulse();
+			handle_rf_pulse(uart_command);
 
 			// check if a RF signal got decoded
 			if (rf_state == RF_FINISHED) {
@@ -219,7 +227,7 @@ int main (void)
 		case RF_CODE_IN:
 			// check if a RF signal got decoded
 			if (is_uart_ack_missing(uart_command) == false) {
-				handle_rf_pulse();
+				handle_rf_pulse(uart_command);
 			}
 			break;
 
@@ -265,33 +273,8 @@ int main (void)
 
 		// do new sniffing
 		case RF_PROTOCOL_SNIFFING_ON:
-			if (waiting_for_uart_ack == true) {
-				if (uart_cmd_retry_cnt == RFIN_CMD_RETRIES) {
-					// Give up
-					waiting_for_uart_ack = false;
-
-					// Reset listen state
-					PCA0_StartRFListen();
-					break;
-				}
-
-				if (IsTimerFinished(TIMER3) == true) {
-					// Did not receive reply within the expected timeout, retry again
-					InitTimer_ms(TIMER3, 1, RFIN_CMD_TIMEOUT_MS);
-					uart_put_RF_CODE_Data(RF_CODE_IN);
-					uart_cmd_retry_cnt++;
-				}
-
-			// Received RF code, send code to ESP8266 and wait for ack
-			} else {
-				handle_rf_pulse();
-
-				if (rf_state == RF_FINISHED) {
-					uart_cmd_retry_cnt = 0;
-					waiting_for_uart_ack = true;
-					InitTimer_ms(TIMER3, 1, RFIN_CMD_TIMEOUT_MS);
-					uart_put_RF_Data(RF_PROTOCOL_SNIFFING_ON);
-				}
+			if (is_uart_ack_missing(uart_command) == false) {
+				handle_rf_pulse(uart_command);
 			}
 			break;
 
