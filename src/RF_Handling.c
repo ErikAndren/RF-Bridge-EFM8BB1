@@ -68,7 +68,7 @@ void PCA0_channel1EventCb(void)
 	// Rising edge detected. This is the end of a negative pulse and the start of a positive pulse
 	if (R_DATA == 1) {
 		// FIXME: Multiplication to reach us resolution, this is a hack to prevent having to flip flop between counting 24 and 25
-		// Flip flopping would be very expensive (too many interrupts). If we let the counter be to fast and count to 24 we could
+		// Flip flopping would be very expensive (too many interrupts). If we let the counter be too slow and count to 25 we could
 		// compensate this by dividing by 48 and add this to the result, this would still yield an truncation (think 47 / 48)
 		// What about dithering?
 		// Let's talk about the error today, it could be 244 ccs or an error of almost 9 us. Is this a problem? Most likely not
@@ -215,10 +215,10 @@ void StartRFTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
 
 	// calculate T0_Overflow
 	bit_time = (100 * (uint32_t) bit_high_time) / bit_high_duty;
-	t0_high = (uint8_t)(0x100 - ((uint32_t) SYSCLK / (0xFF * (1000000 / (uint32_t) bit_time))));
+	t0_high = (uint8_t) (256 - ((uint32_t) SYSCLK / (0xFF * (1000000 / (uint32_t) bit_time))));
 
 	bit_time = (100 * (uint32_t) bit_low_time) / bit_low_duty;
-	t0_low = (uint8_t)(0x100 - ((uint32_t) SYSCLK / (0xFF * (1000000 / (uint32_t) bit_time))));
+	t0_low = (uint8_t) (256 - ((uint32_t) SYSCLK / (0xFF * (1000000 / (uint32_t) bit_time))));
 
 	// calculate high and low duty cycle
 	duty_cycle_high = (uint16_t) ((bit_high_duty * 0xFF) / 100);
