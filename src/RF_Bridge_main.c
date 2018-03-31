@@ -50,11 +50,12 @@ void SiLabs_Startup (void)
 {
 }
 
-bool waiting_for_uart_ack;
-uint8_t uart_cmd_retry_cnt;
-
-uart_command_t next_uart_command, uart_command, last_uart_command;
-uint8_t last_desired_rf_protocol;
+SI_SEGMENT_VARIABLE(waiting_for_uart_ack, bool, SI_SEG_DATA) = false;
+SI_SEGMENT_VARIABLE(uart_cmd_retry_cnt, uint8_t, SI_SEG_DATA) = 0;
+SI_SEGMENT_VARIABLE(last_uart_command, uart_command_t, SI_SEG_DATA);
+SI_SEGMENT_VARIABLE(uart_command, uart_command_t, SI_SEG_DATA);
+SI_SEGMENT_VARIABLE(next_uart_command, uart_command_t, SI_SEG_DATA);
+SI_SEGMENT_VARIABLE(last_desired_rf_protocol, uint8_t, SI_SEG_DATA);
 
 static void handle_rf_transmission(uart_command_t cmd, uint8_t *repeats) {
 	switch(rf_state)
@@ -187,7 +188,6 @@ static void handle_rf_pulse(uart_command_t cmd) {
 				rf_data[actual_byte] = 0;
 			}
 
-			// check if all bits for this protocol got received
 			if (actual_bit == PROTOCOLS[rf_protocol].bit_count) {
 				LED = LED_OFF;
 				rf_state = RF_FINISHED;
@@ -197,10 +197,10 @@ static void handle_rf_pulse(uart_command_t cmd) {
 
 		case RF_FINISHED:
 			uart_cmd_retry_cnt = 0;
+			waiting_for_uart_ack = true;
 
 			// Received RF code, transmit to ESP8266 and wait for ack
 			InitTimer_ms(TIMER3, 1, RFIN_CMD_TIMEOUT_MS);
-			waiting_for_uart_ack = true;
 			if (cmd == RF_CODE_IN) {
 				uart_put_RF_CODE_Data(RF_CODE_IN);
 			} else {
