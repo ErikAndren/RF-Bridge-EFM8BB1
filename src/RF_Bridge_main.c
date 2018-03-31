@@ -83,6 +83,7 @@ static void handle_rf_transmission(uart_command_t cmd, uint8_t *repeats) {
 				uint8_t bit_low_duty = rf_data[CUSTOM_PROTOCOL_BIT_LOW_DUTY_POS];
 				uint8_t bit_count = rf_data[CUSTOM_PROTOCOL_BIT_COUNT_POS];
 
+				StopRFListen();
 				StartRFTransmit(
 						sync_high,
 						sync_low,
@@ -96,6 +97,7 @@ static void handle_rf_transmission(uart_command_t cmd, uint8_t *repeats) {
 				uint8_t protocol_index = GetProtocolIndex(rf_data[RF_PROTOCOL_IDENT_POS]);
 
 				if (protocol_index != NO_PROTOCOL_FOUND) {
+					StopRFListen();
 					StartRFTransmit(
 							PROTOCOLS[protocol_index].sync_high, PROTOCOLS[protocol_index].sync_low,
 							PROTOCOLS[protocol_index].bit_high_data, PROTOCOLS[protocol_index].bit_high_duty,
@@ -127,6 +129,7 @@ static void handle_rf_transmission(uart_command_t cmd, uint8_t *repeats) {
 }
 
 static void handle_rf_pulse(uart_command_t cmd) {
+	// Neg. pulse end implies a previous positive pulse i.e. one cycle of information
 	if (neg_pulse_len > 0) {
 		switch (rf_state) {
 		case RF_IDLE:
@@ -193,10 +196,11 @@ static void handle_rf_pulse(uart_command_t cmd) {
 		}
 
 		case RF_FINISHED:
+			uart_cmd_retry_cnt = 0;
+
 			// Received RF code, transmit to ESP8266 and wait for ack
 			InitTimer_ms(TIMER3, 1, RFIN_CMD_TIMEOUT_MS);
 			waiting_for_uart_ack = true;
-			uart_cmd_retry_cnt = 0;
 			if (cmd == RF_CODE_IN) {
 				uart_put_RF_CODE_Data(RF_CODE_IN);
 			} else {
@@ -207,7 +211,6 @@ static void handle_rf_pulse(uart_command_t cmd) {
 
 		pos_pulse_len = 0;
 		neg_pulse_len = 0;
-		low_pulse_time = 0;
 	}
 }
 
