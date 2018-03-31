@@ -21,15 +21,15 @@ SI_SEGMENT_VARIABLE(rf_protocol, uint8_t, SI_SEG_XDATA) = 0;
 SI_SEGMENT_VARIABLE(rf_state, rf_state_t, SI_SEG_XDATA) = RF_IDLE;
 SI_SEGMENT_VARIABLE(desired_rf_protocol, uint8_t, SI_SEG_XDATA) = UNKNOWN_IDENTIFIER;
 
-SI_SEGMENT_VARIABLE(duty_cycle_high, uint8_t, SI_SEG_XDATA) = 0x56;
-SI_SEGMENT_VARIABLE(duty_cycle_low, uint8_t, SI_SEG_XDATA) = 0xAB;
-SI_SEGMENT_VARIABLE(t0_high, uint8_t, SI_SEG_XDATA) = 0x00;
-SI_SEGMENT_VARIABLE(t0_low, uint8_t, SI_SEG_XDATA) = 0x00;
-SI_SEGMENT_VARIABLE(sync_high, uint16_t, SI_SEG_XDATA) = 0x00;
-SI_SEGMENT_VARIABLE(sync_low, uint16_t, SI_SEG_XDATA) = 0x00;
-SI_SEGMENT_VARIABLE(bit_high, uint16_t, SI_SEG_XDATA) = 0x00;
-SI_SEGMENT_VARIABLE(bit_low, uint16_t, SI_SEG_XDATA) = 0x00;
-SI_SEGMENT_VARIABLE(bit_count, uint8_t, SI_SEG_XDATA) = 0x00;
+SI_SEGMENT_VARIABLE(duty_cycle_high, uint8_t, SI_SEG_XDATA) = 0;
+SI_SEGMENT_VARIABLE(duty_cycle_low, uint8_t, SI_SEG_XDATA) = 0;
+SI_SEGMENT_VARIABLE(t0_high, uint8_t, SI_SEG_XDATA) = 0;
+SI_SEGMENT_VARIABLE(t0_low, uint8_t, SI_SEG_XDATA) = 0;
+SI_SEGMENT_VARIABLE(sync_high, uint16_t, SI_SEG_XDATA) = 0;
+SI_SEGMENT_VARIABLE(sync_low, uint16_t, SI_SEG_XDATA) = 0;
+SI_SEGMENT_VARIABLE(bit_high, uint16_t, SI_SEG_XDATA) = 0;
+SI_SEGMENT_VARIABLE(bit_low, uint16_t, SI_SEG_XDATA) = 0;
+SI_SEGMENT_VARIABLE(bit_count, uint8_t, SI_SEG_XDATA) = 0;
 
 SI_SEGMENT_VARIABLE(actual_bit, uint8_t, SI_SEG_XDATA) = 0;
 SI_SEGMENT_VARIABLE(actual_sync_bit, uint8_t, SI_SEG_XDATA) = 0;
