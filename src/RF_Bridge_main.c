@@ -110,7 +110,7 @@ static void handle_rf_transmission(uart_command_t cmd, uint8_t repeats) {
 	case RF_TRANSMITTING:
 		break;
 
-		// Will be called once transmit is done
+	// Will be called once transmit is done
 	case RF_FINISHED:
 		repeats--;
 		if (repeats > 0) {
@@ -146,8 +146,7 @@ static void handle_rf_pulse(uart_command_t cmd) {
 
 		case RF_IN_SYNC: {
 			uint8_t current_duty_cycle;
-			//LED = !LED;
-			LED = LED_ON;
+			LED = !LED;
 
 			// Skip SYNC bits, if any
 			if (actual_sync_bit < PROTOCOLS[rf_protocol].sync_bit_count) {
