@@ -53,7 +53,7 @@ void SiLabs_Startup (void)
 bool waiting_for_uart_ack;
 uint8_t uart_cmd_retry_cnt;
 
-void handle_rf_pulse(void) {
+static void handle_rf_pulse(void) {
 	if (neg_pulse_len > 0) {
 		switch (rf_state) {
 		case RF_IDLE:
@@ -134,7 +134,7 @@ void handle_rf_pulse(void) {
 	}
 }
 
-bool is_uart_ack_missing(uart_command_t cmd) {
+static bool is_uart_ack_missing(uart_command_t cmd) {
 	if (waiting_for_uart_ack == true) {
 		if (IsTimerFinished(TIMER3) == true) {
 			if (uart_cmd_retry_cnt == RFIN_CMD_RETRIES) {
