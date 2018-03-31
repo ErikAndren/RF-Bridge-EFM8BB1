@@ -196,9 +196,10 @@ uint8_t GetProtocolIndex(uint8_t identifier)
 
 // Transmission path
 //FIXME: Merge this function with PCA0_StartRFTransmit
-void PCA0_InitRFTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
-					   uint16_t bit_high_time, uint8_t bit_high_duty,
-		               uint16_t bit_low_time, uint8_t bit_low_duty, uint8_t bitcount)
+void PCA0_StartRFTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
+					     uint16_t bit_high_time, uint8_t bit_high_duty,
+		                 uint16_t bit_low_time, uint8_t bit_low_duty,
+						 uint8_t bitcount, uint8_t payload_pos)
 {
 	uint16_t bit_time;
 
@@ -227,10 +228,7 @@ void PCA0_InitRFTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
 	 - PCA Counter/Timer Low Byte = 0xFF, why?
 	 ***********************************************************************/
 	PCA0L = (0xFF << PCA0L_PCA0L__SHIFT);
-}
 
-void PCA0_StartRFTransmit(uint8_t payload_pos)
-{
 	actual_bit = 0;
 	actual_byte = payload_pos;
 	rf_state = RF_TRANSMITTING;

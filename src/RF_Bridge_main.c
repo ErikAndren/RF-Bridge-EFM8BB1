@@ -243,11 +243,10 @@ int main (void)
 				uint16_t bit_low_t = *(uint16_t *) &rf_data[SONOFF_TLOW_POS];
 
 				PCA0_StopRFListen();
-				PCA0_InitRFTransmit(sync_high, sync_low,
-						bit_high_t, PROTOCOLS[PT2260_INDEX].bit_high_duty,
-						bit_low_t, PROTOCOLS[PT2260_INDEX].bit_low_duty,
-						PROTOCOLS[PT2260_INDEX].bit_count);
-				PCA0_StartRFTransmit(SONOFF_DATA_POS);
+				PCA0_StartRFTransmit(sync_high, sync_low,
+									 bit_high_t, PROTOCOLS[PT2260_INDEX].bit_high_duty,
+									 bit_low_t, PROTOCOLS[PT2260_INDEX].bit_low_duty,
+									 PROTOCOLS[PT2260_INDEX].bit_count, SONOFF_DATA_POS);
 				break;
 			}
 
@@ -296,26 +295,25 @@ int main (void)
 					uint8_t bit_low_duty = rf_data[CUSTOM_PROTOCOL_BIT_LOW_DUTY_POS];
 					uint8_t bit_count = rf_data[CUSTOM_PROTOCOL_BIT_COUNT_POS];
 
-					PCA0_InitRFTransmit(
+					PCA0_StartRFTransmit(
 							sync_high,
 							sync_low,
 							bit_high_t,
 							bit_high_duty,
 							bit_low_t,
 							bit_low_duty,
-							bit_count);
-					PCA0_StartRFTransmit(CUSTOM_PROTOCOL_DATA_POS);
+							bit_count,
+							CUSTOM_PROTOCOL_DATA_POS);
 				} else {
 					uint8_t protocol_index = GetProtocolIndex(rf_data[RF_PROTOCOL_IDENT_POS]);
 
 					if (protocol_index != NO_PROTOCOL_FOUND)
 					{
-						PCA0_InitRFTransmit(
+						PCA0_StartRFTransmit(
 								PROTOCOLS[protocol_index].sync_high, PROTOCOLS[protocol_index].sync_low,
 								PROTOCOLS[protocol_index].bit_high_data, PROTOCOLS[protocol_index].bit_high_duty,
 								PROTOCOLS[protocol_index].bit_low_time, PROTOCOLS[protocol_index].bit_low_duty,
-								PROTOCOLS[protocol_index].bit_count);
-						PCA0_StartRFTransmit(RF_PROTOCOL_START_POS);
+								PROTOCOLS[protocol_index].bit_count, RF_PROTOCOL_START_POS);
 					}
 				}
 				break;
@@ -324,7 +322,7 @@ int main (void)
 				// Rest in this state during transmission. I/O is done via interrupt callbacks
 				break;
 
-			// wait until data got transfered
+			// RF transmission is done
 			case RF_FINISHED:
 				desired_rf_protocol = last_desired_rf_protocol;
 				uart_command = last_uart_command;
