@@ -134,7 +134,7 @@ static void handle_rf_tx(uart_command_t cmd, uint8_t *repeats) {
 }
 
 static void handle_rf_rx(uart_command_t cmd) {
-	// Neg. pulse end implies a previous positive pulse i.e. one cycle of information
+	// Negative pulse end implies a previous positive pulse i.e. one cycle of information
 	if (neg_pulse_len > 0) {
 		switch (rf_state) {
 		case RF_IDLE:
@@ -200,15 +200,34 @@ static void handle_rf_rx(uart_command_t cmd) {
 		}
 
 		case RF_FINISHED:
-			uart_cmd_retry_cnt = 0;
-			waiting_for_uart_ack = true;
+			// Do not accept more incoming RF message until the previous transmission has been
+			// acknowledged (or timed out) by the host
+			StopRFListen();
 
-			// Received RF code, transmit to ESP8266 and wait for ack
-			InitTimer_ms(TIMER3, 1, RFIN_CMD_TIMEOUT_MS);
-			if (cmd == RF_CODE_IN) {
+			switch (cmd) {
+			case RF_CODE_IN:
+				// Received RF code, transmit to ESP8266 and wait for ack
+				// FIXME: Waiting for an ack makes us blind to new incoming codes.
+				// One improvement would be to multithread and having a queue
+				// Not sure the processor has memory enough to handle this though
+				uart_cmd_retry_cnt = 0;
+				waiting_for_uart_ack = true;
+
+				InitTimer_ms(TIMER3, 1, RFIN_CMD_TIMEOUT_MS);
 				uart_put_RF_CODE_Data(RF_CODE_IN);
-			} else {
+				break;
+
+			case RF_PROTOCOL_SNIFFING_ON:
+				uart_cmd_retry_cnt = 0;
+				waiting_for_uart_ack = true;
+
+				InitTimer_ms(TIMER3, 1, RFIN_CMD_TIMEOUT_MS);
 				uart_put_RF_Data(rf_protocol);
+				break;
+
+
+			default:
+				break;
 			}
 			break;
 
@@ -257,6 +276,7 @@ static void is_learning_done(uart_command_t cmd) {
 		} else if (cmd == RF_PROTOCOL_LEARN) {
 			uart_put_RF_Data(RF_PROTOCOL_LEARN_SUCCESS);
 		}
+		StartRFListen();
 
 	// check for learning timeout
 	} else if (IsTimerFinished(TIMER3) == true) {
@@ -269,6 +289,7 @@ static void is_learning_done(uart_command_t cmd) {
 		} else if (cmd == RF_PROTOCOL_LEARN) {
 			uart_put_command(RF_PROTOCOL_LEARN_TIMEOUT);
 		}
+		StartRFListen();
 	}
 }
 
