@@ -126,6 +126,10 @@ static void handle_rf_tx(uart_command_t cmd, uint8_t *repeats) {
 			uart_put_command(RF_CODE_ACK);
 		}
 		break;
+
+	default:
+		rf_state = RF_IDLE;
+		break;
 	} // rf_state
 }
 
@@ -206,6 +210,10 @@ static void handle_rf_rx(uart_command_t cmd) {
 			} else {
 				uart_put_RF_Data(rf_protocol);
 			}
+			break;
+
+		default:
+			rf_state = RF_IDLE;
 			break;
 		}
 
