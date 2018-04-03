@@ -38,8 +38,7 @@ typedef struct
 	// bit count for this protocol
 	uint8_t bit_count;
 	// bit count of SYNC bits
-	// FIXME: Logic is a bit strange as of now as 0 means one sync bit, 1 means two etc...
-	uint8_t sync_bit_count;
+	uint8_t additional_sync_bits;
 } protocol_data_t;
 
 #define SYNC_TOLERANCE 			2000

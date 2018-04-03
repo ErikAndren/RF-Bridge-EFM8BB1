@@ -157,7 +157,7 @@ static void handle_rf_rx(uart_command_t cmd) {
 			LED = !LED;
 
 			// Skip additional SYNC bits, if any
-			if (actual_sync_bit < PROTOCOLS[rf_protocol].sync_bit_count) {
+			if (actual_sync_bit < PROTOCOLS[rf_protocol].additional_sync_bits) {
 				actual_sync_bit++;
 				break;
 			}
