@@ -33,6 +33,14 @@ The reading of RF signals is already working:<br/>
 Sending start sniffing: 0xAA 0xA6 0x55<br/>
 Receiving AKN: 0xAA 0xA0 0x55<br/>
 
+## Example, RF decode from Rohrmotor24.de remote (40 bit of data):
+0xAA: uart sync init<br/>
+0xA6: sniffing active<br/>
+0x06: data len<br/>
+0x01: protocol identifier<br/>
+0xD0-0x55: data<br/>
+0x55: uart sync end
+
 # Command 0xA7 stops sniffing and reverts back to original Sonoff sniff
 Not really necessary, 0xA4 works as well.
 
