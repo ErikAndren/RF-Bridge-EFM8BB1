@@ -101,7 +101,7 @@ static void handle_rf_tx(uart_command_t cmd, uint8_t *repeats) {
 					StopRFListen();
 					StartRFTransmit(
 							PROTOCOLS[protocol_index].sync_high, PROTOCOLS[protocol_index].sync_low,
-							PROTOCOLS[protocol_index].bit_high_data, PROTOCOLS[protocol_index].bit_high_duty,
+							PROTOCOLS[protocol_index].bit_high_time, PROTOCOLS[protocol_index].bit_high_duty,
 							PROTOCOLS[protocol_index].bit_low_time, PROTOCOLS[protocol_index].bit_low_duty,
 							PROTOCOLS[protocol_index].bit_count, RF_PROTOCOL_START_POS);
 				}
@@ -279,6 +279,7 @@ static void is_learning_done(uart_command_t cmd) {
 		StartRFListen();
 
 	// check for learning timeout
+	// FIXME: Test this!
 	} else if (IsTimerFinished(TIMER3) == true) {
 		SoundBuzzer_ms(LEARN_CMD_FAILURE_MS);
 
