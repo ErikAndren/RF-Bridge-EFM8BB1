@@ -28,7 +28,7 @@ typedef struct
 	// normal low signal time on sync pulse (us)
 	uint16_t sync_low;
 	// high time of a logic bit 1 (us)
-	uint16_t bit_high_data;
+	uint16_t bit_high_time;
 	// high time of a logic bit 0 (us)
 	uint16_t bit_low_time;
 	// duty cycle for logic bit 1 %
@@ -122,9 +122,16 @@ typedef struct
 #define WS_1200				{WS_1200_IDENTIFIER, 0, 29400, 700, 300, 38, 64, 64, 7}
 
 /*
+ * Home Easy / Nexa / Anslut
+ * http://tech.jolowe.se/home-automation-rf-protocols
+ */
+#define HOME_EASY_IDENTIFIER				0x06
+#define HOME_EASY {HOME_EASY_IDENTIFIER, 275, 2750, 275, 275, 50, 16, 64, 0}
+
+/*
  * Protocol array
  */
-#define PROTOCOLCOUNT 5
+#define PROTOCOLCOUNT 6
 #if PROTOCOLCOUNT > 0x7F
 #error Too many protocols are defined, stop!
 #endif
@@ -135,7 +142,8 @@ SI_SEGMENT_VARIABLE(PROTOCOLS[PROTOCOLCOUNT], static const protocol_data_t, SI_S
 		ROHRMOTOR24,
 		Seamaid_PAR_56_RGB,
 		NORU,
-		WS_1200
+		WS_1200,
+		HOME_EASY
 };
 
 #endif /* INC_RF_PROTOCOLS_H_ */
