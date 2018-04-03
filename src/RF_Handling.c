@@ -200,31 +200,32 @@ void StartRFTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
 		             uint16_t bit_low_time, uint8_t bit_low_duty,
 				     uint8_t bitcount, uint8_t payload_pos)
 {
-	uint16_t bit_time;
+	uint16_t bit_period_us;
 
 	// set global variable
 	sync_high = sync_high_in;
 	sync_low = sync_low_in;
 
 	// calculate T0_Overflow
+	// Calculate the pulse period, for high and low pulses - they might differ
 	// This is the reload value used to reload TL0 when it is in mode 2. See 18.3.2.1 in reference manual
 	// FIXME: This logic needs to be explained.
-	// Multiply the bit high time in us with 100 and divide with the bit high duty cycle
-	// (100 * us) / %
+	// Calculate the bit period (us)
+	bit_period_us = (100 * (uint32_t) bit_high_time) / bit_high_duty;
+	
 	// PWM counter is 8 bits i.e 256 values
+#define PWM_8BIT_CNT 256
+	// Bit period is hacked up into 256 parts, each part is incremented when the timer 0 overflows
+	// What does 1000000 represent? Is it related to that the bit period is in us i. e. 1 MHz
+	// Frequency of timer overflows that needs to be attained during one second
+	t0_high = (uint8_t) (256 - ((uint32_t) SYSCLK / (PWM_8BIT_CNT * (1000000 / (uint32_t) bit_period_us))));
 
-	bit_time = (100 * (uint32_t) bit_high_time) / bit_high_duty;
-	// will give us the bit high us per high percent
-	// 256 - (sysclk / (255 * (1000000 / (100 * us) / %)))
-	// Is 0xFF connected to the 8 bit PCA counting?
-	t0_high = (uint8_t) (256 - ((uint32_t) SYSCLK / (0xFF * (1000000 / (uint32_t) bit_time))));
+	bit_period_us = (100 * (uint32_t) bit_low_time) / bit_low_duty;
+	t0_low = (uint8_t) (256 - ((uint32_t) SYSCLK / (PWM_8BIT_CNT * (1000000 / (uint32_t) bit_period_us))));
 
-	bit_time = (100 * (uint32_t) bit_low_time) / bit_low_duty;
-	t0_low = (uint8_t) (256 - ((uint32_t) SYSCLK / (0xFF * (1000000 / (uint32_t) bit_time))));
-
-	// calculate high and low duty cycle
-	duty_cycle_high = (uint16_t) ((bit_high_duty * 0xFF) / 100);
-	duty_cycle_low = (uint16_t) ((bit_low_duty * 0xFF) / 100);
+	// convert duty cycle from percent to per 256
+	duty_cycle_high = (uint16_t) ((bit_high_duty * PWM_8BIT_CNT) / 100);
+	duty_cycle_low = (uint16_t) ((bit_low_duty * PWM_8BIT_CNT) / 100);
 
 	bit_count = bitcount;
 
@@ -249,7 +250,7 @@ void StartRFTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
 }
 
 // This defines the falling edge of the pulse, in PCA0 cycles
-// Of the 256 counts, where shall the falling edge occur?
+// Of the 256 PCA counts, where shall the falling edge occur?
 static void SetDutyCycle(void)
 {
 	if (((rf_data[actual_byte] << (actual_bit % 8)) & 0x80) == 0x80)
@@ -262,7 +263,6 @@ static void SetDutyCycle(void)
 	}
 }
 
-// Half of symbol transmitted, check if to change duty cycle length
 // Called when rising edge (falling non. inv) is generated (overflow)
 // This defines the length (frequency)
 // Starts the high part of the pulse
@@ -270,6 +270,7 @@ void PCA0_intermediateOverflowCb(void)
 {
 	// This will effectively toggle how fast the counter will wrap around
 	// Both timer 0 and PCA counter works in 8 bit mode
+	// Symbols can have different lengths, adjust for that here
 	if (((rf_data[actual_byte] << (actual_bit % 8)) & 0x80) == 0x80) {
 		// bit 1
 		TH0 = t0_high;
@@ -297,6 +298,9 @@ void PCA0_channel0EventCb(void)
 		StopRFTransmit();
 	} else {
 		// Start transmission of next bit
+		//FIXME: Is this really safe? Couldn't this create a problem if the low start is moved a bit ahead?
+		// PCA0 counter is not reset, and so if this event is called, and the updated match value is slightly beyond it will be called again
+		// Missed bits?
 		SetDutyCycle();
 	}
 }
@@ -316,6 +320,7 @@ void StopRFTransmit(void)
 	// clear all interrupt flags of PCA0
 	PCA0CN0 &= ~(PCA0CN0_CF__BMASK | PCA0CN0_CCF0__BMASK | PCA0CN0_CCF1__BMASK | PCA0CN0_CCF2__BMASK);
 
+	//FIXME: Is this really necessary? We only stop transmission after a full pulse i.e we're ending on low anyway
 	// enable P0.0 for I/O control
 	XBR1 &= ~XBR1_PCA0ME__CEX0_CEX1;
 
