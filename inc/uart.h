@@ -61,7 +61,7 @@
 ** high byte error return code of uart_getc()
 */
 #define UART_NO_DATA          0x0100              /* no receive data available   */
-/* The errors below are never set are they? */
+/* FIXME: The errors below are never set are they? */
 #define UART_FRAME_ERROR      0x1000              /* Framing Error by UART       */
 #define UART_OVERRUN_ERROR    0x0800              /* Overrun condition by UART   */
 #define UART_PARITY_ERROR     0x0400              /* Parity Error by UART        */
@@ -93,6 +93,7 @@ typedef enum
 	RF_PROTOCOL_SNIFFING_OFF = 0xA7,
 	RF_PROTOCOL_OUT = 0xA8,
 	RF_PROTOCOL_LEARN = 0xA9,
+	// FIXME: Why not reuse the RF Code ones?
 	RF_PROTOCOL_LEARN_TIMEOUT = 0xAA,
 	RF_PROTOCOL_LEARN_SUCCESS = 0xAB,
 	RF_BUCKET_OUT = 0xB0,
