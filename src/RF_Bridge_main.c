@@ -222,9 +222,8 @@ static void handle_rf_rx(uart_command_t cmd) {
 				waiting_for_uart_ack = true;
 
 				InitTimer_ms(TIMER3, 1, RFIN_CMD_TIMEOUT_MS);
-				uart_put_RF_Data(rf_protocol);
+				uart_put_RF_Data(RF_PROTOCOL_SNIFFING_ON);
 				break;
-
 
 			default:
 				break;
@@ -255,7 +254,7 @@ static bool is_uart_ack_missing(uart_command_t cmd) {
 				if (cmd == RF_CODE_IN) {
 					uart_put_RF_CODE_Data(RF_CODE_IN);
 				} else {
-					uart_put_RF_Data(rf_protocol);
+					uart_put_RF_Data(uart_command);
 				}
 				uart_cmd_retry_cnt++;
 			}
