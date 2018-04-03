@@ -57,7 +57,7 @@ SI_SEGMENT_VARIABLE(uart_command, uart_command_t, SI_SEG_DATA);
 SI_SEGMENT_VARIABLE(next_uart_command, uart_command_t, SI_SEG_DATA);
 SI_SEGMENT_VARIABLE(last_desired_rf_protocol, uint8_t, SI_SEG_DATA);
 
-static void handle_rf_transmission(uart_command_t cmd, uint8_t *repeats) {
+static void handle_rf_tx(uart_command_t cmd, uint8_t *repeats) {
 	switch(rf_state)
 	{
 	// init and start RF transmit
@@ -129,7 +129,7 @@ static void handle_rf_transmission(uart_command_t cmd, uint8_t *repeats) {
 	} // rf_state
 }
 
-static void handle_rf_pulse(uart_command_t cmd) {
+static void handle_rf_rx(uart_command_t cmd) {
 	// Neg. pulse end implies a previous positive pulse i.e. one cycle of information
 	if (neg_pulse_len > 0) {
 		switch (rf_state) {
@@ -302,33 +302,33 @@ int main (void)
 		// Act upon currently executing command
 		switch(uart_command) {
 		case RF_CODE_LEARN:
-			handle_rf_pulse(uart_command);
+			handle_rf_rx(uart_command);
 			is_learning_done(uart_command);
 			break; // case RF_CODE_LEARN
 
 		case RF_CODE_IN:
 			// check if a RF signal got decoded
 			if (is_uart_ack_missing(uart_command) == false) {
-				handle_rf_pulse(uart_command);
+				handle_rf_rx(uart_command);
 			}
 			break;
 
 		case RF_CODE_OUT:
-			handle_rf_transmission(uart_command, &tr_repeats);
+			handle_rf_tx(uart_command, &tr_repeats);
 			break;
 
 		case RF_PROTOCOL_SNIFFING_ON:
 			if (is_uart_ack_missing(uart_command) == false) {
-				handle_rf_pulse(uart_command);
+				handle_rf_rx(uart_command);
 			}
 			break;
 
 		case RF_PROTOCOL_OUT:
-			handle_rf_transmission(uart_command, &tr_repeats);
+			handle_rf_tx(uart_command, &tr_repeats);
 			break;
 
 		case RF_PROTOCOL_LEARN:
-			handle_rf_pulse(uart_command);
+			handle_rf_rx(uart_command);
 			is_learning_done(uart_command);
 			break;
 
