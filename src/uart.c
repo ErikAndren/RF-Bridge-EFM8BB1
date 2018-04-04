@@ -151,12 +151,6 @@ void uart_put_RF_Data(uint8_t command)
 	uart_putc(RF_CODE_START);
 	uart_putc(command);
 
-	//FIXME: Think this through? Why not just divide by 8
-//	while (i < PROTOCOLS[rf_protocol].bit_count)
-//	{
-//		i += 8;
-//		bytes++;
-//	}
 	bytes = PROTOCOLS[rf_protocol].bit_count / 8;
 	// In the case we are dealing with an non byte divisible number of bits
 	if (PROTOCOLS[rf_protocol].bit_count % 8) {
