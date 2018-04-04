@@ -14,7 +14,7 @@
 #define RF_CODE_START		0xAA
 #define RF_CODE_STOP		0x55
 
-// FIXME: What does TSYN represent?
+// TSYN represents the part of the period where the sync pulse is low
 #define SONOFF_TSYN_SZ 2
 #define SONOFF_TSYN_POS 0
 #define SONOFF_TLOW_SZ 2
