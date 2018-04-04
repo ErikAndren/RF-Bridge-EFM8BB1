@@ -8,6 +8,8 @@
 #ifndef INC_RF_HANDLING_H_
 #define INC_RF_HANDLING_H_
 
+#include "uart.h"
+
 extern uint8_t IdentifyRFProtocol(uint8_t identifier, uint16_t period_pos, uint16_t period_neg);
 extern uint8_t GetProtocolIndex(uint8_t identifier);
 extern void StartRFTransmit(uint16_t sync_high_in, uint16_t sync_low_in, uint16_t bit_high_time, uint8_t bit_high_duty,
@@ -16,6 +18,9 @@ extern void SetDutyCycle(void);
 extern void StopRFTransmit(void);
 extern void StartRFListen(void);
 extern void StopRFListen(void);
+
+extern void handle_rf_tx(uart_command_t cmd, uint8_t *repeats);
+extern void handle_rf_rx(uart_command_t cmd);
 
 #define TIMER0_CC_S_TO_COUNT 245
 
@@ -62,5 +67,16 @@ extern SI_SEGMENT_VARIABLE(bucket_count, uint8_t, SI_SEG_XDATA);
 extern SI_SEGMENT_VARIABLE(pos_pulse_len, uint16_t, SI_SEG_DATA);
 extern SI_SEGMENT_VARIABLE(neg_pulse_len, uint16_t, SI_SEG_DATA);
 extern SI_SEGMENT_VARIABLE(low_pulse_time, uint16_t, SI_SEG_DATA);
+extern SI_SEGMENT_VARIABLE(desired_rf_protocol, uint8_t, SI_SEG_XDATA);
+extern SI_SEGMENT_VARIABLE(last_desired_rf_protocol, uint8_t, SI_SEG_DATA);
+extern SI_SEGMENT_VARIABLE(last_uart_command, uart_command_t, SI_SEG_DATA);
+extern SI_SEGMENT_VARIABLE(uart_command, uart_command_t, SI_SEG_DATA);
+extern SI_SEGMENT_VARIABLE(next_uart_command, uart_command_t, SI_SEG_DATA);
+
+extern SI_SEGMENT_VARIABLE(waiting_for_uart_ack, bool, SI_SEG_DATA);
+extern SI_SEGMENT_VARIABLE(uart_cmd_retry_cnt, uint8_t, SI_SEG_DATA);
+
+#define RFIN_CMD_TIMEOUT_MS 1000
+#define RFIN_CMD_RETRIES 3
 
 #endif /* INC_RF_HANDLING_H_ */

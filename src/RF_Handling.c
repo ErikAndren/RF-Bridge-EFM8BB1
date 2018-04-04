@@ -16,10 +16,15 @@
 #include "Timer.h"
 #include "Delay.h"
 
+SI_SEGMENT_VARIABLE(last_uart_command, uart_command_t, SI_SEG_DATA);
+SI_SEGMENT_VARIABLE(uart_command, uart_command_t, SI_SEG_DATA);
+SI_SEGMENT_VARIABLE(next_uart_command, uart_command_t, SI_SEG_DATA);
+
 SI_SEGMENT_VARIABLE(rf_data[RF_DATA_BUFFERSIZE], uint8_t, SI_SEG_XDATA);
 SI_SEGMENT_VARIABLE(rf_protocol, uint8_t, SI_SEG_XDATA) = 0;
 SI_SEGMENT_VARIABLE(rf_state, rf_state_t, SI_SEG_XDATA) = RF_IDLE;
 SI_SEGMENT_VARIABLE(desired_rf_protocol, uint8_t, SI_SEG_XDATA) = UNKNOWN_IDENTIFIER;
+SI_SEGMENT_VARIABLE(last_desired_rf_protocol, uint8_t, SI_SEG_DATA);
 
 SI_SEGMENT_VARIABLE(duty_cycle_high, uint8_t, SI_SEG_XDATA) = 0;
 SI_SEGMENT_VARIABLE(duty_cycle_low, uint8_t, SI_SEG_XDATA) = 0;
@@ -34,6 +39,9 @@ SI_SEGMENT_VARIABLE(bit_count, uint8_t, SI_SEG_XDATA) = 0;
 SI_SEGMENT_VARIABLE(actual_bit, uint8_t, SI_SEG_XDATA) = 0;
 SI_SEGMENT_VARIABLE(actual_sync_bit, uint8_t, SI_SEG_XDATA) = 0;
 SI_SEGMENT_VARIABLE(actual_byte, uint8_t, SI_SEG_XDATA) = 0;
+
+SI_SEGMENT_VARIABLE(waiting_for_uart_ack, bool, SI_SEG_DATA) = false;
+SI_SEGMENT_VARIABLE(uart_cmd_retry_cnt, uint8_t, SI_SEG_DATA) = 0;
 
 SI_SEGMENT_VARIABLE(pos_pulse_len, uint16_t, SI_SEG_DATA) = 0;
 SI_SEGMENT_VARIABLE(neg_pulse_len, uint16_t, SI_SEG_DATA) = 0;
@@ -177,7 +185,192 @@ uint8_t GetProtocolIndex(uint8_t identifier)
 	return protocol_index;
 }
 
+void handle_rf_rx(uart_command_t cmd) {
+	// Negative pulse end implies a previous positive pulse i.e. one cycle of information
+	if (neg_pulse_len > 0) {
+		switch (rf_state) {
+		case RF_IDLE:
+			rf_protocol = IdentifyRFProtocol(desired_rf_protocol, pos_pulse_len, neg_pulse_len);
+			if (rf_protocol != NO_PROTOCOL_FOUND) {
+				sync_high = pos_pulse_len;
+				sync_low = neg_pulse_len;
+				actual_byte = 0;
+				actual_bit = 0;
+				actual_sync_bit = 0;
+				low_pulse_time = 0;
+				rf_state = RF_IN_SYNC;
+				rf_data[0] = 0;
+				LED = LED_ON;
+			}
+			break;
+
+		case RF_IN_SYNC: {
+			uint8_t duty_cycle;
+			LED = !LED;
+
+			// Skip additional SYNC bits, if any
+			if (actual_sync_bit < PROTOCOLS[rf_protocol].additional_sync_bits) {
+				actual_sync_bit++;
+				break;
+			}
+
+			actual_bit++;
+			duty_cycle = (100 * (uint32_t) pos_pulse_len) / ((uint32_t) pos_pulse_len + (uint32_t) neg_pulse_len);
+
+			// Only set the bit if it passes the bit high duty filter
+			if (((duty_cycle > (PROTOCOLS[rf_protocol].bit_high_duty - DUTY_CYCLE_TOLERANCE)) &&
+				(duty_cycle < (PROTOCOLS[rf_protocol].bit_high_duty + DUTY_CYCLE_TOLERANCE)) &&
+				(actual_bit < PROTOCOLS[rf_protocol].bit_count)) ||
+					// The duty cycle can not be used for the last bit because of the missing rising edge on the end
+					// A new rising edge will eventually come as the input pin jitters but we don't know in time when this is.
+					// Another way to solve this is by setting a timer on the last positive pulse
+					// This is probably good enough. But we are not checking against duty cycle limitations.
+					// Instead just pulse that is the longest
+					((pos_pulse_len > low_pulse_time) && (actual_bit == PROTOCOLS[rf_protocol].bit_count))) {
+				bit_high = pos_pulse_len;
+				rf_data[actual_byte] |= (1 >> ((actual_bit - 1) % 8));
+			} else {
+				bit_low = pos_pulse_len;
+
+				// backup low bit pulse time to be able to determine the last bit
+				if (pos_pulse_len > low_pulse_time) {
+					low_pulse_time = pos_pulse_len;
+				}
+			}
+
+			if ((actual_bit % 8) == 0) {
+				// Clear next byte
+				actual_byte++;
+				rf_data[actual_byte] = 0;
+			}
+
+			if (actual_bit == PROTOCOLS[rf_protocol].bit_count) {
+				LED = LED_OFF;
+				rf_state = RF_FINISHED;
+			}
+			break;
+		}
+
+		case RF_FINISHED:
+			// Do not accept more incoming RF message until the previous transmission has been
+			// acknowledged (or timed out) by the host
+			StopRFListen();
+
+			switch (cmd) {
+			case RF_CODE_IN:
+				// Received RF code, transmit to ESP8266 and wait for ack
+				// FIXME: Waiting for an ack makes us blind to new incoming codes.
+				// One improvement would be to multithread and having a queue
+				// Not sure the processor has memory enough to handle this though
+				uart_cmd_retry_cnt = 0;
+				waiting_for_uart_ack = true;
+
+				InitTimer_ms(TIMER3, 1, RFIN_CMD_TIMEOUT_MS);
+				uart_put_RF_CODE_Data(RF_CODE_IN);
+				break;
+
+			case RF_PROTOCOL_SNIFFING_ON:
+				uart_cmd_retry_cnt = 0;
+				waiting_for_uart_ack = true;
+
+				InitTimer_ms(TIMER3, 1, RFIN_CMD_TIMEOUT_MS);
+				uart_put_RF_Data(RF_PROTOCOL_SNIFFING_ON);
+				break;
+
+			default:
+				break;
+			}
+			break;
+
+		default:
+			rf_state = RF_IDLE;
+			break;
+		}
+
+		neg_pulse_len = 0;
+	}
+}
+
+
+
 // Transmission path
+void handle_rf_tx(uart_command_t cmd, uint8_t *repeats) {
+	switch(rf_state)
+	{
+	// init and start RF transmit
+	case RF_IDLE:
+	{
+		if (cmd == RF_CODE_OUT) {
+			uint16_t sync_low = (uint16_t) ((uint32_t) (*(uint16_t *) &rf_data[SONOFF_TSYN_POS]));
+			uint16_t sync_high = (sync_low / PT2260_SYNC_LOW) * PT2260_SYNC_HIGH;
+			uint16_t bit_high_t = *(uint16_t *) &rf_data[SONOFF_THIGH_POS];
+			uint16_t bit_low_t = *(uint16_t *) &rf_data[SONOFF_TLOW_POS];
+
+			StopRFListen();
+			StartRFTransmit(sync_high, sync_low,
+					bit_high_t, PROTOCOLS[PT2260_INDEX].bit_high_duty,
+					bit_low_t, PROTOCOLS[PT2260_INDEX].bit_low_duty,
+					PROTOCOLS[PT2260_INDEX].bit_count, SONOFF_DATA_POS);
+		} else if (cmd == RF_PROTOCOL_OUT) {
+			if (rf_data[RF_PROTOCOL_IDENT_POS] == CUSTOM_PROTOCOL_IDENT) {
+				uint16_t sync_high = *(uint16_t *) &rf_data[CUSTOM_PROTOCOL_SYNC_HIGH_POS];
+				uint16_t sync_low = *(uint16_t *) &rf_data[CUSTOM_PROTOCOL_SYNC_LOW_POS];
+				uint16_t bit_high_t = *(uint16_t *) &rf_data[CUSTOM_PROTOCOL_BIT_HIGH_TIME_POS];
+				uint8_t bit_high_duty = rf_data[CUSTOM_PROTOCOL_BIT_HIGH_DUTY_POS];
+				uint16_t bit_low_t = *(uint16_t *) &rf_data[CUSTOM_PROTOCOL_BIT_LOW_TIME_POS];
+				uint8_t bit_low_duty = rf_data[CUSTOM_PROTOCOL_BIT_LOW_DUTY_POS];
+				uint8_t bit_count = rf_data[CUSTOM_PROTOCOL_BIT_COUNT_POS];
+
+				StopRFListen();
+				StartRFTransmit(
+						sync_high,
+						sync_low,
+						bit_high_t,
+						bit_high_duty,
+						bit_low_t,
+						bit_low_duty,
+						bit_count,
+						CUSTOM_PROTOCOL_DATA_POS);
+			} else {
+				uint8_t protocol_index = GetProtocolIndex(rf_data[RF_PROTOCOL_IDENT_POS]);
+
+				if (protocol_index != NO_PROTOCOL_FOUND) {
+					StopRFListen();
+					StartRFTransmit(
+							PROTOCOLS[protocol_index].sync_high, PROTOCOLS[protocol_index].sync_low,
+							PROTOCOLS[protocol_index].bit_high_time, PROTOCOLS[protocol_index].bit_high_duty,
+							PROTOCOLS[protocol_index].bit_low_time, PROTOCOLS[protocol_index].bit_low_duty,
+							PROTOCOLS[protocol_index].bit_count, RF_PROTOCOL_START_POS);
+				}
+			}
+		}
+		break;
+	}
+
+	case RF_TRANSMITTING:
+		break;
+
+	// Will be called once transmit is done
+	case RF_FINISHED:
+		(*repeats)--;
+		if (*repeats > 0) {
+			rf_state = RF_IDLE;
+		} else {
+			desired_rf_protocol = last_desired_rf_protocol;
+			uart_command = last_uart_command;
+
+			StartRFListen();
+			uart_put_command(RF_CODE_ACK);
+		}
+		break;
+
+	default:
+		rf_state = RF_IDLE;
+		break;
+	} // rf_state
+}
+
+
 static void SendRFSync(void)
 {
 	// enable P0.0 for I/O control
