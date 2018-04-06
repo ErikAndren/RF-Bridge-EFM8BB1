@@ -36,8 +36,8 @@ Receiving AKN: 0xAA 0xA0 0x55<br/>
 ## Example, RF decode from Rohrmotor24.de remote (40 bit of data):
 0xAA: uart sync init<br/>
 0xA6: sniffing active<br/>
-0x06: data len<br/>
 0x01: protocol identifier<br/>
+0x06: data len<br/>
 0xD0-0x55: data<br/>
 0x55: uart sync end
 

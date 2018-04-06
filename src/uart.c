@@ -157,9 +157,8 @@ void uart_put_RF_Data(uint8_t command)
 		bytes++;
 	}
 
-	// One extra for the identifier
-	uart_putc(bytes + 1);
 	uart_putc(PROTOCOLS[rf_protocol].identifier);
+	uart_putc(bytes);
 
 	for (i = 0; i < bytes; i++) {
 		uart_putc(rf_data[i]);
