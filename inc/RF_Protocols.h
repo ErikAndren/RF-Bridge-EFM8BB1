@@ -27,13 +27,15 @@ typedef struct
 	uint16_t sync_high;
 	// normal low signal time on sync pulse (us)
 	uint16_t sync_low;
-	// high time of a logic bit 1 (us)
+	// tolerance +- in us
+ 	uint16_t sync_tolerance;
+	// high time of a logic bit 1 (us), only used for tx
 	uint16_t bit_high_time;
-	// high time of a logic bit 0 (us)
+	// high time of a logic bit 0 (us), only used for tx
 	uint16_t bit_low_time;
-	// duty cycle for logic bit 1 %
+	// duty cycle for logic bit 1 %,
 	uint8_t bit_high_duty;
-	// duty cycle for logic bit 0 %
+	// duty cycle for logic bit 0 % not used for rx
 	uint8_t bit_low_duty;
 	// bit count for this protocol
 	uint8_t bit_count;
@@ -41,12 +43,44 @@ typedef struct
 	uint8_t additional_sync_bits;
 } protocol_data_t;
 
-#define SYNC_TOLERANCE 			2000
-#define DUTY_CYCLE_TOLERANCE 	8
+#define DUTY_CYCLE_TOLERANCE 	16
 
 #define UNKNOWN_IDENTIFIER		0x00
 
 #define NO_PROTOCOL_FOUND 0x80
+
+/*
+ * Home Easy / Nexa / Anslut
+ * http://tech.jolowe.se/home-automation-rf-protocols
+ */
+#define HOME_EASY_IDENTIFIER 0
+#define HOME_EASY {HOME_EASY_IDENTIFIER, 275, 2750, 200, 275, 275, 50, 16, 64, 0}
+
+/*
+ * Rohrmotor24
+ * https://github.com/bjwelker/Raspi-Rollo/tree/master/Arduino/Rollo_Code_Receiver
+ */
+#define ROHRMOTOR24_IDENTIFIER 1
+#define ROHRMOTOR24	{ROHRMOTOR24_IDENTIFIER, 4800, 2000, 1500, 700, 300, 70, 30, 40, 0}
+
+/*
+ * UNDERWATER PAR56 LED LAMP, 502266
+ * http://www.seamaid-lighting.com/de/produit/lampe-par56/
+ */
+#define Seamaid_PAR_56_RGB_IDENTIFIER 2
+#define Seamaid_PAR_56_RGB {Seamaid_PAR_56_RGB_IDENTIFIER, 3000, 9000, 2000, 1100, 400, 75, 25, 24, 0}
+
+/*
+ * Wall plug Noru
+  */
+#define NORU_IDENTIFIER 3
+#define NORU {NORU_IDENTIFIER, 9500, 3000, 2000, 900, 320, 70, 30, 24, 0}
+
+/*
+ * WS-1200 Series Wireless Weather Station
+  */
+#define WS_1200_IDENTIFIER 4
+#define WS_1200	{WS_1200_IDENTIFIER, 0, 29400, 2000, 700, 300, 38, 64, 64, 7}
 
 /*
  * Original RF bridge protocol
@@ -85,64 +119,31 @@ typedef struct
  *
  */
 
-#define PT2260_IDENTIFIER				0x01
+#define PT2260_IDENTIFIER 5
 #define PT2260_ALPHA_STEP 128
 #define PT2260_SYNC_PERIOD 4096
 #define PT2260_SYNC_HIGH PT2260_ALPHA_STEP
 #define PT2260_SYNC_LOW (PT2260_SYNC_PERIOD - PT2260_SYNC_HIGH)
 #define PT2260_BIT_PERIOD 1024
 
-#define PT2260				{PT2260_IDENTIFIER, 0, 12400, 1080, 400, 75, 25, 24, 0}
-#define PT2260_INDEX 0
-/*
- * Rohrmotor24
- * https://github.com/bjwelker/Raspi-Rollo/tree/master/Arduino/Rollo_Code_Receiver
- */
-#define ROHRMOTOR24_IDENTIFIER			0x02
-#define ROHRMOTOR24			{ROHRMOTOR24_IDENTIFIER, 4800, 1500, 700, 300, 70, 30, 40, 0}
-
-/*
- * UNDERWATER PAR56 LED LAMP, 502266
- * http://www.seamaid-lighting.com/de/produit/lampe-par56/
- */
-#define Seamaid_PAR_56_RGB_IDENTIFIER	0x03
-#define Seamaid_PAR_56_RGB	{Seamaid_PAR_56_RGB_IDENTIFIER, 3000, 9000, 1100, 400, 75, 25, 24, 0}
-
-/*
- * Wall plug Noru
-  */
-#define NORU_IDENTIFIER					0x04
-#define NORU				{NORU_IDENTIFIER, 9500, 3000, 900, 320, 70, 30, 24, 0}
-
-/*
- * WS-1200 Series Wireless Weather Station
-  */
-#define WS_1200_IDENTIFIER				0x05
-#define WS_1200				{WS_1200_IDENTIFIER, 0, 29400, 700, 300, 38, 64, 64, 7}
-
-/*
- * Home Easy / Nexa / Anslut
- * http://tech.jolowe.se/home-automation-rf-protocols
- */
-#define HOME_EASY_IDENTIFIER				0x06
-#define HOME_EASY {HOME_EASY_IDENTIFIER, 275, 2750, 275, 275, 50, 16, 64, 0}
+//FIXME: If sync low is set to 12400 reception of HOME_EASY does not work
+#define PT2260 {PT2260_IDENTIFIER, 0, 1240, 2000, 1080, 400, 75, 25, 24, 0}
 
 /*
  * Protocol array
  */
-#define PROTOCOLCOUNT 6
-#if PROTOCOLCOUNT > 0x7F
-#error Too many protocols are defined, stop!
-#endif
 
-SI_SEGMENT_VARIABLE(PROTOCOLS[PROTOCOLCOUNT], static const protocol_data_t, SI_SEG_CODE) =
+/* Keil C51 compiler does not support C99 i. e. no designated initializers */
+SI_SEGMENT_VARIABLE(PROTOCOLS[], static const protocol_data_t, SI_SEG_CODE) =
 {
-		PT2260,
+		HOME_EASY,
 		ROHRMOTOR24,
 		Seamaid_PAR_56_RGB,
 		NORU,
 		WS_1200,
-		HOME_EASY
+		PT2260
 };
+
+static const uint8_t PROTOCOLCOUNT = sizeof(PROTOCOLS) / sizeof(protocol_data_t);
 
 #endif /* INC_RF_PROTOCOLS_H_ */
