@@ -13,7 +13,6 @@
 #include "Globals.h"
 #include "InitDevice.h"
 #include "uart_0.h"
-#include "pca_0.h"
 #include "uart.h"
 #include "RF_Handling.h"
 #include "RF_Protocols.h"
