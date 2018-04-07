@@ -22,8 +22,6 @@ extern void StopRFListen(void);
 extern void handle_rf_tx(uart_command_t cmd, uint8_t *repeats);
 extern void handle_rf_rx(uart_command_t cmd);
 
-#define TIMER0_CC_S_TO_COUNT 245
-
 // 112 byte == 896 bits, so a RF signal with maximum of 896 bits is possible
 // for bucket transmission, this depends on the number of buckets.
 // E.g. 4 buckets have a total overhead of 11, allowing 101 bits (high/low pairs)
@@ -35,6 +33,7 @@ typedef enum
 {
 	RF_IDLE,
 	RF_IN_SYNC,
+	RF_DATA,
 	RF_DECODE_BUCKET,
 	RF_TRANSMITTING,
 	RF_FINISHED
@@ -77,6 +76,6 @@ extern SI_SEGMENT_VARIABLE(waiting_for_uart_ack, bool, SI_SEG_DATA);
 extern SI_SEGMENT_VARIABLE(uart_cmd_retry_cnt, uint8_t, SI_SEG_DATA);
 
 #define RFIN_CMD_TIMEOUT_MS 1000
-#define RFIN_CMD_RETRIES 3
+#define RFIN_CMD_RETRIES 0
 
 #endif /* INC_RF_HANDLING_H_ */
