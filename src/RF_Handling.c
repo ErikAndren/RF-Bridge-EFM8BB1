@@ -12,6 +12,7 @@
 #include "RF_Protocols.h"
 #include "RF_Buckets.h"
 #include "pca_0.h"
+#include "uart_0.h"
 #include "uart.h"
 #include "Timer.h"
 #include "Delay.h"
@@ -37,7 +38,6 @@ SI_SEGMENT_VARIABLE(bit_low, uint16_t, SI_SEG_XDATA) = 0;
 SI_SEGMENT_VARIABLE(bit_count, uint8_t, SI_SEG_XDATA) = 0;
 
 SI_SEGMENT_VARIABLE(actual_bit, uint8_t, SI_SEG_XDATA) = 0;
-SI_SEGMENT_VARIABLE(actual_sync_bit, uint8_t, SI_SEG_XDATA) = 0;
 SI_SEGMENT_VARIABLE(actual_byte, uint8_t, SI_SEG_XDATA) = 0;
 
 SI_SEGMENT_VARIABLE(waiting_for_uart_ack, bool, SI_SEG_DATA) = false;
@@ -96,7 +96,7 @@ void StartRFListen(void)
 {
 	// restore timer to 100000 Hz, 10 s interval
 	// 245 cc's * 40.8 ns = 50 us = 100000 Hz = 100 kHz
-	TH0 = 256 - TIMER0_CC_S_TO_COUNT;
+	TH0 = 256 - (SYSCLK / RX_SAMPLE_RATE);
 	TL0 = TH0;
 
 	// enable interrupt for RF reception
@@ -130,11 +130,11 @@ uint8_t IdentifyRFProtocol(uint8_t identifier, uint16_t period_pos, uint16_t per
 		case UNKNOWN_IDENTIFIER:
 			// check all protocols
 			for (used_protocol = 0; used_protocol < PROTOCOLCOUNT; used_protocol++) {
-				if ((period_neg > (PROTOCOLS[used_protocol].sync_low - SYNC_TOLERANCE)) &&
-					(period_neg < (PROTOCOLS[used_protocol].sync_low + SYNC_TOLERANCE))) {
+				if ((period_neg > (PROTOCOLS[used_protocol].sync_low - PROTOCOLS[used_protocol].sync_tolerance)) &&
+					(period_neg < (PROTOCOLS[used_protocol].sync_low + PROTOCOLS[used_protocol].sync_tolerance))) {
 					if ((PROTOCOLS[used_protocol].sync_high == 0) ||
-					   ((period_pos > (PROTOCOLS[used_protocol].sync_high - SYNC_TOLERANCE)) &&
-						(period_pos < (PROTOCOLS[used_protocol].sync_high + SYNC_TOLERANCE)))) {
+					   ((period_pos > (PROTOCOLS[used_protocol].sync_high - PROTOCOLS[used_protocol].sync_tolerance)) &&
+						(period_pos < (PROTOCOLS[used_protocol].sync_high + PROTOCOLS[used_protocol].sync_tolerance)))) {
 						protocol_found = used_protocol;
 						break;
 					}
@@ -151,11 +151,11 @@ uint8_t IdentifyRFProtocol(uint8_t identifier, uint16_t period_pos, uint16_t per
 				break;
 			}
 
-			if ((period_neg > (PROTOCOLS[used_protocol].sync_low - SYNC_TOLERANCE)) &&
-				(period_neg < (PROTOCOLS[used_protocol].sync_low + SYNC_TOLERANCE))) {
+			if ((period_neg > (PROTOCOLS[used_protocol].sync_low - PROTOCOLS[used_protocol].sync_tolerance)) &&
+				(period_neg < (PROTOCOLS[used_protocol].sync_low + PROTOCOLS[used_protocol].sync_tolerance))) {
 				if ((PROTOCOLS[used_protocol].sync_high == 0) ||
-				   ((period_pos > (PROTOCOLS[used_protocol].sync_high - SYNC_TOLERANCE)) &&
-					(period_pos < (PROTOCOLS[used_protocol].sync_high + SYNC_TOLERANCE)))) {
+				   ((period_pos > (PROTOCOLS[used_protocol].sync_high - PROTOCOLS[used_protocol].sync_tolerance)) &&
+					(period_pos < (PROTOCOLS[used_protocol].sync_high + PROTOCOLS[used_protocol].sync_tolerance)))) {
 					protocol_found = used_protocol;
 					break;
 				}
@@ -186,7 +186,7 @@ uint8_t GetProtocolIndex(uint8_t identifier)
 }
 
 void handle_rf_rx(uart_command_t cmd) {
-	// Negative pulse end implies a previous positive pulse i.e. one cycle of information
+	// Negative pulse end implies a previous positive pulse i.e. one period is complete
 	if (neg_pulse_len > 0) {
 		switch (rf_state) {
 		case RF_IDLE:
@@ -196,31 +196,39 @@ void handle_rf_rx(uart_command_t cmd) {
 				sync_low = neg_pulse_len;
 				actual_byte = 0;
 				actual_bit = 0;
-				actual_sync_bit = 0;
 				low_pulse_time = 0;
-				rf_state = RF_IN_SYNC;
+				if (PROTOCOLS[rf_protocol].additional_sync_bits > 0) {
+					rf_state = RF_IN_SYNC;
+				} else {
+					rf_state = RF_DATA;
+				}
 				rf_data[0] = 0;
 				LED = LED_ON;
 			}
 			break;
 
-		case RF_IN_SYNC: {
+		case RF_IN_SYNC:
+			// Skip additional SYNC bits
+			actual_bit++;
+
+			if (actual_bit == PROTOCOLS[rf_protocol].additional_sync_bits) {
+				actual_bit = 0;
+				rf_state = RF_DATA;
+			}
+			break;
+
+		case RF_DATA:
+		{
 			uint8_t duty_cycle;
 			LED = !LED;
-
-			// Skip additional SYNC bits, if any
-			if (actual_sync_bit < PROTOCOLS[rf_protocol].additional_sync_bits) {
-				actual_sync_bit++;
-				break;
-			}
 
 			actual_bit++;
 			duty_cycle = (100 * (uint32_t) pos_pulse_len) / ((uint32_t) pos_pulse_len + (uint32_t) neg_pulse_len);
 
 			// Only set the bit if it passes the bit high duty filter
 			if (((duty_cycle > (PROTOCOLS[rf_protocol].bit_high_duty - DUTY_CYCLE_TOLERANCE)) &&
-				(duty_cycle < (PROTOCOLS[rf_protocol].bit_high_duty + DUTY_CYCLE_TOLERANCE)) &&
-				(actual_bit < PROTOCOLS[rf_protocol].bit_count)) ||
+				 (duty_cycle < (PROTOCOLS[rf_protocol].bit_high_duty + DUTY_CYCLE_TOLERANCE)) &&
+				 (actual_bit < PROTOCOLS[rf_protocol].bit_count)) ||
 					// The duty cycle can not be used for the last bit because of the missing rising edge on the end
 					// A new rising edge will eventually come as the input pin jitters but we don't know in time when this is.
 					// Another way to solve this is by setting a timer on the last positive pulse
@@ -228,7 +236,8 @@ void handle_rf_rx(uart_command_t cmd) {
 					// Instead just pulse that is the longest
 					((pos_pulse_len > low_pulse_time) && (actual_bit == PROTOCOLS[rf_protocol].bit_count))) {
 				bit_high = pos_pulse_len;
-				rf_data[actual_byte] |= (1 >> ((actual_bit - 1) % 8));
+				rf_data[actual_byte] |= (1 << ((actual_bit - 1) % 8));
+
 			} else {
 				bit_low = pos_pulse_len;
 
@@ -260,7 +269,7 @@ void handle_rf_rx(uart_command_t cmd) {
 			case RF_CODE_IN:
 				// Received RF code, transmit to ESP8266 and wait for ack
 				// FIXME: Waiting for an ack makes us blind to new incoming codes.
-				// One improvement would be to multithread and having a queue
+				// One improvement would be to multi-thread and having a queue
 				// Not sure the processor has memory enough to handle this though
 				uart_cmd_retry_cnt = 0;
 				waiting_for_uart_ack = true;
@@ -291,8 +300,6 @@ void handle_rf_rx(uart_command_t cmd) {
 	}
 }
 
-
-
 // Transmission path
 void handle_rf_tx(uart_command_t cmd, uint8_t *repeats) {
 	switch(rf_state)
@@ -319,7 +326,7 @@ void handle_rf_tx(uart_command_t cmd, uint8_t *repeats) {
 				uint8_t bit_high_duty = rf_data[CUSTOM_PROTOCOL_BIT_HIGH_DUTY_POS];
 				uint16_t bit_low_t = *(uint16_t *) &rf_data[CUSTOM_PROTOCOL_BIT_LOW_TIME_POS];
 				uint8_t bit_low_duty = rf_data[CUSTOM_PROTOCOL_BIT_LOW_DUTY_POS];
-				uint8_t bit_count = rf_data[CUSTOM_PROTOCOL_BIT_COUNT_POS];
+				uint8_t bit_count_t = rf_data[CUSTOM_PROTOCOL_BIT_COUNT_POS];
 
 				StopRFListen();
 				StartRFTransmit(
@@ -329,7 +336,7 @@ void handle_rf_tx(uart_command_t cmd, uint8_t *repeats) {
 						bit_high_duty,
 						bit_low_t,
 						bit_low_duty,
-						bit_count,
+						bit_count_t,
 						CUSTOM_PROTOCOL_DATA_POS);
 			} else {
 				uint8_t protocol_index = GetProtocolIndex(rf_data[RF_PROTOCOL_IDENT_POS]);
@@ -370,7 +377,6 @@ void handle_rf_tx(uart_command_t cmd, uint8_t *repeats) {
 	} // rf_state
 }
 
-
 static void SendRFSync(void)
 {
 	// enable P0.0 for I/O control
@@ -399,7 +405,6 @@ void StartRFTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
 	sync_high = sync_high_in;
 	sync_low = sync_low_in;
 
-	// calculate T0_Overflow
 	// Calculate the pulse period, for high and low pulses - they might differ
 	// This is the reload value used to reload TL0 when it is in mode 2. See 18.3.2.1 in reference manual
 	// FIXME: This logic needs to be explained.
