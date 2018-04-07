@@ -13,6 +13,8 @@ RM := rm -rf
 -include sources.mk
 -include src/subdir.mk
 -include lib/efm8bb1/peripheralDrivers/src/subdir.mk
+-include lib/efm8bb1/peripheralDrivers/inc/subdir.mk
+-include .metadata/.plugins/org.eclipse.cdt.make.core/subdir.mk
 -include subdir.mk
 -include objects.mk
 
@@ -27,14 +29,14 @@ all: RF_Bridge.omf
 RF_Bridge.omf: echo_path $(OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Keil 8051 Linker'
-	LX51 "@RF_Bridge.lnp" || $(RC)
+	wine "/Applications/Simplicity Studio.app/Contents/Eclipse/developer/toolchains/keil_8051/9.53/BIN/LX51" "@RF_Bridge.lnp" || $(RC)
 	@echo 'Finished building target: $@'
 
 # Change from all upper case to the expected case
 	@-mv "RF_BRIDGE.OMF.CRBUILD" "$@"
 
 # Generate hex file: RF_Bridge.hex
-	@Ohx51 "RF_Bridge.omf" "HEXFILE (RF_Bridge.hex)" "H386" 2>&1 >/dev/null
+	@wine "/Applications/Simplicity Studio.app/Contents/Eclipse/developer/toolchains/keil_8051/9.53/BIN/Ohx51" "RF_Bridge.omf" "HEXFILE (RF_Bridge.hex)" "H386" 2>&1 >/dev/null
 
 # Other Targets
 clean:
