@@ -11,7 +11,7 @@
 #include "RF_Handling.h"
 #include "RF_Protocols.h"
 #include "RF_Buckets.h"
-#include "pca_0.h"
+#include <pca_0.h>
 #include "uart_0.h"
 #include "uart.h"
 #include "Timer.h"
@@ -97,15 +97,12 @@ void StartRFListen(void)
 	// restore timer to 100000 Hz, 10 s interval
 	// 245 cc's * 40.8 ns = 50 us = 100000 Hz = 100 kHz
 	TH0 = 256 - (SYSCLK / RX_SAMPLE_RATE);
-	TL0 = TH0;
 
 	// enable interrupt for RF reception
 	PCA0CPM1 |= PCA0CPM1_ECCF__ENABLED;
 
 	rf_state = RF_IDLE;
 
-	//FIXME: Not really necessary to start and stop the PCA counter. Disabling the interrupt is probably enough
-	PCA0_writeCounter(0);
 	PCA0_run();
 }
 
@@ -122,18 +119,24 @@ void StopRFListen(void)
 
 uint8_t IdentifyRFProtocol(uint8_t identifier, uint16_t period_pos, uint16_t period_neg)
 {
+
+	//FIXME: Could be merged into one variable
 	uint8_t protocol_found = NO_PROTOCOL_FOUND;
 	uint8_t used_protocol;
 
-	switch(identifier) {
+	switch (identifier) {
 		// protocol is undefined, do loop through all protocols
 		case UNKNOWN_IDENTIFIER:
 			// check all protocols
 			for (used_protocol = 0; used_protocol < PROTOCOLCOUNT; used_protocol++) {
 				if ((period_neg > (PROTOCOLS[used_protocol].sync_low - PROTOCOLS[used_protocol].sync_tolerance)) &&
 					(period_neg < (PROTOCOLS[used_protocol].sync_low + PROTOCOLS[used_protocol].sync_tolerance))) {
+//					uart_putc(0xFF);
+//					uart_puts(neg_pulse_len);
+//					uart_puts(pos_pulse_len);
+//					UART0_initTxPolling();
 					if ((PROTOCOLS[used_protocol].sync_high == 0) ||
-					   ((period_pos > (PROTOCOLS[used_protocol].sync_high - PROTOCOLS[used_protocol].sync_tolerance)) &&
+						((period_pos > (PROTOCOLS[used_protocol].sync_high - PROTOCOLS[used_protocol].sync_tolerance)) &&
 						(period_pos < (PROTOCOLS[used_protocol].sync_high + PROTOCOLS[used_protocol].sync_tolerance)))) {
 						protocol_found = used_protocol;
 						break;
@@ -192,6 +195,9 @@ void handle_rf_rx(uart_command_t cmd) {
 		case RF_IDLE:
 			rf_protocol = IdentifyRFProtocol(desired_rf_protocol, pos_pulse_len, neg_pulse_len);
 			if (rf_protocol != NO_PROTOCOL_FOUND) {
+//				uart_puts(neg_pulse_len);
+//				UART0_initTxPolling();
+
 				sync_high = pos_pulse_len;
 				sync_low = neg_pulse_len;
 				actual_byte = 0;
@@ -238,13 +244,29 @@ void handle_rf_rx(uart_command_t cmd) {
 				bit_high = pos_pulse_len;
 				rf_data[actual_byte] |= (1 << ((actual_bit - 1) % 8));
 
-			} else {
+			} else if ((duty_cycle > (PROTOCOLS[rf_protocol].bit_low_duty - DUTY_CYCLE_TOLERANCE)) &&
+					   (duty_cycle < (PROTOCOLS[rf_protocol].bit_low_duty + DUTY_CYCLE_TOLERANCE)) ||
+					   (actual_bit == PROTOCOLS[rf_protocol].bit_count)) {
 				bit_low = pos_pulse_len;
 
 				// backup low bit pulse time to be able to determine the last bit
 				if (pos_pulse_len > low_pulse_time) {
 					low_pulse_time = pos_pulse_len;
 				}
+			} else {
+				//uart_putc(0x55);
+				//uart_putc(actual_bit);
+				//uart_putc(rf_protocol);
+				//uart_putc(PROTOCOLS[rf_protocol].bit_low_duty - DUTY_CYCLE_TOLERANCE);
+				//uart_putc(duty_cycle);
+				//uart_putc(PROTOCOLS[rf_protocol].bit_low_duty + DUTY_CYCLE_TOLERANCE);
+				//uart_puts(pos_pulse_len);
+				//uart_puts(neg_pulse_len);
+				//UART0_initTxPolling();
+
+				// Bit length is out of spec, revert back to idle state
+				rf_state = RF_IDLE;
+				break;
 			}
 
 			if ((actual_bit % 8) == 0) {
@@ -315,9 +337,9 @@ void handle_rf_tx(uart_command_t cmd, uint8_t *repeats) {
 
 			StopRFListen();
 			StartRFTransmit(sync_high, sync_low,
-					bit_high_t, PROTOCOLS[PT2260_INDEX].bit_high_duty,
-					bit_low_t, PROTOCOLS[PT2260_INDEX].bit_low_duty,
-					PROTOCOLS[PT2260_INDEX].bit_count, SONOFF_DATA_POS);
+					bit_high_t, PROTOCOLS[PT2260_IDENTIFIER].bit_high_duty,
+					bit_low_t, PROTOCOLS[PT2260_IDENTIFIER].bit_low_duty,
+					PROTOCOLS[PT2260_IDENTIFIER].bit_count, SONOFF_DATA_POS);
 		} else if (cmd == RF_PROTOCOL_OUT) {
 			if (rf_data[RF_PROTOCOL_IDENT_POS] == CUSTOM_PROTOCOL_IDENT) {
 				uint16_t sync_high = *(uint16_t *) &rf_data[CUSTOM_PROTOCOL_SYNC_HIGH_POS];
