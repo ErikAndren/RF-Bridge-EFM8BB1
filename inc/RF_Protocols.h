@@ -41,7 +41,13 @@ typedef struct
 	uint8_t bit_count;
 	// bit count of SYNC bits
 	uint8_t additional_sync_bits;
+
 } protocol_data_t;
+
+/* http://www.logicapplied.se/projects/remote_control/nexa/nexa.html */
+#define ARC_IDENTIFIER 5
+#define ARC {ARC_IDENTIFIER, 440, 1080, 100, 1340, 440, 75, 25, 24, 0}
+
 
 #define DUTY_CYCLE_TOLERANCE 	16
 
@@ -127,7 +133,7 @@ typedef struct
 #define PT2260_BIT_PERIOD 1024
 
 //FIXME: If sync low is set to 12400 reception of HOME_EASY does not work
-#define PT2260 {PT2260_IDENTIFIER, 0, 1240, 2000, 1080, 400, 75, 25, 24, 0}
+#define PT2260 {PT2260_IDENTIFIER, 0, 12400, 2000, 1080, 400, 75, 25, 24, 0}
 
 /*
  * Protocol array
@@ -141,7 +147,7 @@ SI_SEGMENT_VARIABLE(PROTOCOLS[], static const protocol_data_t, SI_SEG_CODE) =
 		Seamaid_PAR_56_RGB,
 		NORU,
 		WS_1200,
-		PT2260
+		ARC
 };
 
 static const uint8_t PROTOCOLCOUNT = sizeof(PROTOCOLS) / sizeof(protocol_data_t);
