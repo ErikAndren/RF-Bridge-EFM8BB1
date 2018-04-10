@@ -44,11 +44,6 @@ typedef struct
 
 } protocol_data_t;
 
-/* http://www.logicapplied.se/projects/remote_control/nexa/nexa.html */
-#define ARC_IDENTIFIER 5
-#define ARC {ARC_IDENTIFIER, 440, 1080, 100, 1340, 440, 75, 25, 24, 0}
-
-
 #define DUTY_CYCLE_TOLERANCE 	16
 
 #define UNKNOWN_IDENTIFIER		0x00
@@ -88,10 +83,19 @@ typedef struct
 #define WS_1200_IDENTIFIER 4
 #define WS_1200	{WS_1200_IDENTIFIER, 0, 29400, 2000, 700, 300, 38, 64, 64, 7}
 
+/* http://www.logicapplied.se/projects/remote_control/nexa/nexa.html */
+#define ARC_IDENTIFIER 5
+#define ARC {ARC_IDENTIFIER, 440, 1080, 100, 1340, 440, 75, 25, 24, 0}
+
+/* FIXME: There is a problem with my remote where a spurious pulse may come before the sync pulse
+ * it looks like this throws the rx off */
+
+#define EV1527_IDENTIFIER 6
+#define EV1527 {EV1527_IDENTIFIER, 400, 7800, 300, 200, 600, 75, 25, 24, 0}
+
 /*
  * Original RF bridge protocol
  * PT2260, http://www.princeton.com.tw/Portals/0/Product/PT2260_4.pdf
- * EV1527, https://www.sunrom.com/get/206000
  * The built-in oscillator circuitry of PT2260 allows a frequency in a range about 100-500kHz.
  * Only 100 - 300 kHz according to the datasheet
  *
@@ -125,7 +129,7 @@ typedef struct
  *
  */
 
-#define PT2260_IDENTIFIER 5
+#define PT2260_IDENTIFIER 7
 #define PT2260_ALPHA_STEP 128
 #define PT2260_SYNC_PERIOD 4096
 #define PT2260_SYNC_HIGH PT2260_ALPHA_STEP
@@ -147,7 +151,9 @@ SI_SEGMENT_VARIABLE(PROTOCOLS[], static const protocol_data_t, SI_SEG_CODE) =
 		Seamaid_PAR_56_RGB,
 		NORU,
 		WS_1200,
-		ARC
+		ARC,
+		EV1527,
+		PT2260
 };
 
 static const uint8_t PROTOCOLCOUNT = sizeof(PROTOCOLS) / sizeof(protocol_data_t);
