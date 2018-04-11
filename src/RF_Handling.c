@@ -119,9 +119,7 @@ void StopRFListen(void)
 
 uint8_t identify_rf_protocol(uint8_t protocol, uint16_t period_pos, uint16_t period_neg)
 {
-
 	//FIXME: Could be merged into one variable
-	uint8_t protocol_found = NO_PROTOCOL_FOUND;
 	uint8_t used_protocol;
 
 	switch (protocol) {
@@ -135,8 +133,7 @@ uint8_t identify_rf_protocol(uint8_t protocol, uint16_t period_pos, uint16_t per
 					if ((PROTOCOLS[used_protocol].sync_high == 0) ||
 						((period_pos > (PROTOCOLS[used_protocol].sync_high - PROTOCOLS[used_protocol].sync_tolerance)) &&
 						(period_pos < (PROTOCOLS[used_protocol].sync_high + PROTOCOLS[used_protocol].sync_tolerance)))) {
-						protocol_found = used_protocol;
-						break;
+						return used_protocol;
 					}
 				}
 			}
@@ -156,14 +153,13 @@ uint8_t identify_rf_protocol(uint8_t protocol, uint16_t period_pos, uint16_t per
 				if ((PROTOCOLS[used_protocol].sync_high == 0) ||
 				   ((period_pos > (PROTOCOLS[used_protocol].sync_high - PROTOCOLS[used_protocol].sync_tolerance)) &&
 					(period_pos < (PROTOCOLS[used_protocol].sync_high + PROTOCOLS[used_protocol].sync_tolerance)))) {
-					protocol_found = used_protocol;
-					break;
+					return used_protocol;
 				}
 			}
 			break;
 	}
 
-	return protocol_found;
+	return NO_PROTOCOL_FOUND;
 }
 
 uint8_t GetProtocolIndex(uint8_t identifier)
