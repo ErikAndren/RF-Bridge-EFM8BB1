@@ -117,14 +117,14 @@ void StopRFListen(void)
 	PCA0CPM1 &= ~PCA0CPM1_ECCF__ENABLED;
 }
 
-uint8_t IdentifyRFProtocol(uint8_t identifier, uint16_t period_pos, uint16_t period_neg)
+uint8_t identify_rf_protocol(uint8_t protocol, uint16_t period_pos, uint16_t period_neg)
 {
 
 	//FIXME: Could be merged into one variable
 	uint8_t protocol_found = NO_PROTOCOL_FOUND;
 	uint8_t used_protocol;
 
-	switch (identifier) {
+	switch (protocol) {
 		// protocol is undefined, do loop through all protocols
 		case UNKNOWN_IDENTIFIER:
 			// check all protocols
@@ -144,7 +144,7 @@ uint8_t IdentifyRFProtocol(uint8_t identifier, uint16_t period_pos, uint16_t per
 
 		// check other protocols
 		default:
-			used_protocol = GetProtocolIndex(identifier);
+			used_protocol = GetProtocolIndex(protocol);
 
 			// check if identifier got found in list
 			if (used_protocol == NO_PROTOCOL_FOUND) {
@@ -190,7 +190,7 @@ void handle_rf_rx(uart_command_t cmd) {
 	if (neg_pulse_len > 0) {
 		switch (rf_state) {
 		case RF_IDLE:
-			rf_protocol = IdentifyRFProtocol(desired_rf_protocol, pos_pulse_len, neg_pulse_len);
+			rf_protocol = identify_rf_protocol(desired_rf_protocol, pos_pulse_len, neg_pulse_len);
 			if (rf_protocol != NO_PROTOCOL_FOUND) {
 				sync_high = pos_pulse_len;
 				sync_low = neg_pulse_len;

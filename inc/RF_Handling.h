@@ -10,7 +10,7 @@
 
 #include "uart.h"
 
-extern uint8_t IdentifyRFProtocol(uint8_t identifier, uint16_t period_pos, uint16_t period_neg);
+extern uint8_t identify_rf_protocol(uint8_t identifier, uint16_t period_pos, uint16_t period_neg);
 extern uint8_t GetProtocolIndex(uint8_t identifier);
 extern void StartRFTransmit(uint16_t sync_high_in, uint16_t sync_low_in, uint16_t bit_high_time, uint8_t bit_high_duty,
 		uint16_t bit_low_time, uint8_t bit_low_duty, uint8_t bitcount, uint8_t payload_ptr);
