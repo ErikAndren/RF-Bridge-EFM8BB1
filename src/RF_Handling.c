@@ -106,7 +106,7 @@ void StartRFListen(void)
 	PCA0_run();
 }
 
-void StopRFListen(void)
+void stop_rf_rx(void)
 {
 	PCA0_halt();
 
@@ -240,7 +240,7 @@ void handle_rf_rx(uart_command_t cmd) {
 		case RF_FINISHED:
 			// Do not accept more incoming RF message until the previous transmission has been
 			// acknowledged (or timed out) by the host
-			StopRFListen();
+			stop_rf_rx();
 
 			switch (cmd) {
 			case RF_CODE_IN:
@@ -290,8 +290,8 @@ void handle_rf_tx(uart_command_t cmd, uint8_t *repeats) {
 			uint16_t bit_high_t = *(uint16_t *) &rf_data[SONOFF_THIGH_POS];
 			uint16_t bit_low_t = *(uint16_t *) &rf_data[SONOFF_TLOW_POS];
 
-			StopRFListen();
-			StartRFTransmit(sync_high, sync_low,
+			stop_rf_rx();
+			start_rf_tx(sync_high, sync_low,
 					bit_high_t, PROTOCOLS[PT2260_IDENTIFIER].bit_high_duty,
 					bit_low_t, PROTOCOLS[PT2260_IDENTIFIER].bit_low_duty,
 					PROTOCOLS[PT2260_IDENTIFIER].bit_count, SONOFF_DATA_POS);
@@ -305,8 +305,8 @@ void handle_rf_tx(uart_command_t cmd, uint8_t *repeats) {
 				uint8_t bit_low_duty = rf_data[CUSTOM_PROTOCOL_BIT_LOW_DUTY_POS];
 				uint8_t bit_count_t = rf_data[CUSTOM_PROTOCOL_BIT_COUNT_POS];
 
-				StopRFListen();
-				StartRFTransmit(
+				stop_rf_rx();
+				start_rf_tx(
 						sync_high,
 						sync_low,
 						bit_high_t,
@@ -318,8 +318,8 @@ void handle_rf_tx(uart_command_t cmd, uint8_t *repeats) {
 			} else if (rf_data[RF_PROTOCOL_IDENT_POS] < PROTOCOLCOUNT) {
 				uint8_t protocol_index = rf_data[RF_PROTOCOL_IDENT_POS];
 
-				StopRFListen();
-				StartRFTransmit(
+				stop_rf_rx();
+				start_rf_tx(
 					PROTOCOLS[protocol_index].sync_high, PROTOCOLS[protocol_index].sync_low,
 					PROTOCOLS[protocol_index].bit_high_time, PROTOCOLS[protocol_index].bit_high_duty,
 					PROTOCOLS[protocol_index].bit_low_time, PROTOCOLS[protocol_index].bit_low_duty,
@@ -369,7 +369,7 @@ static void SendRFSync(void)
 	XBR1 |= XBR1_PCA0ME__CEX0_CEX1;
 }
 
-void StartRFTransmit(uint16_t sync_high_in, uint16_t sync_low_in,
+void start_rf_tx(uint16_t sync_high_in, uint16_t sync_low_in,
 					 uint16_t bit_high_time, uint8_t bit_high_duty,
 		             uint16_t bit_low_time, uint8_t bit_low_duty,
 				     uint8_t bitcount, uint8_t payload_pos)

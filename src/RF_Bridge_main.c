@@ -171,7 +171,7 @@ int main (void)
 		case RF_BUCKET_OUT:
 		{
 			const uint8_t bkts = rf_data[BUCKET_NO_POS] * BUCKET_PAIRS;
-			StopRFListen();
+			stop_rf_rx();
 
 			// byte 2*(1..bkts):		bucket time high
 			// byte 2*(1..bkts)+1:		bucket time low
