@@ -24,7 +24,7 @@ SI_SEGMENT_VARIABLE(next_uart_command, uart_command_t, SI_SEG_DATA);
 SI_SEGMENT_VARIABLE(rf_data[RF_DATA_BUFFERSIZE], uint8_t, SI_SEG_XDATA);
 SI_SEGMENT_VARIABLE(rf_protocol, uint8_t, SI_SEG_XDATA) = 0;
 SI_SEGMENT_VARIABLE(rf_state, rf_state_t, SI_SEG_XDATA) = RF_IDLE;
-SI_SEGMENT_VARIABLE(desired_rf_protocol, uint8_t, SI_SEG_XDATA) = UNKNOWN_IDENTIFIER;
+SI_SEGMENT_VARIABLE(desired_rf_protocol, uint8_t, SI_SEG_XDATA) = UNKNOWN_PROTOCOL;
 SI_SEGMENT_VARIABLE(last_desired_rf_protocol, uint8_t, SI_SEG_DATA);
 
 SI_SEGMENT_VARIABLE(duty_cycle_high, uint8_t, SI_SEG_XDATA) = 0;
@@ -126,7 +126,7 @@ uint8_t identify_rf_protocol(uint8_t protocol, uint16_t period_pos, uint16_t per
 
 	switch (protocol) {
 		// protocol is undefined, do loop through all protocols
-		case UNKNOWN_IDENTIFIER:
+		case UNKNOWN_PROTOCOL:
 			// check all protocols
 			for (used_protocol = 0; used_protocol < PROTOCOLCOUNT; used_protocol++) {
 				if ((period_neg > (PROTOCOLS[used_protocol].sync_low - PROTOCOLS[used_protocol].sync_tolerance)) &&
@@ -172,7 +172,7 @@ uint8_t GetProtocolIndex(uint8_t identifier)
 	uint8_t protocol_index = NO_PROTOCOL_FOUND;
 
 	// check first for valid identifier
-	if ((identifier > UNKNOWN_IDENTIFIER) && (identifier < NO_PROTOCOL_FOUND)) {
+	if ((identifier > UNKNOWN_PROTOCOL) && (identifier < NO_PROTOCOL_FOUND)) {
 		// find protocol index by identifier
 		for (i = 0; i < PROTOCOLCOUNT; i++) {
 			if (PROTOCOLS[i].identifier == identifier) {

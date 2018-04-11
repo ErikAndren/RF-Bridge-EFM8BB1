@@ -318,7 +318,7 @@ int main (void)
 
 				case RF_PROTOCOL_SNIFFING_ON:
 					last_desired_rf_protocol = desired_rf_protocol;
-					desired_rf_protocol = UNKNOWN_IDENTIFIER;
+					desired_rf_protocol = UNKNOWN_PROTOCOL;
 					last_uart_command = uart_command;
 					uart_command = RF_PROTOCOL_SNIFFING_ON;
 					StartRFListen();
@@ -345,7 +345,7 @@ int main (void)
 				case RF_PROTOCOL_LEARN:
 					SoundBuzzer_ms(LEARN_CMD_START_MS);
 					last_desired_rf_protocol = desired_rf_protocol;
-					desired_rf_protocol = UNKNOWN_IDENTIFIER;
+					desired_rf_protocol = UNKNOWN_PROTOCOL;
 					last_uart_command = uart_command;
 					uart_command = RF_PROTOCOL_LEARN;
 					uart_put_command(RF_CODE_ACK);

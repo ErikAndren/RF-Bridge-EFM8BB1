@@ -46,7 +46,7 @@ typedef struct
 
 #define DUTY_CYCLE_TOLERANCE 	16
 
-#define UNKNOWN_IDENTIFIER		0x00
+#define UNKNOWN_PROTOCOL		0x00
 
 #define NO_PROTOCOL_FOUND 0x80
 
