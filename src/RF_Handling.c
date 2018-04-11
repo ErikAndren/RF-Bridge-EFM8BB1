@@ -156,26 +156,6 @@ uint8_t identify_rf_protocol(uint8_t protocol, uint16_t period_pos, uint16_t per
 
 	return NO_PROTOCOL_FOUND;
 }
-
-uint8_t GetProtocolIndex(uint8_t identifier)
-{
-	uint8_t i;
-	uint8_t protocol_index = NO_PROTOCOL_FOUND;
-
-	// check first for valid identifier
-	if ((identifier > UNKNOWN_PROTOCOL) && (identifier < NO_PROTOCOL_FOUND)) {
-		// find protocol index by identifier
-		for (i = 0; i < PROTOCOLCOUNT; i++) {
-			if (PROTOCOLS[i].identifier == identifier) {
-				protocol_index = i;
-				break;
-			}
-		}
-	}
-
-	return protocol_index;
-}
-
 void handle_rf_rx(uart_command_t cmd) {
 	// Negative pulse end implies a previous positive pulse i.e. one period is complete
 	if (neg_pulse_len > 0) {
@@ -335,17 +315,15 @@ void handle_rf_tx(uart_command_t cmd, uint8_t *repeats) {
 						bit_low_duty,
 						bit_count_t,
 						CUSTOM_PROTOCOL_DATA_POS);
-			} else {
-				uint8_t protocol_index = GetProtocolIndex(rf_data[RF_PROTOCOL_IDENT_POS]);
+			} else if (rf_data[RF_PROTOCOL_IDENT_POS] < PROTOCOLCOUNT) {
+				uint8_t protocol_index = rf_data[RF_PROTOCOL_IDENT_POS];
 
-				if (protocol_index != NO_PROTOCOL_FOUND) {
-					StopRFListen();
-					StartRFTransmit(
-							PROTOCOLS[protocol_index].sync_high, PROTOCOLS[protocol_index].sync_low,
-							PROTOCOLS[protocol_index].bit_high_time, PROTOCOLS[protocol_index].bit_high_duty,
-							PROTOCOLS[protocol_index].bit_low_time, PROTOCOLS[protocol_index].bit_low_duty,
-							PROTOCOLS[protocol_index].bit_count, RF_PROTOCOL_START_POS);
-				}
+				StopRFListen();
+				StartRFTransmit(
+					PROTOCOLS[protocol_index].sync_high, PROTOCOLS[protocol_index].sync_low,
+					PROTOCOLS[protocol_index].bit_high_time, PROTOCOLS[protocol_index].bit_high_duty,
+					PROTOCOLS[protocol_index].bit_low_time, PROTOCOLS[protocol_index].bit_low_duty,
+					PROTOCOLS[protocol_index].bit_count, RF_PROTOCOL_START_POS);
 			}
 		}
 		break;
