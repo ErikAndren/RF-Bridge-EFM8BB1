@@ -136,7 +136,6 @@ typedef struct
 #define PT2260_SYNC_LOW (PT2260_SYNC_PERIOD - PT2260_SYNC_HIGH)
 #define PT2260_BIT_PERIOD 1024
 
-//FIXME: If sync low is set to 12400 reception of HOME_EASY does not work
 #define PT2260 {PT2260_IDENTIFIER, 0, 12400, 2000, 1080, 400, 75, 25, 24, 0}
 
 /*
