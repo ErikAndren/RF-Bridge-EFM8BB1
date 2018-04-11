@@ -131,10 +131,7 @@ uint8_t IdentifyRFProtocol(uint8_t identifier, uint16_t period_pos, uint16_t per
 			for (used_protocol = 0; used_protocol < PROTOCOLCOUNT; used_protocol++) {
 				if ((period_neg > (PROTOCOLS[used_protocol].sync_low - PROTOCOLS[used_protocol].sync_tolerance)) &&
 					(period_neg < (PROTOCOLS[used_protocol].sync_low + PROTOCOLS[used_protocol].sync_tolerance))) {
-//					uart_putc(0xFF);
-//					uart_puts(neg_pulse_len);
-//					uart_puts(pos_pulse_len);
-//					UART0_initTxPolling();
+
 					if ((PROTOCOLS[used_protocol].sync_high == 0) ||
 						((period_pos > (PROTOCOLS[used_protocol].sync_high - PROTOCOLS[used_protocol].sync_tolerance)) &&
 						(period_pos < (PROTOCOLS[used_protocol].sync_high + PROTOCOLS[used_protocol].sync_tolerance)))) {
@@ -195,9 +192,6 @@ void handle_rf_rx(uart_command_t cmd) {
 		case RF_IDLE:
 			rf_protocol = IdentifyRFProtocol(desired_rf_protocol, pos_pulse_len, neg_pulse_len);
 			if (rf_protocol != NO_PROTOCOL_FOUND) {
-//				uart_puts(neg_pulse_len);
-//				UART0_initTxPolling();
-
 				sync_high = pos_pulse_len;
 				sync_low = neg_pulse_len;
 				actual_byte = 0;
@@ -254,16 +248,6 @@ void handle_rf_rx(uart_command_t cmd) {
 					low_pulse_time = pos_pulse_len;
 				}
 			} else {
-				//uart_putc(0x55);
-				//uart_putc(actual_bit);
-				//uart_putc(rf_protocol);
-				//uart_putc(PROTOCOLS[rf_protocol].bit_low_duty - DUTY_CYCLE_TOLERANCE);
-				//uart_putc(duty_cycle);
-				//uart_putc(PROTOCOLS[rf_protocol].bit_low_duty + DUTY_CYCLE_TOLERANCE);
-				//uart_puts(pos_pulse_len);
-				//uart_puts(neg_pulse_len);
-				//UART0_initTxPolling();
-
 				// Bit length is out of spec, revert back to idle state
 				rf_state = RF_IDLE;
 				break;
