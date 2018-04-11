@@ -119,21 +119,18 @@ void StopRFListen(void)
 
 uint8_t identify_rf_protocol(uint8_t protocol, uint16_t period_pos, uint16_t period_neg)
 {
-	//FIXME: Could be merged into one variable
-	uint8_t used_protocol;
-
 	switch (protocol) {
 		// protocol is undefined, do loop through all protocols
 		case UNKNOWN_PROTOCOL:
 			// check all protocols
-			for (used_protocol = 0; used_protocol < PROTOCOLCOUNT; used_protocol++) {
-				if ((period_neg > (PROTOCOLS[used_protocol].sync_low - PROTOCOLS[used_protocol].sync_tolerance)) &&
-					(period_neg < (PROTOCOLS[used_protocol].sync_low + PROTOCOLS[used_protocol].sync_tolerance))) {
+			for (protocol = 0; protocol < PROTOCOLCOUNT; protocol++) {
+				if ((period_neg > (PROTOCOLS[protocol].sync_low - PROTOCOLS[protocol].sync_tolerance)) &&
+					(period_neg < (PROTOCOLS[protocol].sync_low + PROTOCOLS[protocol].sync_tolerance))) {
 
-					if ((PROTOCOLS[used_protocol].sync_high == 0) ||
-						((period_pos > (PROTOCOLS[used_protocol].sync_high - PROTOCOLS[used_protocol].sync_tolerance)) &&
-						(period_pos < (PROTOCOLS[used_protocol].sync_high + PROTOCOLS[used_protocol].sync_tolerance)))) {
-						return used_protocol;
+					if ((PROTOCOLS[protocol].sync_high == 0) ||
+						((period_pos > (PROTOCOLS[protocol].sync_high - PROTOCOLS[protocol].sync_tolerance)) &&
+						(period_pos < (PROTOCOLS[protocol].sync_high + PROTOCOLS[protocol].sync_tolerance)))) {
+						return protocol;
 					}
 				}
 			}
@@ -141,19 +138,17 @@ uint8_t identify_rf_protocol(uint8_t protocol, uint16_t period_pos, uint16_t per
 
 		// check other protocols
 		default:
-			used_protocol = GetProtocolIndex(protocol);
-
 			// check if identifier got found in list
-			if (used_protocol == NO_PROTOCOL_FOUND) {
+			if (protocol >= PROTOCOLCOUNT) {
 				break;
 			}
 
-			if ((period_neg > (PROTOCOLS[used_protocol].sync_low - PROTOCOLS[used_protocol].sync_tolerance)) &&
-				(period_neg < (PROTOCOLS[used_protocol].sync_low + PROTOCOLS[used_protocol].sync_tolerance))) {
-				if ((PROTOCOLS[used_protocol].sync_high == 0) ||
-				   ((period_pos > (PROTOCOLS[used_protocol].sync_high - PROTOCOLS[used_protocol].sync_tolerance)) &&
-					(period_pos < (PROTOCOLS[used_protocol].sync_high + PROTOCOLS[used_protocol].sync_tolerance)))) {
-					return used_protocol;
+			if ((period_neg > (PROTOCOLS[protocol].sync_low - PROTOCOLS[protocol].sync_tolerance)) &&
+				(period_neg < (PROTOCOLS[protocol].sync_low + PROTOCOLS[protocol].sync_tolerance))) {
+				if ((PROTOCOLS[protocol].sync_high == 0) ||
+				   ((period_pos > (PROTOCOLS[protocol].sync_high - PROTOCOLS[protocol].sync_tolerance)) &&
+					(period_pos < (PROTOCOLS[protocol].sync_high + PROTOCOLS[protocol].sync_tolerance)))) {
+					return protocol;
 				}
 			}
 			break;
