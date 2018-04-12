@@ -252,12 +252,15 @@ int main (void)
 			switch(next_uart_command)
 			{
 			case RF_CODE_OUT:
-				uart_rx_state = RECEIVE_PAYLOAD;
 				uart_payload_pos = 0;
 				uart_payload_len = SONOFF_INSTR_SZ;
+				uart_rx_state = RECEIVE_PAYLOAD;
 				break;
 
 			case RF_PROTOCOL_OUT:
+				uart_rx_state = RECEIVE_PROTOCOL;
+				break;
+
 			case RF_BUCKET_OUT:
 				uart_rx_state = RECEIVE_PAYLOAD_LEN;
 				break;
@@ -267,6 +270,15 @@ int main (void)
 			}
 			break; // End SYNC_INIT
 
+			case RECEIVE_PROTOCOL:
+				if (uart_rx_data >= PROTOCOLCOUNT) {
+					uart_rx_state = RECEIVE_IDLE;
+				} else {
+					desired_rf_protocol = uart_rx_data;
+					uart_rx_state = RECEIVE_PAYLOAD_LEN;
+				}
+				break;
+
 		case RECEIVE_PAYLOAD_LEN:
 			uart_payload_pos = 0;
 			uart_payload_len = uart_rx_data;
@@ -274,7 +286,7 @@ int main (void)
 			if (uart_payload_len > 0) {
 				uart_rx_state = RECEIVE_PAYLOAD;
 			} else {
-				uart_rx_state = RECEIVE_END;
+				uart_rx_state = RECEIVE_IDLE;
 			}
 			break;
 
@@ -282,7 +294,7 @@ int main (void)
 			rf_data[uart_payload_pos] = uart_rx_data;
 			uart_payload_pos++;
 
-			if ((uart_payload_pos == uart_payload_len) || (uart_payload_pos >= RF_DATA_BUFFERSIZE)) {
+			if ((uart_payload_pos == uart_payload_len) || (uart_payload_pos == RF_DATA_BUFFERSIZE)) {
 				uart_rx_state = RECEIVE_END;
 			}
 			break;
@@ -296,7 +308,6 @@ int main (void)
 				case RF_CODE_ACK:
 					waiting_for_uart_ack = false;
 
-					// Reset back to listen state
 					StartRFListen();
 					break;
 
