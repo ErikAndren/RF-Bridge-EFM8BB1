@@ -10,17 +10,16 @@
 
 #include "uart.h"
 
-extern uint8_t identify_rf_protocol(uint8_t identifier, uint16_t period_pos, uint16_t period_neg);
-extern uint8_t GetProtocolIndex(uint8_t identifier);
+extern uint8_t rf_identify_protocol(uint8_t identifier, uint16_t period_pos, uint16_t period_neg);
 extern void start_rf_tx(uint16_t sync_high_in, uint16_t sync_low_in, uint16_t bit_high_time, uint8_t bit_high_duty,
 		uint16_t bit_low_time, uint8_t bit_low_duty, uint8_t bitcount, uint8_t payload_ptr);
-extern void SetDutyCycle(void);
-extern void StopRFTransmit(void);
-extern void StartRFListen(void);
-extern void stop_rf_rx(void);
+extern void rf_tx_set_duty_cycle(void);
+extern void rf_tx_stop(void);
+extern void rf_rx_start(void);
+extern void rf_rx_stop(void);
 
-extern void handle_rf_tx(uart_command_t cmd, uint8_t *repeats);
-extern void handle_rf_rx(uart_command_t cmd);
+extern void rf_tx_handle(uart_command_t cmd, uint8_t *repeats);
+extern void rf_rx_handle(uart_command_t cmd);
 
 // 112 byte == 896 bits, so a RF signal with maximum of 896 bits is possible
 // for bucket transmission, this depends on the number of buckets.

@@ -92,7 +92,7 @@ void PCA0_channel1EventCb(void)
 }
 
 // Receive path
-void StartRFListen(void)
+void rf_rx_start(void)
 {
 	// restore timer to 100000 Hz, 10 s interval
 	// 245 cc's * 40.8 ns = 50 us = 100000 Hz = 100 kHz
@@ -106,7 +106,7 @@ void StartRFListen(void)
 	PCA0_run();
 }
 
-void stop_rf_rx(void)
+void rf_rx_stop(void)
 {
 	PCA0_halt();
 
@@ -117,7 +117,7 @@ void stop_rf_rx(void)
 	PCA0CPM1 &= ~PCA0CPM1_ECCF__ENABLED;
 }
 
-uint8_t identify_rf_protocol(uint8_t protocol, uint16_t period_pos, uint16_t period_neg)
+uint8_t rf_identify_protocol(uint8_t protocol, uint16_t period_pos, uint16_t period_neg)
 {
 	switch (protocol) {
 		// protocol is undefined, do loop through all protocols
@@ -156,12 +156,12 @@ uint8_t identify_rf_protocol(uint8_t protocol, uint16_t period_pos, uint16_t per
 
 	return NO_PROTOCOL_FOUND;
 }
-void handle_rf_rx(uart_command_t cmd) {
+void rf_rx_handle(uart_command_t cmd) {
 	// Negative pulse end implies a previous positive pulse i.e. one period is complete
 	if (neg_pulse_len > 0) {
 		switch (rf_state) {
 		case RF_IDLE:
-			rf_protocol = identify_rf_protocol(desired_rf_protocol, pos_pulse_len, neg_pulse_len);
+			rf_protocol = rf_identify_protocol(desired_rf_protocol, pos_pulse_len, neg_pulse_len);
 			if (rf_protocol != NO_PROTOCOL_FOUND) {
 				sync_high = pos_pulse_len;
 				sync_low = neg_pulse_len;
@@ -240,7 +240,7 @@ void handle_rf_rx(uart_command_t cmd) {
 		case RF_FINISHED:
 			// Do not accept more incoming RF message until the previous transmission has been
 			// acknowledged (or timed out) by the host
-			stop_rf_rx();
+			rf_rx_stop();
 
 			switch (cmd) {
 			case RF_CODE_IN:
@@ -278,7 +278,7 @@ void handle_rf_rx(uart_command_t cmd) {
 }
 
 // Transmission path
-void handle_rf_tx(uart_command_t cmd, uint8_t *repeats) {
+void rf_tx_handle(uart_command_t cmd, uint8_t *repeats) {
 	switch(rf_state)
 	{
 	// init and start RF transmit
@@ -290,7 +290,7 @@ void handle_rf_tx(uart_command_t cmd, uint8_t *repeats) {
 			uint16_t bit_high_t = *(uint16_t *) &rf_data[SONOFF_THIGH_POS];
 			uint16_t bit_low_t = *(uint16_t *) &rf_data[SONOFF_TLOW_POS];
 
-			stop_rf_rx();
+			rf_rx_stop();
 			start_rf_tx(sync_high, sync_low,
 					bit_high_t, PROTOCOLS[PT2260_IDENTIFIER].bit_high_duty,
 					bit_low_t, PROTOCOLS[PT2260_IDENTIFIER].bit_low_duty,
@@ -305,7 +305,7 @@ void handle_rf_tx(uart_command_t cmd, uint8_t *repeats) {
 				uint8_t bit_low_duty = rf_data[CUSTOM_PROTOCOL_BIT_LOW_DUTY_POS];
 				uint8_t bit_count_t = rf_data[CUSTOM_PROTOCOL_BIT_COUNT_POS];
 
-				stop_rf_rx();
+				rf_rx_stop();
 				start_rf_tx(
 						sync_high,
 						sync_low,
@@ -318,7 +318,7 @@ void handle_rf_tx(uart_command_t cmd, uint8_t *repeats) {
 			} else if (rf_data[RF_PROTOCOL_IDENT_POS] < PROTOCOLCOUNT) {
 				uint8_t protocol_index = rf_data[RF_PROTOCOL_IDENT_POS];
 
-				stop_rf_rx();
+				rf_rx_stop();
 				start_rf_tx(
 					PROTOCOLS[protocol_index].sync_high, PROTOCOLS[protocol_index].sync_low,
 					PROTOCOLS[protocol_index].bit_high_time, PROTOCOLS[protocol_index].bit_high_duty,
@@ -341,7 +341,7 @@ void handle_rf_tx(uart_command_t cmd, uint8_t *repeats) {
 			desired_rf_protocol = last_desired_rf_protocol;
 			uart_command = last_uart_command;
 
-			StartRFListen();
+			rf_rx_start();
 			uart_put_command(RF_CODE_ACK);
 		}
 		break;
@@ -352,7 +352,7 @@ void handle_rf_tx(uart_command_t cmd, uint8_t *repeats) {
 	} // rf_state
 }
 
-static void SendRFSync(void)
+static void send_rf_tx_sync(void)
 {
 	// enable P0.0 for I/O control
 	XBR1 &= ~XBR1_PCA0ME__CEX0_CEX1;
@@ -414,17 +414,17 @@ void start_rf_tx(uint16_t sync_high_in, uint16_t sync_low_in,
 	rf_state = RF_TRANSMITTING;
 
 	// set first bit to be in sync when PCA0 is starting
-	SetDutyCycle();
+	rf_tx_set_duty_cycle();
 
 	// According to PT2260 docs, sync pulse comes after payload
 	// Yes, but not in the EV-protocol. Doesn't matter if multiple transmits are sent
-	SendRFSync();
+	send_rf_tx_sync();
 	PCA0_run();
 }
 
 // This defines the falling edge of the pulse, in PCA0 cycles
 // Of the 256 PCA counts, where shall the falling edge occur?
-static void SetDutyCycle(void)
+static void rf_tx_set_duty_cycle(void)
 {
 	if (((rf_data[actual_byte] << (actual_bit % 8)) & 0x80) == 0x80)
 	{
@@ -468,17 +468,17 @@ void PCA0_channel0EventCb(void)
 
 	// stop transfer if all bits are transmitted
 	if (actual_bit == bit_count) {
-		StopRFTransmit();
+		rf_tx_stop();
 	} else {
 		// Start transmission of next bit
 		//FIXME: Is this really safe? Couldn't this create a problem if the low start is moved a bit ahead?
 		// PCA0 counter is not reset, and so if this event is called, and the updated match value is slightly beyond it will be called again
 		// Missed bits?
-		SetDutyCycle();
+		rf_tx_set_duty_cycle();
 	}
 }
 
-void StopRFTransmit(void)
+void rf_tx_stop(void)
 {
 	// set duty cycle to zero
 	// FIXME: Is this really necessary?
