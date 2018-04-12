@@ -293,7 +293,7 @@ void rf_tx_handle(uart_command_t cmd, uint8_t *repeats) {
 			uint16_t bit_low_t = *(uint16_t *) &rf_data[SONOFF_TLOW_POS];
 
 			rf_rx_stop();
-			start_rf_tx(sync_high, sync_low,
+			rf_tx_start(sync_high, sync_low,
 					bit_high_t, PROTOCOLS[PT2260_IDENTIFIER].bit_high_duty,
 					bit_low_t, PROTOCOLS[PT2260_IDENTIFIER].bit_low_duty,
 					PROTOCOLS[PT2260_IDENTIFIER].bit_count, SONOFF_DATA_POS);
@@ -308,7 +308,7 @@ void rf_tx_handle(uart_command_t cmd, uint8_t *repeats) {
 				uint8_t bit_count_t = rf_data[CUSTOM_PROTOCOL_BIT_COUNT_POS];
 
 				rf_rx_stop();
-				start_rf_tx(
+				rf_tx_start(
 						sync_high,
 						sync_low,
 						bit_high_t,
@@ -321,7 +321,7 @@ void rf_tx_handle(uart_command_t cmd, uint8_t *repeats) {
 				uint8_t protocol_index = rf_data[RF_PROTOCOL_IDENT_POS];
 
 				rf_rx_stop();
-				start_rf_tx(
+				rf_tx_start(
 					PROTOCOLS[protocol_index].sync_high, PROTOCOLS[protocol_index].sync_low,
 					PROTOCOLS[protocol_index].bit_high_time, PROTOCOLS[protocol_index].bit_high_duty,
 					PROTOCOLS[protocol_index].bit_low_time, PROTOCOLS[protocol_index].bit_low_duty,
@@ -354,7 +354,7 @@ void rf_tx_handle(uart_command_t cmd, uint8_t *repeats) {
 	} // rf_state
 }
 
-static void send_rf_tx_sync(void)
+static void rf_tx_send_sync(void)
 {
 	// enable P0.0 for I/O control
 	XBR1 &= ~XBR1_PCA0ME__CEX0_CEX1;
@@ -371,7 +371,7 @@ static void send_rf_tx_sync(void)
 	XBR1 |= XBR1_PCA0ME__CEX0_CEX1;
 }
 
-void start_rf_tx(uint16_t sync_high_in, uint16_t sync_low_in,
+void rf_tx_start(uint16_t sync_high_in, uint16_t sync_low_in,
 					 uint16_t bit_high_time, uint8_t bit_high_duty,
 		             uint16_t bit_low_time, uint8_t bit_low_duty,
 				     uint8_t bitcount, uint8_t payload_pos)
@@ -418,7 +418,7 @@ void start_rf_tx(uint16_t sync_high_in, uint16_t sync_low_in,
 
 	// According to PT2260 docs, sync pulse comes after payload
 	// Yes, but not in the EV-protocol. Doesn't matter if multiple transmits are sent
-	send_rf_tx_sync();
+	rf_tx_send_sync();
 	PCA0_run();
 }
 
