@@ -53,8 +53,8 @@ Example (hex): AA A8 06 01 D0 F9 32 11 33 55<br/>
 
 0xAA: uart sync init<br/>
 0xA8: transmit RF data<br/>
+0x01: protocol identifier<br/>
 0x06: data len<br/>
-0x01: protocol identifier (ROHRMOTOR24)<br/>
 0xD0-0x55: data<br/>
 0x55: uart sync end
 
