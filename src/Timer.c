@@ -49,7 +49,8 @@ void SetTimerReload(uint8_t timer, uint16_t reload)
 }
 
 /*
- * Init Timer with microseconds interval, maximum is 65535 s.
+ * Init Timer with microseconds. The interval parameter is used to calculate how often the timer needs to be reset
+ * This allows for timers that are longer than the timer resolution
  */
 void InitTimer_us(uint8_t timer, uint16_t interval, uint16_t timeout)
 {
@@ -69,7 +70,7 @@ void InitTimer_us(uint8_t timer, uint16_t interval, uint16_t timeout)
 }
 
 /*
- * Init Timer with milliseconds interval, maximum is ~2.5ms.
+ * Init Timer with milliseconds interval
  */
 void InitTimer_ms(uint8_t timer, uint16_t interval, uint16_t timeout)
 {
@@ -158,6 +159,8 @@ SI_INTERRUPT (TIMER2_ISR, TIMER2_IRQn)
 		TMR2CN0 &= ~TMR2CN0_TR2__RUN;
 	}
 
+	//FIXME: Add logic that recalculate the timer overflow value if on the last iteration.
+	//Right now we will overshoot
 	if (Timer_Timeout[0] > Timer_Interval[0]) {
 		Timer_Timeout[0] -= Timer_Interval[0];
 	} else {
