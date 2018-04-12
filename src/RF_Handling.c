@@ -337,6 +337,9 @@ void rf_tx_handle(uart_command_t cmd, uint8_t *repeats) {
 	case RF_FINISHED:
 		(*repeats)--;
 		if (*repeats > 0) {
+			//FIXME: This needs to be protocol specific
+			InitTimer_ms(TIMER3, 1, 8);
+			WaitTimerFinished(TIMER3);
 			rf_state = RF_IDLE;
 		} else {
 			desired_rf_protocol = last_desired_rf_protocol;
@@ -361,10 +364,10 @@ static void rf_tx_send_sync(void)
 	// Send ASK/On-off keying to SYN115 chip
 	T_DATA = 1;
 #define TX_SETUP_TIME 60
-	InitTimer_us(TIMER3, 5, sync_high - TX_SETUP_TIME);
+	InitTimer_us(TIMER3, 10, sync_high - TX_SETUP_TIME);
 	WaitTimerFinished(TIMER3);
 	T_DATA = 0;
-	InitTimer_us(TIMER3, 5, sync_low - TX_SETUP_TIME);
+	InitTimer_us(TIMER3, 10, sync_low - TX_SETUP_TIME);
 	WaitTimerFinished(TIMER3);
 
 	// disable P0.0 for I/O control, enter PCA mode
