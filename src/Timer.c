@@ -15,12 +15,34 @@ SI_SEGMENT_VARIABLE(Timer_Interval[NO_TIMERS], uint16_t, SI_SEG_XDATA) = 0;
 
 static void StartTimer(uint8_t timer, uint16_t interval, uint16_t timeout) {
 	if (timer == TIMER2) {
+		/* Stop timer */
+		TMR2CN0 &= ~TMR2CN0_TR2__RUN;
+
+		/* Clear Timer 2 high overflow flag */
+		TMR2CN0 &= ~TMR2CN0_TF2H__SET;
+
+		/* Load timer with reload value */
+		TMR2 = TMR2RL;
+
 		Timer_Timeout[0] = timeout;
 		Timer_Interval[0] = interval;
+
+		/* Start timer */
 		TMR2CN0 |= TMR2CN0_TR2__RUN;
 	} else if (timer == TIMER3) {
+		/* Stop timer */
+		TMR3CN0 &= ~TMR3CN0_TR3__RUN;
+
+		/* Clear overflow flag */
+		TMR3CN0 &= ~TMR3CN0_TF3H__SET;
+
+		/* Load timer with reload value */
+		TMR3 = TMR3RL;
+
 		Timer_Timeout[1] = timeout;
 		Timer_Interval[1] = interval;
+
+		/* Start timer */
 		TMR3CN0 |= TMR3CN0_TR3__RUN;
 	}
 }
