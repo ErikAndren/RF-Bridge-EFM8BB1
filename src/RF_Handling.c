@@ -52,6 +52,8 @@ SI_SEGMENT_VARIABLE(bucket_sync, uint16_t, SI_SEG_XDATA);
 SI_SEGMENT_VARIABLE(buckets[BUCKET_MAX], uint16_t, SI_SEG_XDATA);	// -1 because of the bucket_sync
 SI_SEGMENT_VARIABLE(bucket_count, uint8_t, SI_SEG_XDATA) = 0;
 
+#define PWM_8BIT_CNT 256
+
 //-----------------------------------------------------------------------------
 // Callbacks
 //-----------------------------------------------------------------------------
@@ -123,7 +125,7 @@ uint8_t rf_identify_protocol(uint8_t protocol, uint16_t period_pos, uint16_t per
 		// protocol is undefined, do loop through all protocols
 		case UNKNOWN_PROTOCOL:
 			// check all protocols
-			for (protocol = 0; protocol < PROTOCOLCOUNT; protocol++) {
+			for (protocol = 0; protocol < PROTOCOL_COUNT; protocol++) {
 				if ((period_neg > (PROTOCOLS[protocol].sync_low - PROTOCOLS[protocol].sync_tolerance)) &&
 					(period_neg < (PROTOCOLS[protocol].sync_low + PROTOCOLS[protocol].sync_tolerance))) {
 
@@ -139,7 +141,7 @@ uint8_t rf_identify_protocol(uint8_t protocol, uint16_t period_pos, uint16_t per
 		// check other protocols
 		default:
 			// check if identifier got found in list
-			if (protocol >= PROTOCOLCOUNT) {
+			if (protocol >= PROTOCOL_COUNT) {
 				break;
 			}
 
@@ -315,7 +317,7 @@ void rf_tx_handle(uart_command_t cmd, uint8_t *repeats) {
 						bit_low_duty,
 						bit_count_t,
 						CUSTOM_PROTOCOL_DATA_POS);
-			} else if (rf_data[RF_PROTOCOL_IDENT_POS] < PROTOCOLCOUNT) {
+			} else if (rf_data[RF_PROTOCOL_IDENT_POS] < PROTOCOL_COUNT) {
 				uint8_t protocol_index = rf_data[RF_PROTOCOL_IDENT_POS];
 
 				rf_rx_stop();
@@ -386,8 +388,6 @@ void start_rf_tx(uint16_t sync_high_in, uint16_t sync_low_in,
 	// Calculate the bit period (us)
 	bit_period_us = (100 * (uint32_t) bit_high_time) / bit_high_duty;
 	
-	// PWM counter is 8 bits i.e 256 values
-#define PWM_8BIT_CNT 256
 	// Bit period is hacked up into 256 parts, each part is incremented when the timer 0 overflows
 	// What does 1000000 represent? Is it related to that the bit period is in us i. e. 1 MHz
 	// Frequency of timer overflows that needs to be attained during one second

@@ -155,6 +155,6 @@ SI_SEGMENT_VARIABLE(PROTOCOLS[], static const protocol_data_t, SI_SEG_CODE) =
 		PT2260
 };
 
-static const uint8_t PROTOCOLCOUNT = sizeof(PROTOCOLS) / sizeof(protocol_data_t);
+static const uint8_t PROTOCOL_COUNT = sizeof(PROTOCOLS) / sizeof(protocol_data_t);
 
 #endif /* INC_RF_PROTOCOLS_H_ */

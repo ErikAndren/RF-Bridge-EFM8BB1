@@ -268,7 +268,7 @@ int main (void)
 			break; // End SYNC_INIT
 
 			case RECEIVE_PROTOCOL:
-				if (uart_rx_data >= PROTOCOLCOUNT) {
+				if (uart_rx_data >= PROTOCOL_COUNT) {
 					uart_rx_state = RECEIVE_IDLE;
 				} else {
 					desired_rf_protocol = uart_rx_data;
