@@ -298,9 +298,10 @@ void rf_tx_handle(uart_command_t cmd, uint8_t *repeats) {
 					bit_low_t, PROTOCOLS[PT2260_IDENTIFIER].bit_low_duty,
 					PROTOCOLS[PT2260_IDENTIFIER].bit_count, SONOFF_DATA_POS);
 		} else if (cmd == RF_PROTOCOL_OUT) {
-			if (rf_data[RF_PROTOCOL_IDENT_POS] == CUSTOM_PROTOCOL_IDENT) {
+			if (rf_protocol == CUSTOM_PROTOCOL_IDENT) {
 				uint16_t sync_high = *(uint16_t *) &rf_data[CUSTOM_PROTOCOL_SYNC_HIGH_POS];
 				uint16_t sync_low = *(uint16_t *) &rf_data[CUSTOM_PROTOCOL_SYNC_LOW_POS];
+				//FIXME: Missing parameters here
 				uint16_t bit_high_t = *(uint16_t *) &rf_data[CUSTOM_PROTOCOL_BIT_HIGH_TIME_POS];
 				uint8_t bit_high_duty = rf_data[CUSTOM_PROTOCOL_BIT_HIGH_DUTY_POS];
 				uint16_t bit_low_t = *(uint16_t *) &rf_data[CUSTOM_PROTOCOL_BIT_LOW_TIME_POS];
@@ -317,15 +318,13 @@ void rf_tx_handle(uart_command_t cmd, uint8_t *repeats) {
 						bit_low_duty,
 						bit_count_t,
 						CUSTOM_PROTOCOL_DATA_POS);
-			} else if (rf_data[RF_PROTOCOL_IDENT_POS] < PROTOCOL_COUNT) {
-				uint8_t protocol_index = rf_data[RF_PROTOCOL_IDENT_POS];
-
+			} else {
 				rf_rx_stop();
 				rf_tx_start(
-					PROTOCOLS[protocol_index].sync_high, PROTOCOLS[protocol_index].sync_low,
-					PROTOCOLS[protocol_index].bit_high_time, PROTOCOLS[protocol_index].bit_high_duty,
-					PROTOCOLS[protocol_index].bit_low_time, PROTOCOLS[protocol_index].bit_low_duty,
-					PROTOCOLS[protocol_index].bit_count, RF_PROTOCOL_START_POS);
+					PROTOCOLS[desired_rf_protocol].sync_high, PROTOCOLS[desired_rf_protocol].sync_low,
+					PROTOCOLS[desired_rf_protocol].bit_high_time, PROTOCOLS[desired_rf_protocol].bit_high_duty,
+					PROTOCOLS[desired_rf_protocol].bit_low_time, PROTOCOLS[desired_rf_protocol].bit_low_duty,
+					PROTOCOLS[desired_rf_protocol].bit_count, RF_PROTOCOL_PAYLOAD_START_POS);
 			}
 		}
 		break;
@@ -361,10 +360,11 @@ static void rf_tx_send_sync(void)
 
 	// Send ASK/On-off keying to SYN115 chip
 	T_DATA = 1;
-	InitTimer_us(TIMER3, 10, sync_high);
+#define TX_SETUP_TIME 60
+	InitTimer_us(TIMER3, 5, sync_high - TX_SETUP_TIME);
 	WaitTimerFinished(TIMER3);
 	T_DATA = 0;
-	InitTimer_us(TIMER3, 10, sync_low);
+	InitTimer_us(TIMER3, 5, sync_low - TX_SETUP_TIME);
 	WaitTimerFinished(TIMER3);
 
 	// disable P0.0 for I/O control, enter PCA mode
@@ -416,8 +416,10 @@ void rf_tx_start(uint16_t sync_high_in, uint16_t sync_low_in,
 	// set first bit to be in sync when PCA0 is starting
 	rf_tx_set_duty_cycle();
 
-	// According to PT2260 docs, sync pulse comes after payload
-	// Yes, but not in the EV-protocol. Doesn't matter if multiple transmits are sent
+//	uart_puts(sync_high);
+//	uart_puts(sync_low);
+//	UART0_initTxPolling();
+
 	rf_tx_send_sync();
 	PCA0_run();
 }
