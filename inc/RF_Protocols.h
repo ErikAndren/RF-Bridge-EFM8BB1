@@ -85,7 +85,7 @@ typedef struct
 
 /* http://www.logicapplied.se/projects/remote_control/nexa/nexa.html */
 #define ARC_IDENTIFIER 5
-#define ARC {ARC_IDENTIFIER, 440, 1080, 100, 1340, 440, 75, 25, 24, 0}
+#define ARC {ARC_IDENTIFIER, 440, 1080, 100, 1340, 440, 78, 29, 24, 0}
 
 /* FIXME: There is a problem with my remote where a spurious pulse may come before the sync pulse
  * it looks like this throws the rx off */
