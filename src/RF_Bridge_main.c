@@ -152,7 +152,6 @@ int main (void)
 		case RF_PROTOCOL_OUT:
 		case RF_CODE_OUT:
 			rf_tx_handle(uart_command, &tr_repeats);
-			desired_rf_protocol = last_desired_rf_protocol;
 			break;
 
 		case RF_PROTOCOL_SNIFFING_ON:
@@ -321,8 +320,9 @@ int main (void)
 
 				case RF_CODE_OUT:
 				case RF_PROTOCOL_OUT:
-					last_desired_rf_protocol = desired_rf_protocol;
 					tr_repeats = RF_TX_REPEATS;
+					last_desired_rf_protocol = desired_rf_protocol;
+					last_uart_command = uart_command;
 					uart_command = next_uart_command;
 					break;
 
