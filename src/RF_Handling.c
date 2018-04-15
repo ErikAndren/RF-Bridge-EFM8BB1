@@ -338,7 +338,7 @@ void rf_tx_handle(uart_command_t cmd, uint8_t *repeats) {
 		(*repeats)--;
 		if (*repeats > 0) {
 			//FIXME: This needs to be protocol specific
-			InitTimer_ms(TIMER3, 1, 12);
+			InitTimer_ms(TIMER3, 1, 10);
 			WaitTimerFinished(TIMER3);
 			rf_state = RF_IDLE;
 		} else {
