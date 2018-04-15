@@ -431,7 +431,8 @@ void rf_tx_start(uint16_t sync_high_in, uint16_t sync_low_in,
 // Of the 256 PCA counts, where shall the falling edge occur?
 static void rf_tx_set_duty_cycle(void)
 {
-	if (((rf_data[actual_byte] << (actual_bit % 8)) & 0x80) == 0x80)
+	//rf_data[actual_byte]
+	if (((rf_data[actual_byte] >> (actual_bit % 8)) & 0x01) == 0x01)
 	{
 		// bit 1
 		PCA0_writeChannel(PCA0_CHAN0, duty_cycle_high << 8);
@@ -449,7 +450,7 @@ void PCA0_intermediateOverflowCb(void)
 	// This will effectively toggle how fast the counter will wrap around
 	// Both timer 0 and PCA counter works in 8 bit mode
 	// Symbols can have different lengths, adjust for that here
-	if (((rf_data[actual_byte] << (actual_bit % 8)) & 0x80) == 0x80) {
+	if (((rf_data[actual_byte] >> (actual_bit % 8)) & 0x01) == 0x01) {
 		// bit 1
 		TH0 = t0_high;
 		TL0 = t0_high;
