@@ -86,11 +86,10 @@ typedef struct
 /* http://www.logicapplied.se/projects/remote_control/nexa/nexa.html */
 #define ARC_IDENTIFIER 5
 #define ARC {ARC_IDENTIFIER, 440, 1080, 400, 1340, 440, 78, 29, 24, 0}
-/* FIXME: ARC Commands with double the period time has been observed */
+/* FIXME: ARC Commands with double the period time has been observed, might need to add a identifier doubling all values */
 
 /* FIXME: There is a problem with my remote where a spurious pulse may come before the sync pulse
  * it looks like this throws the rx off */
-
 #define EV1527_IDENTIFIER 6
 #define EV1527 {EV1527_IDENTIFIER, 400, 7800, 300, 200, 600, 75, 25, 24, 0}
 
