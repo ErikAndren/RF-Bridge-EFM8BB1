@@ -56,7 +56,7 @@ typedef struct
  * http://tech.jolowe.se/home-automation-rf-protocols
  */
 #define HOME_EASY_IDENTIFIER 0
-#define HOME_EASY {HOME_EASY_IDENTIFIER, 275, 2750, 200, 275, 275, 50, 16, 64, 0, true}
+#define HOME_EASY {HOME_EASY_IDENTIFIER, 275, 2750, 200, 275, 275, 50, 18, 64, 0, true}
 
 /*
  * Rohrmotor24
