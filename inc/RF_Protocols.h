@@ -41,7 +41,8 @@ typedef struct
 	uint8_t bit_count;
 	// bit count of SYNC bits
 	uint8_t additional_sync_bits;
-
+	// Send pause bit at the end of each transmission
+	uint8_t needs_pause_bit;
 } protocol_data_t;
 
 #define DUTY_CYCLE_TOLERANCE 	16
@@ -55,43 +56,43 @@ typedef struct
  * http://tech.jolowe.se/home-automation-rf-protocols
  */
 #define HOME_EASY_IDENTIFIER 0
-#define HOME_EASY {HOME_EASY_IDENTIFIER, 275, 2750, 200, 275, 275, 50, 16, 64, 0}
+#define HOME_EASY {HOME_EASY_IDENTIFIER, 275, 2750, 200, 275, 275, 50, 16, 64, 0, true}
 
 /*
  * Rohrmotor24
  * https://github.com/bjwelker/Raspi-Rollo/tree/master/Arduino/Rollo_Code_Receiver
  */
 #define ROHRMOTOR24_IDENTIFIER 1
-#define ROHRMOTOR24	{ROHRMOTOR24_IDENTIFIER, 4800, 2000, 1500, 700, 300, 70, 30, 40, 0}
+#define ROHRMOTOR24	{ROHRMOTOR24_IDENTIFIER, 4800, 2000, 1500, 700, 300, 70, 30, 40, 0, false}
 
 /*
  * UNDERWATER PAR56 LED LAMP, 502266
  * http://www.seamaid-lighting.com/de/produit/lampe-par56/
  */
 #define Seamaid_PAR_56_RGB_IDENTIFIER 2
-#define Seamaid_PAR_56_RGB {Seamaid_PAR_56_RGB_IDENTIFIER, 3000, 9000, 2000, 1100, 400, 75, 25, 24, 0}
+#define Seamaid_PAR_56_RGB {Seamaid_PAR_56_RGB_IDENTIFIER, 3000, 9000, 2000, 1100, 400, 75, 25, 24, 0, false}
 
 /*
  * Wall plug Noru
   */
 #define NORU_IDENTIFIER 3
-#define NORU {NORU_IDENTIFIER, 9500, 3000, 2000, 900, 320, 70, 30, 24, 0}
+#define NORU {NORU_IDENTIFIER, 9500, 3000, 2000, 900, 320, 70, 30, 24, 0, false}
 
 /*
  * WS-1200 Series Wireless Weather Station
   */
 #define WS_1200_IDENTIFIER 4
-#define WS_1200	{WS_1200_IDENTIFIER, 0, 29400, 2000, 700, 300, 38, 64, 64, 7}
+#define WS_1200	{WS_1200_IDENTIFIER, 0, 29400, 2000, 700, 300, 38, 64, 64, 7, false}
 
 /* http://www.logicapplied.se/projects/remote_control/nexa/nexa.html */
 #define ARC_IDENTIFIER 5
-#define ARC {ARC_IDENTIFIER, 440, 1080, 400, 1340, 440, 78, 29, 24, 0}
+#define ARC {ARC_IDENTIFIER, 440, 1080, 400, 1340, 440, 78, 29, 24, 0, false}
 /* FIXME: ARC Commands with double the period time has been observed, might need to add a identifier doubling all values */
 
 /* FIXME: There is a problem with my remote where a spurious pulse may come before the sync pulse
  * it looks like this throws the rx off */
 #define EV1527_IDENTIFIER 6
-#define EV1527 {EV1527_IDENTIFIER, 400, 7800, 300, 200, 600, 75, 25, 24, 0}
+#define EV1527 {EV1527_IDENTIFIER, 400, 7800, 300, 200, 600, 75, 25, 24, 0, false}
 
 /*
  * Original RF bridge protocol
@@ -136,7 +137,7 @@ typedef struct
 #define PT2260_SYNC_LOW (PT2260_SYNC_PERIOD - PT2260_SYNC_HIGH)
 #define PT2260_BIT_PERIOD 1024
 
-#define PT2260 {PT2260_IDENTIFIER, 0, 12400, 2000, 1080, 400, 75, 25, 24, 0}
+#define PT2260 {PT2260_IDENTIFIER, 0, 12400, 2000, 1080, 400, 75, 25, 24, 0, false}
 
 /*
  * Protocol array

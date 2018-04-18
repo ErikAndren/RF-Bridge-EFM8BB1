@@ -221,6 +221,11 @@ void rf_rx_handle(uart_command_t cmd) {
 					low_pulse_time = pos_pulse_len;
 				}
 			} else {
+#ifdef DEBUG
+				uart_puts(pos_pulse_len);
+				uart_puts(pos_pulse_len);
+				UART0_initTxPolling();
+#endif
 				// Bit length is out of spec, revert back to idle state
 				rf_state = RF_IDLE;
 				break;
@@ -337,8 +342,11 @@ void rf_tx_handle(uart_command_t cmd, uint8_t *repeats) {
 	case RF_FINISHED:
 		(*repeats)--;
 		if (*repeats > 0) {
-			//FIXME: This needs to be protocol specific
-			InitTimer_ms(TIMER3, 1, 10);
+			// Wait a bit until transmitting next pulse
+			//FIXME: This needs to be protocol specific (needed for ARC)?
+			// 10 for ARC
+			// 9 for home easy?
+			InitTimer_ms(TIMER3, 1, 9);
 			WaitTimerFinished(TIMER3);
 			rf_state = RF_IDLE;
 		} else {
@@ -472,15 +480,19 @@ void PCA0_channel0EventCb(void)
 		actual_byte++;
 	}
 
-	// stop transfer if all bits are transmitted
-	if (actual_bit == bit_count) {
-		rf_tx_stop();
-	} else {
+	if (actual_bit < bit_count) {
 		// Start transmission of next bit
 		//FIXME: Is this really safe? Couldn't this create a problem if the low start is moved a bit ahead?
 		// PCA0 counter is not reset, and so if this event is called, and the updated match value is slightly beyond it will be called again
 		// Missed bits?
 		rf_tx_set_duty_cycle();
+	} else if ((actual_bit == bit_count) && (PROTOCOLS[desired_rf_protocol].needs_pause_bit == true)) {
+		actual_byte--;
+		rf_data[actual_byte] = 0xFF;
+		rf_tx_set_duty_cycle();
+	} else {
+		// stop transfer if all bits are transmitted
+		rf_tx_stop();
 	}
 }
 
