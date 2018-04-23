@@ -211,9 +211,9 @@ void rf_rx_handle(uart_command_t cmd) {
 				bit_high = pos_pulse_len;
 				rf_data[actual_byte] |= (1 << ((actual_bit - 1) % 8));
 
-			} else if ((duty_cycle > (PROTOCOLS[rf_protocol].bit_low_duty - DUTY_CYCLE_TOLERANCE)) &&
-					   (duty_cycle < (PROTOCOLS[rf_protocol].bit_low_duty + DUTY_CYCLE_TOLERANCE)) ||
-					   (actual_bit == PROTOCOLS[rf_protocol].bit_count)) {
+			} else if (((duty_cycle > (PROTOCOLS[rf_protocol].bit_low_duty - DUTY_CYCLE_TOLERANCE)) &&
+					    (duty_cycle < (PROTOCOLS[rf_protocol].bit_low_duty + DUTY_CYCLE_TOLERANCE))) ||
+					    (actual_bit == PROTOCOLS[rf_protocol].bit_count)) {
 				bit_low = pos_pulse_len;
 
 				// backup low bit pulse time to be able to determine the last bit
