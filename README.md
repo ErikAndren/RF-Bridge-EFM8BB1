@@ -11,6 +11,8 @@ https://www.itead.cc/wiki/File:RF_Universal_Transeceive_Module_Serial_Protocol_v
 There are the pins C2 & C2CK on the board. With a Arduino you can build a programmer to read/erase and program the flash.
 Software for the Arduino: https://github.com/conorpp/efm8-arduino-programmer
 
+You can also upgrade the firmware using the latest Tasmota firmware given that you connect the C2K and C2 ports to GPIO4 and GPIO5 on the board.
+
 # Software
 The project is written with Simplicity Studio 4. The resulting *.hex file can be programmed on the EFM8BB1.
 
