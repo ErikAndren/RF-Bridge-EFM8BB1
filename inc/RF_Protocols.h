@@ -17,6 +17,35 @@
 #define MIN_PULSE_LENGTH	100
 #define MAX_BUCKETS			8
 
+// TSYN represents the part of the period where the sync pulse is low
+#define SONOFF_TSYN_SZ 2
+#define SONOFF_TSYN_POS 0
+#define SONOFF_TLOW_SZ 2
+#define SONOFF_TLOW_POS 2
+#define SONOFF_THIGH_SZ 2
+#define SONOFF_THIGH_POS 4
+#define SONOFF_DATA_SZ 3
+#define SONOFF_DATA_POS 6
+#define SONOFF_INSTR_SZ (SONOFF_TSYN_SZ + SONOFF_TLOW_SZ + SONOFF_THIGH_SZ + SONOFF_DATA_SZ)
+
+#define CUSTOM_PROTOCOL_IDENT 0x7F
+#define CUSTOM_PROTOCOL_SYNC_HIGH_SZ 2
+#define CUSTOM_PROTOCOL_SYNC_HIGH_POS 1
+#define CUSTOM_PROTOCOL_SYNC_LOW_SZ 2
+#define CUSTOM_PROTOCOL_SYNC_LOW_POS 3
+#define CUSTOM_PROTOCOL_BIT_HIGH_TIME_SZ 2
+#define CUSTOM_PROTOCOL_BIT_HIGH_TIME_POS 5
+#define CUSTOM_PROTOCOL_BIT_HIGH_DUTY_SZ 1
+#define CUSTOM_PROTOCOL_BIT_HIGH_DUTY_POS 7
+#define CUSTOM_PROTOCOL_BIT_LOW_TIME_SZ 2
+#define CUSTOM_PROTOCOL_BIT_LOW_TIME_POS 8
+#define CUSTOM_PROTOCOL_BIT_LOW_DUTY_SZ 1
+#define CUSTOM_PROTOCOL_BIT_LOW_DUTY_POS 10
+#define CUSTOM_PROTOCOL_BIT_COUNT_SZ 1
+#define CUSTOM_PROTOCOL_BIT_COUNT_POS 11
+#define CUSTOM_PROTOCOL_BIT_COUNT_SZ 1
+#define CUSTOM_PROTOCOL_DATA_POS 12
+
 #define RF_TX_REPEATS 6
 
 typedef struct
@@ -86,7 +115,7 @@ typedef struct
 
 /* http://www.logicapplied.se/projects/remote_control/nexa/nexa.html */
 #define ARC_IDENTIFIER 5
-#define ARC {ARC_IDENTIFIER, 440, 1080, 400, 1340, 440, 78, 29, 24, 0, false}
+#define ARC {ARC_IDENTIFIER, 440, 10800, 400, 1340, 440, 78, 29, 24, 0, false}
 /* FIXME: ARC Commands with double the period time has been observed, might need to add a identifier doubling all values */
 
 /* FIXME: There is a problem with my remote where a spurious pulse may come before the sync pulse

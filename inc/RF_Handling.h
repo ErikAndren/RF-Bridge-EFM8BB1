@@ -10,6 +10,15 @@
 
 #include "uart.h"
 
+#define BUCKET_NO_POS 0
+#define BUCKET_NO_SZ 1
+#define BUCKET_REP_POS 1
+#define BUCKET_REP_SZ 1
+#define BUCKET_PAIRS 2
+#define BUCKET_MAX 1
+
+#define RF_PROTOCOL_PAYLOAD_START_POS 0
+
 extern uint8_t rf_identify_protocol(uint8_t identifier, uint16_t period_pos, uint16_t period_neg);
 extern void rf_tx_start(uint16_t sync_high_in, uint16_t sync_low_in, uint16_t bit_high_time, uint8_t bit_high_duty,
 		uint16_t bit_low_time, uint8_t bit_low_duty, uint8_t bitcount, uint8_t payload_ptr);
@@ -25,8 +34,6 @@ extern void rf_rx_handle(uart_command_t cmd);
 // for bucket transmission, this depends on the number of buckets.
 // E.g. 4 buckets have a total overhead of 11, allowing 101 bits (high/low pairs)
 #define RF_DATA_BUFFERSIZE		112
-
-#define SWB(val) ((((val) >> 8) & 0x00FF) | (((val) << 8) & 0xFF00))
 
 typedef enum
 {
