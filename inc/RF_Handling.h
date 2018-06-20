@@ -59,7 +59,7 @@ extern SI_SEGMENT_VARIABLE(actual_sync_bit, uint8_t, SI_SEG_XDATA);
 extern SI_SEGMENT_VARIABLE(actual_byte, uint8_t, SI_SEG_XDATA);
 
 extern SI_SEGMENT_VARIABLE(bucket_sync, uint16_t, SI_SEG_XDATA);
-extern SI_SEGMENT_VARIABLE(buckets[15], uint16_t, SI_SEG_XDATA);
+extern SI_SEGMENT_VARIABLE(buckets[BUCKET_MAX], uint16_t, SI_SEG_XDATA);
 extern SI_SEGMENT_VARIABLE(bucket_count, uint8_t, SI_SEG_XDATA);
 
 extern SI_SEGMENT_VARIABLE(pos_pulse_len, uint16_t, SI_SEG_DATA);
