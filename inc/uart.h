@@ -50,7 +50,7 @@
 #define BUCKET_REP_POS 1
 #define BUCKET_REP_SZ 1
 #define BUCKET_PAIRS 2
-#define BUCKET_MAX 15
+#define BUCKET_MAX 1
 
 #define UART_RX_BUFFER_SIZE	16 + 4
 #define UART_TX_BUFFER_SIZE	32
