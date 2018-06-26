@@ -8,11 +8,6 @@
 #ifndef INC_RF_PROTOCOLS_H_
 #define INC_RF_PROTOCOLS_H_
 
-//-----------------------------------------------------------------------------
-// Includes
-//-----------------------------------------------------------------------------
-#include <stdint.h>
-
 #define MIN_FOOTER_LENGTH	3500
 #define MIN_PULSE_LENGTH	100
 #define MAX_BUCKETS			8
