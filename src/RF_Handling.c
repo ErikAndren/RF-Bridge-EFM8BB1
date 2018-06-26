@@ -245,7 +245,7 @@ void rf_rx_handle(uart_command_t cmd) {
 		}
 
 		case RF_FINISHED:
-			// Do not accept more incoming RF message until the previous transmission has been
+			// Do not accept more incoming RF message until the previous reception has been
 			// acknowledged (or timed out) by the host
 			rf_rx_stop();
 
